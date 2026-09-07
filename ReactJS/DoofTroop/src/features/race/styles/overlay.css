@@ -1,6 +1,6 @@
 ﻿/**
  * In-race HUD shell. Timer = `.betting-banner` (overlay.css).
- * Bottom chrome reuses `.betting-footer*` — same portrait/landscape rules
+ * Bottom chrome reuses `.betting-footer*` — same compact rules
  * as betting overlay (see mobile.css).
  */
 
@@ -9,7 +9,7 @@
   --hud-scale: 1;
   --hud-w: calc(980px * var(--hud-scale));
   --history-w: calc(230px * var(--hud-scale));
-  --history-col-shift: calc(-53px * var(--hud-scale));
+  --history-col-shift: calc(-41px * var(--hud-scale));
   --race-current-bets-table-gap: calc(6px * var(--hud-scale));
   --bets-toggle-drop: calc(-8px * var(--hud-scale));
 
@@ -88,7 +88,7 @@
   height: calc(52px * var(--hud-scale));
   padding: calc(10px * var(--hud-scale)) calc(12px * var(--hud-scale)) 0;
   border: 0;
-  border-radius: 999px;
+  border-radius: 0;
   background-color: transparent;
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -111,6 +111,10 @@
 
 .race-overlay .betting-overlay__fullscreen {
   z-index: 8;
+}
+
+.race-overlay .betting-footer__menu-wrap {
+  z-index: 9;
 }
 
 .race-overlay .betting-overlay__menu-top {

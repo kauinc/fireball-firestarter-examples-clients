@@ -5,9 +5,9 @@
     calc(98px * var(--hud-scale))
     minmax(0, calc(590px * var(--hud-scale)))
     calc(68px * var(--hud-scale));
-  grid-template-rows: calc(44px * var(--hud-scale)) auto;
+  grid-template-rows: calc(36px * var(--hud-scale)) auto;
   column-gap: calc(4px * var(--hud-scale));
-  row-gap: calc(3px * var(--hud-scale));
+  row-gap: 0;
   align-items: stretch;
   width: calc(764px * var(--hud-scale));
   transform: translateX(var(--board-shift-x, 0px));
@@ -22,22 +22,25 @@
 .doof-grid__colors {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0;
+  gap: calc(5px * var(--hud-scale));
   margin-inline: calc(8px * var(--hud-scale));
+  align-self: end;
+  /* Sit closer to the table top edge. */
+  margin-bottom: calc(-2px * var(--hud-scale));
 }
 
 .doof-grid__colors .doof-grid__chip-label {
   width: 100%;
-  height: calc(50px * var(--hud-scale));
+  height: calc(34px * var(--hud-scale));
   margin-left: 0;
-  background-size: 120% 120%;
-  transform: translateY(calc(5px * var(--hud-scale)));
+  background-size: 100% 100%;
+  transform: none;
 }
 
 .doof-grid__patterns {
   display: grid;
   grid-template-rows: repeat(3, 1fr);
-  gap: 0;
+  gap: calc(8px * var(--hud-scale));
   margin-block: calc(8px * var(--hud-scale));
   align-self: stretch;
   overflow: visible;
@@ -48,7 +51,7 @@
   display: grid;
   place-items: center;
   width: 100%;
-  height: calc(44px * var(--hud-scale));
+  height: calc(34px * var(--hud-scale));
   padding: 0;
   border: 0;
   overflow: hidden;
@@ -59,7 +62,7 @@
   background-position: center;
   color: #fff;
   font-family: inherit;
-  font-size: calc(13px * var(--hud-font-scale));
+  font-size: calc(11px * var(--hud-font-scale));
   font-weight: 800;
   letter-spacing: 0.01em;
   line-height: 1;
@@ -80,9 +83,9 @@
   align-self: stretch;
   overflow: visible;
   background-image: none;
-  font-size: calc(13px * var(--hud-font-scale));
-  /* Fixed pill height + slight overscale — glass chrome from text-description-bar. */
-  --pattern-label-h: calc(62px * var(--hud-scale));
+  font-size: calc(11px * var(--hud-font-scale));
+  /* Fixed pill height — TableButton chrome. */
+  --pattern-label-h: calc(36px * var(--hud-scale));
   transform: translateX(var(--pattern-label-x, 0px));
 }
 
@@ -91,7 +94,7 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 118%;
+  width: 100%;
   height: var(--pattern-label-h);
   transform: translate(-50%, -50%);
   background-image: var(--chip-bar);
@@ -105,9 +108,8 @@
 .doof-grid__field {
   /* bet-field.png inner grid: L27 R1382 T27 B318 of 1410×346 */
   --field-pad: calc(8px * var(--hud-scale));
-  --chip-size: calc(30px * var(--hud-scale));
-  --chip-stack-x: calc(7px * var(--hud-scale));
-  --chip-stack-y: calc(2px * var(--hud-scale));
+  --chip-size: calc(34px * var(--hud-scale));
+  --chip-stack-spread: calc(18px * var(--hud-scale));
   --field-in-l: calc(27 / 1410);
   --field-in-r: calc(28 / 1410);
   --field-in-t: calc(27 / 346);
@@ -161,9 +163,8 @@
   position: absolute;
   z-index: 2;
   pointer-events: auto;
-  --chip-size: calc(30px * var(--hud-scale));
-  --chip-stack-x: calc(7px * var(--hud-scale));
-  --chip-stack-y: calc(2px * var(--hud-scale));
+  --chip-size: calc(34px * var(--hud-scale));
+  --chip-stack-spread: calc(18px * var(--hud-scale));
   --chip-stack-dir: 1;
 }
 
@@ -201,9 +202,17 @@
 .chip-stack {
   position: relative;
   display: block;
-  width: var(--chip-size, calc(30px * var(--hud-scale)));
-  height: var(--chip-size, calc(30px * var(--hud-scale)));
+  width: var(--chip-size, calc(34px * var(--hud-scale)));
+  height: var(--chip-size, calc(34px * var(--hud-scale)));
   overflow: visible;
+  /* Fig 1: digits visible, chips still mostly overlapped. */
+  --chip-fan: 0.58;
+  --chip-stack-spread: calc(18px * var(--hud-scale));
+}
+
+.chip-stack:hover,
+.chip-stack:focus-within {
+  --chip-fan: 0.9;
 }
 
 .chip-stack__chip {
@@ -212,12 +221,12 @@
   top: 0;
   display: grid;
   place-items: center;
-  width: var(--chip-size, calc(30px * var(--hud-scale)));
-  height: var(--chip-size, calc(30px * var(--hud-scale)));
+  width: var(--chip-size, calc(34px * var(--hud-scale)));
+  height: var(--chip-size, calc(34px * var(--hud-scale)));
   color: #fff;
   font-size: clamp(
     calc(8px * var(--hud-font-scale)),
-    calc(var(--chip-size, calc(30px * var(--hud-scale))) * 0.34),
+    calc(var(--chip-size, calc(34px * var(--hud-scale))) * 0.34),
     calc(14px * var(--hud-font-scale))
   );
   font-weight: 800;
@@ -226,6 +235,17 @@
   paint-order: stroke fill;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
   pointer-events: auto;
+  /* Triangle via --chip-tx / --chip-ty (not a linear diagonal). */
+  transform: translate(
+    calc(
+      var(--chip-tx, 0) * var(--chip-fan, 0.58) * var(--chip-stack-spread) *
+        var(--chip-stack-dir, 1)
+    ),
+    calc(
+      var(--chip-ty, 0) * var(--chip-fan, 0.58) * var(--chip-stack-spread)
+    )
+  );
+  transition: transform 160ms ease;
 }
 
 .chip-stack__chip img {
@@ -236,10 +256,28 @@
   object-fit: contain;
 }
 
-.chip-stack__total {
+.chip-stack__amount {
   position: relative;
   z-index: 1;
-  opacity: 1;
+  line-height: 1;
+}
+
+.chip-stack__amount--own {
+  display: none;
+}
+
+.chip-stack__amount--total {
+  display: inline;
+}
+
+.chip-stack:hover .chip-stack__amount--own,
+.chip-stack:focus-within .chip-stack__amount--own {
+  display: inline;
+}
+
+.chip-stack:hover .chip-stack__amount--total,
+.chip-stack:focus-within .chip-stack__amount--total {
+  display: none;
 }
 
 .doof-grid__cell {
@@ -255,8 +293,80 @@
   cursor: pointer;
 }
 
+.doof-grid__cell.is-drag-highlight {
+  overflow: visible;
+  z-index: 1;
+}
+
+/* Base sprite always owns size/position; highlight art is glow-only behind it. */
+.doof-grid__sprite {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: auto;
+  height: 88%;
+  max-width: 88%;
+  max-height: 100%;
+  flex-shrink: 0;
+}
+
+.doof-grid__cell.is-hat .doof-grid__sprite {
+  height: 95%;
+  max-width: 95%;
+}
+
+.doof-grid__cell.is-glasses .doof-grid__sprite {
+  height: 88%;
+  max-width: 88%;
+}
+
+.doof-grid__sprite-base {
+  position: relative;
+  z-index: 1;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+
+/* Keep the base sprite visible so size/position never change; HL art is glow only. */
+.doof-grid__sprite.is-highlighted .doof-grid__sprite-base {
+  filter: none;
+}
+
+/*
+ * Highlight PNGs are 1500² with glow padding; base webps are tight crops.
+ * Scale/translate measured so the solid body aligns under the base (glow peeks out).
+ */
+.doof-grid__sprite-glow {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 0;
+  width: auto;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
+  object-position: center bottom;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(10.3%) scale(1.171);
+  transform-origin: center bottom;
+}
+
+.doof-grid__cell.is-hat .doof-grid__sprite-glow {
+  transform: translateX(-50%) translateY(10.3%) scale(1.171);
+}
+
+.doof-grid__cell.is-glasses .doof-grid__sprite-glow {
+  transform: translateX(-50%) translateY(13.8%) scale(1.572);
+}
+
 /* Hats are taller; glasses are wider. Keep full art, sit on bottom cell line. */
-.doof-grid__cell img {
+.doof-grid__cell > img {
   width: auto;
   height: 88%;
   max-width: 88%;
@@ -265,17 +375,16 @@
   object-position: center bottom;
   display: block;
   flex-shrink: 0;
-  transform: none;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }
 
-.doof-grid__cell.is-hat img {
+.doof-grid__cell.is-hat > img {
   width: auto;
   height: 95%;
   max-width: 95%;
 }
 
-.doof-grid__cell.is-glasses img {
+.doof-grid__cell.is-glasses > img {
   width: auto;
   height: 88%;
   max-width: 88%;
@@ -373,7 +482,7 @@
   filter: drop-shadow(0 0 calc(10px * var(--hud-scale)) rgba(255, 94, 200, 0.45));
 }
 
-.doof-grid.is-crazy-combo-active .doof-grid__cell.is-crazy-combo-pickable:hover img {
+.doof-grid.is-crazy-combo-active .doof-grid__cell.is-crazy-combo-pickable:hover .doof-grid__sprite-base {
   filter: brightness(1.08);
 }
 
@@ -383,16 +492,23 @@
   cursor: default;
 }
 
-.doof-grid.is-crazy-combo-active .doof-grid__cell.is-crazy-combo-taken:hover img {
-  filter: none;
+.doof-grid.is-crazy-combo-active .doof-grid__cell.is-crazy-combo-taken:hover .doof-grid__sprite-base {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }
 
-/* Yellow pick-mode chrome on color/pattern labels. */
+/* Combo-active assets include glow padding — overscale so the solid
+   pill matches the normal TableButton size (no shrink on highlight). */
 .doof-grid__chip-label.is-combo-highlight {
-  background-size: 100% 100%;
+  overflow: visible;
+  background-size: 125% 161%;
   background-position: center;
 }
 
 .doof-grid__colors .doof-grid__chip-label.is-combo-highlight {
-  background-size: 120% 120%;
+  background-size: 125% 161%;
+}
+
+.doof-grid__patterns .doof-grid__chip-label.is-combo-highlight::before {
+  width: 125%;
+  height: calc(var(--pattern-label-h) * 1.61);
 }

@@ -34,27 +34,6 @@ export function betTargetKey(target) {
   }
 }
 
-export function describeBetTarget(target) {
-  switch (target.type) {
-    case 'doof':
-      return `${target.color} ${target.pattern}`
-    case 'split':
-      return target.cells.map((c) => `${c.color} ${c.pattern}`).join(' + ')
-    case 'pattern':
-      return target.pattern
-    case 'color':
-      return target.color
-    case 'accessory':
-      return target.accessory
-    case 'combo':
-      return 'Combo'
-    case 'crazyCombo':
-      return 'Crazy Combo'
-    default:
-      return ''
-  }
-}
-
 /**
  * Resolve roulette-style field target from normalized 0..1 coords
  * inside the PNG inner grid (doof-grid__playable), not the texture border.

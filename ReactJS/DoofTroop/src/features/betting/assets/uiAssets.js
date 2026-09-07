@@ -1,57 +1,63 @@
-import textBar from '../../../assets/ui/text-description-bar.png'
-import comboBar from '../../../assets/ui/combo-bar.png'
-import comboInactive from '../../../assets/ui/Combo_Inactive.png'
-import crazyComboBar from '../../../assets/ui/crazy-combo-bar.png'
+import textBar from '../../../assets/ui/TableButton.png'
+import comboBar from '../../../assets/ui/ComboBar.png'
+import comboBarActive from '../../../assets/ui/ComboBar_Active.png'
+import crazyComboBar from '../../../assets/ui/CrazyComboBar_ActiveBackground.png'
 import crazyComboBarComplete from '../../../assets/ui/CrazyComboBar.png'
 import historyBar from '../../../assets/ui/history-bar.png'
-import myBetsHistory from '../../../assets/ui/my-bets-history.png'
-import historyBetsToggleArrow from '../../../assets/ui/history-bets-toggle-arrow.png'
-import balanceBar from '../../../assets/ui/balance-value-bar.png'
-import hatsGlassesBar from '../../../assets/ui/hats-glasses-bar.png'
+import historyMyBetsInactive from '../../../assets/ui/History_MyBets_Inactive.png'
+import historyMyBetsActive from '../../../assets/ui/History_MyBets_Active.png'
+import balanceBar from '../../../assets/ui/BetBalanceBar.png'
+import hatsGlassesBar from '../../../assets/ui/HatsGlassesBar.png'
+import hatsGlassesBarComboActive from '../../../assets/ui/HatsGlassesBar_ComboActive.png'
 import ccBoard from '../../../assets/ui/cc-board.png'
-import ccSelection from '../../../assets/ui/cc-selection.png'
-import colorPatternBar from '../../../assets/ui/color-pattern-bar.png'
+import ccSelection from '../../../assets/ui/CrazyComboBar_ActiveSmall.png'
+import colorPatternBar from '../../../assets/ui/TableButton_ComboActive.png'
 import patternDots from '../../../assets/ui/pattern-dots.png'
-import patternSolid from '../../../assets/ui/pattern-solid.png'
-import patternStripes from '../../../assets/ui/pattern-stripes.png'
-import colorRedBar from '../../../assets/ui/color-red.png'
-import colorYellowBar from '../../../assets/ui/color-yellow.png'
-import colorGreenBar from '../../../assets/ui/color-green.png'
-import colorCyanBar from '../../../assets/ui/color-cyan.png'
-import colorBlueBar from '../../../assets/ui/color-blue.png'
-import colorMagentaBar from '../../../assets/ui/color-magenta.png'
-import accessoryHatsBar from '../../../assets/ui/accessory-hats.png'
-import accessoryGlassesBar from '../../../assets/ui/accessory-glasses.png'
-import hatIcon from '../../../assets/ui/hat.webp'
-import glassesIcon from '../../../assets/ui/glasses.webp'
+import patternSolid from '../../../assets/ui/solid.png'
+import patternStripes from '../../../assets/ui/stripes.png'
+import colorRedBar from '../../../assets/ui/red.png'
+import colorYellowBar from '../../../assets/ui/Yellow.png'
+import colorGreenBar from '../../../assets/ui/green.png'
+import colorCyanBar from '../../../assets/ui/cyan.png'
+import colorBlueBar from '../../../assets/ui/blue.png'
+import colorMagentaBar from '../../../assets/ui/magenta.png'
+import hatIcon from '../../../assets/ui/hats.png'
+import glassesIcon from '../../../assets/ui/glasses.png'
 import betField from '../../../assets/ui/bet-field.png'
-import roundButton from '../../../assets/ui/round-button.png'
-import whiteChip from '../../../assets/ui/chip-white.png'
-import yellowChip from '../../../assets/ui/chip-yellow.png'
-import blackChip from '../../../assets/ui/chip-black.png'
-import violetChip from '../../../assets/ui/chip-violet.png'
-import redChip from '../../../assets/ui/chip-red.png'
-import greenChip from '../../../assets/ui/chip-green.png'
-import whiteChipSelected from '../../../assets/ui/WhiteSelected.png'
-import yellowChipSelected from '../../../assets/ui/YellowSelected.png'
-import blackChipSelected from '../../../assets/ui/BlackSelected.png'
-import violetChipSelected from '../../../assets/ui/VioletSelected.png'
-import redChipSelected from '../../../assets/ui/RedSelected.png'
-import greenChipSelected from '../../../assets/ui/GreenSelected.png'
-import fullscreen from '../../../assets/ui/fullscreen.png'
+import roundButton from '../../../assets/ui/RoundButton.png'
+import menuButton from '../../../assets/ui/MenuButton.png'
+import menuPanel from '../../../assets/ui/Menu.png'
+import menuSoundIcon from '../../../assets/ui/Menu_SoundIcon.png'
+import menuCommentIcon from '../../../assets/ui/Menu_CommentIcon.png'
+import menuInfoIcon from '../../../assets/ui/Menu_InfoIcon.png'
+import menuHomeIcon from '../../../assets/ui/Menu_HomeIcon.png'
+import increaseBet from '../../../assets/ui/IncreaseBet.png'
+import decreaseBet from '../../../assets/ui/DecreaseBet.png'
+import silverChip from '../../../assets/ui/Chip_Silver.png'
+import goldChip from '../../../assets/ui/Chip_Gold.png'
+import bronzeChip from '../../../assets/ui/Chip_Bronze.png'
+import silverChipSelected from '../../../assets/ui/Chip_Silver_Selected.png'
+import goldChipSelected from '../../../assets/ui/Chip_Gold_Selected.png'
+import bronzeChipSelected from '../../../assets/ui/Chip_Bronze_Selected.png'
+import silverChipSimple from '../../../assets/ui/Chip_Silver_Simple.png'
+import goldChipSimple from '../../../assets/ui/Chip_Gold_Simple.png'
+import bronzeChipSimple from '../../../assets/ui/Chip_Bronze_Simple.png'
+import fullscreen from '../../../assets/ui/FullScreen.png'
 import backgroundFade from '../../../assets/ui/Background_Fade.png'
+import timerBar from '../../../assets/ui/TimerBar.png'
 
 export const uiAssets = Object.freeze({
   textBar,
   comboBar,
-  comboInactive,
+  comboBarActive,
   crazyComboBar,
   crazyComboBarComplete,
   historyBar,
-  myBetsHistory,
-  historyBetsToggleArrow,
+  historyMyBetsInactive,
+  historyMyBetsActive,
   balanceBar,
   hatsGlassesBar,
+  hatsGlassesBarComboActive,
   ccBoard,
   ccSelection,
   colorPatternBar,
@@ -72,28 +78,40 @@ export const uiAssets = Object.freeze({
       Stripes: patternStripes,
     }),
     accessories: Object.freeze({
-      Hats: accessoryHatsBar,
-      Glasses: accessoryGlassesBar,
+      Hats: hatIcon,
+      Glasses: glassesIcon,
     }),
   }),
   betField,
   roundButton,
+  menuButton,
+  menuPanel,
+  menuIcons: Object.freeze({
+    sound: menuSoundIcon,
+    commentary: menuCommentIcon,
+    howToPlay: menuInfoIcon,
+    home: menuHomeIcon,
+  }),
+  increaseBet,
+  decreaseBet,
   fullscreen,
   backgroundFade,
+  timerBar,
+  /** Tray chips keyed by metal. */
   chips: Object.freeze({
-    0.2: whiteChip,
-    0.5: yellowChip,
-    1: blackChip,
-    2: violetChip,
-    5: redChip,
-    25: greenChip,
+    silver: silverChip,
+    gold: goldChip,
+    bronze: bronzeChip,
   }),
   chipsSelected: Object.freeze({
-    0.2: whiteChipSelected,
-    0.5: yellowChipSelected,
-    1: blackChipSelected,
-    2: violetChipSelected,
-    5: redChipSelected,
-    25: greenChipSelected,
+    silver: silverChipSelected,
+    gold: goldChipSelected,
+    bronze: bronzeChipSelected,
+  }),
+  /** Board / stack faces (flat simple metal). */
+  chipsSimple: Object.freeze({
+    silver: silverChipSimple,
+    gold: goldChipSimple,
+    bronze: bronzeChipSimple,
   }),
 })

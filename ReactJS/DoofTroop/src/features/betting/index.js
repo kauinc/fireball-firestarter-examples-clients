@@ -1,7 +1,6 @@
 export { BettingOverlay } from './components/BettingOverlay.jsx'
 export { useBettingOverlayState } from './hooks/useBettingOverlayState.js'
 export { useCurrentRound } from './hooks/useCurrentRound.js'
-export { useHudScale, useHudViewport } from './hooks/useHudScale.js'
 export {
   BettingPhase,
   BETTING_WINDOW_SECONDS,

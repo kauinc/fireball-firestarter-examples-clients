@@ -1,7 +1,5 @@
 .loading-screen {
   --loading-yellow: #ffe600;
-  --loading-bg-mid: #3a2224;
-  --loading-bg-edge: #140c10;
 
   position: absolute;
   inset: 0;
@@ -9,12 +7,11 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  background:
-    radial-gradient(
-      55% 60% at 50% 45%,
-      var(--loading-bg-mid) 0%,
-      var(--loading-bg-edge) 72%
-    );
+  background-color: #140c10;
+  background-image: var(--loading-bg);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: var(--loading-yellow);
   user-select: none;
 }

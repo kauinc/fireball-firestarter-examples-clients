@@ -4,11 +4,11 @@ import { uiAssets } from '../assets/uiAssets.js'
  * Inactive chrome for Hats/Glasses while regular COMBO pick mode is active.
  */
 export function comboAccessoryPickBarBackground() {
-  return uiAssets.comboInactive
+  return uiAssets.hatsGlassesBarComboActive
 }
 
 /**
- * Yellow pick-mode chrome (C_Color_Pattern.png) for color/pattern labels.
+ * Pick-mode chrome for color/pattern labels.
  */
 export function comboPickBarBackground() {
   return uiAssets.colorPatternBar

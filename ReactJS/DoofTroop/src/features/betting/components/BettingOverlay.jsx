@@ -3,7 +3,6 @@ import { BettingBanner } from './BettingBanner.jsx'
 import { DoofGrid } from './DoofGrid.jsx'
 import { MidControls } from './MidControls.jsx'
 import { BettingFooter } from './BettingFooter.jsx'
-import { HistoryPanel } from './HistoryPanel.jsx'
 import { useCurrentRound } from '../hooks/useCurrentRound.js'
 import { useBettingOverlayState } from '../hooks/useBettingOverlayState.js'
 import { useChipBets } from '../hooks/useChipBets.js'
@@ -19,6 +18,10 @@ import {
   requiresComboPickBeforeBet,
 } from '../constants/combo.js'
 import { BettingPhase } from '../constants/bettingPhase.js'
+import {
+  CHIP_VALUES,
+  DEFAULT_CHIP_VALUE,
+} from '../constants/doofs.js'
 import {
   HudFade,
   HudFullscreenButton,
@@ -42,7 +45,6 @@ function BettingRoundSession({
   bannerLabel,
   disabled,
   compact,
-  orientation,
   viewportScale,
   round,
   status,
@@ -55,7 +57,8 @@ function BettingRoundSession({
   const boardRef = useRef(null)
   const overlayRef = useRef(null)
   const [accessory, setAccessory] = useState(null)
-  const [selectedChip, setSelectedChip] = useState(5)
+  const [selectedChip, setSelectedChip] = useState(DEFAULT_CHIP_VALUE)
+  const [selectedMetal, setSelectedMetal] = useState('gold')
   const [comboActive, setComboActive] = useState(false)
   const [comboPick, setComboPick] = useState(null)
   const [crazyComboPickActive, setCrazyComboPickActive] = useState(false)
@@ -146,7 +149,17 @@ function BettingRoundSession({
     setCrazyComboPicks(emptyCrazyComboPicks())
   }
 
-  const { bets, totalBet, placeBet, clearBets, doubleBets } = useChipBets(
+  const {
+    bets,
+    totalBet,
+    canUndo,
+    canRepeat,
+    placeBet,
+    clearBets,
+    undoBets,
+    repeatLastBets,
+    doubleBets,
+  } = useChipBets(
     DEFAULT_SELECTED_POSITIONS,
     sessionKey,
     crazyCombo,
@@ -154,22 +167,22 @@ function BettingRoundSession({
     crazyComboPicks,
   )
 
-  function tryPlaceBet(amount, target) {
+  function tryPlaceBet(amount, target, metal = selectedMetal) {
     if (
       !canPlaceBetTarget(target, { crazyCombo, comboPick, crazyComboPicks })
     ) {
       playSfx('betReject')
       return false
     }
-    placeBet(amount, target)
+    placeBet(amount, target, metal)
     playSfx('chipPlace')
     return true
   }
 
   const { dragChip, startDrag, clearDrag, isDragPlacement } = useChipDrag({
     disabled: disabled || hidden || comboActive || crazyComboPickActive,
-    placeBet: (amount, target) => {
-      tryPlaceBet(amount, target)
+    placeBet: (amount, target, metal) => {
+      tryPlaceBet(amount, target, metal)
     },
     boardRef,
   })
@@ -180,14 +193,49 @@ function BettingRoundSession({
     playSfx('betClear')
   }
 
+  function handleUndo() {
+    if (!undoBets()) {
+      playSfx('betReject')
+      return
+    }
+    playSfx('betClear')
+  }
+
+  function handleRepeat() {
+    if (!repeatLastBets()) {
+      playSfx('betReject')
+      return
+    }
+    playSfx('betDouble')
+  }
+
   function handleDouble() {
-    doubleBets()
+    if (!doubleBets()) {
+      playSfx('betReject')
+      return
+    }
     playSfx('betDouble')
   }
 
   function handleSelectChip(value) {
     setSelectedChip(value)
     playSfx('chipSelect')
+  }
+
+  function handleSelectMetal(metal) {
+    setSelectedMetal(metal)
+    playSfx('chipSelect')
+  }
+
+  function stepSelectedChip(delta) {
+    const index = CHIP_VALUES.indexOf(selectedChip)
+    const from = index >= 0 ? index : 0
+    const next = CHIP_VALUES[from + delta]
+    if (next == null) {
+      playSfx('betReject')
+      return
+    }
+    handleSelectChip(next)
   }
 
   // Round-scoped betting state remounts via parent `key={sessionKey}`.
@@ -202,7 +250,7 @@ function BettingRoundSession({
     enabled: showAdvancedChrome && !hidden,
     overlayRef,
     getAnchorTop: getFadeAnchorTop,
-    deps: [viewportScale, compact, orientation, showAdvancedChrome],
+    deps: [viewportScale, compact, showAdvancedChrome],
   })
 
   if (hidden) return null
@@ -216,7 +264,7 @@ function BettingRoundSession({
     if (disabled || comboActive || crazyComboPickActive || !target) {
       return
     }
-    tryPlaceBet(selectedChip, target)
+    tryPlaceBet(selectedChip, target, selectedMetal)
   }
 
   const labelBets = bets.filter(
@@ -228,10 +276,9 @@ function BettingRoundSession({
   const crazyComboBet =
     bets.find((bet) => bet.target.type === 'crazyCombo') ?? null
   const ghostSrc =
-    dragChip?.moved && dragChip ? uiAssets.chips[dragChip.value] : null
-
-  const showPortraitTopHistory =
-    compact && orientation === 'portrait' && historyOpen
+    dragChip?.moved && dragChip?.metal
+      ? (uiAssets.chipsSimple?.[dragChip.metal] ?? uiAssets.chips[dragChip.metal])
+      : null
 
   return (
     <div
@@ -239,7 +286,6 @@ function BettingRoundSession({
       className="betting-overlay"
       data-phase={phase}
       data-compact={compact ? 'true' : undefined}
-      data-orient={orientation}
       data-advanced={showAdvancedChrome ? 'true' : 'false'}
       data-crazy={crazyCombo ? 'true' : 'false'}
       data-combo={comboActive ? 'true' : 'false'}
@@ -253,15 +299,6 @@ function BettingRoundSession({
       <BettingBanner label={bannerLabel} secondsLeft={secondsLeft} />
 
       {compact ? <HudMenuChrome placement="top" /> : null}
-
-      {showPortraitTopHistory ? (
-        <>
-          <div className="hud-history-top__darken" aria-hidden="true" />
-          <div className="betting-overlay__history-top">
-            <HistoryPanel open />
-          </div>
-        </>
-      ) : null}
 
       {showAdvancedChrome ? <HudFade /> : null}
 
@@ -278,6 +315,9 @@ function BettingRoundSession({
             crazyComboPicks={crazyComboPicks}
             onCrazyComboDoofPick={handleCrazyComboDoofPick}
             onComboBarPick={handleComboBarPick}
+            highlightTarget={
+              dragChip?.moved ? dragChip.hoverTarget : null
+            }
           />
 
           {showAdvancedChrome ? (
@@ -306,13 +346,21 @@ function BettingRoundSession({
 
           <BettingFooter
             disabled={disabled}
-            selectedChip={selectedChip}
-            onSelectChip={handleSelectChip}
+            stakeValue={selectedChip}
+            selectedMetal={selectedMetal}
+            onSelectMetal={handleSelectMetal}
             onChipDragStart={startDrag}
             onClear={handleClear}
+            onUndo={handleUndo}
+            onRepeat={handleRepeat}
             onDouble={handleDouble}
+            onIncreaseChip={() => stepSelectedChip(1)}
+            onDecreaseChip={() => stepSelectedChip(-1)}
+            canUndo={canUndo}
+            canRepeat={canRepeat}
+            canDouble={totalBet > 0}
             totalBet={totalBet}
-            hideMenu={compact}
+            hideMenu
           />
         </div>
       </div>
@@ -321,6 +369,7 @@ function BettingRoundSession({
         isFullscreen={isFullscreen}
         onToggle={toggleFullscreen}
       />
+      {compact ? null : <HudMenuChrome placement="footer" />}
 
       {ghostSrc ? (
         <div
@@ -343,11 +392,11 @@ function BettingRoundSession({
  * Betting HUD driven by Supabase `rounds.status` (Realtime).
  * Visible only while status === BETTING_OPEN.
  *
- * Mobile (compact): portrait / landscape layouts match product refs.
+ * Mobile (compact): landscape layout matches product refs.
  * Combo controls are always visible during betting.
  */
 export function BettingOverlay() {
-  const { scale: viewportScale, compact, orientation } = useHudViewportContext()
+  const { scale: viewportScale, compact } = useHudViewportContext()
   const { round, status } = useCurrentRound()
   const { phase, secondsLeft, bannerLabel, isBettingUiVisible, disabled } =
     useBettingOverlayState({ status, round })
@@ -366,7 +415,6 @@ export function BettingOverlay() {
       bannerLabel={bannerLabel}
       disabled={disabled}
       compact={compact}
-      orientation={orientation}
       viewportScale={viewportScale}
       round={round}
       status={status}

@@ -8,7 +8,7 @@
   --hud-scale: 1;
   --hud-w: calc(980px * var(--hud-scale));
   --history-w: calc(230px * var(--hud-scale));
-  --history-col-shift: calc(-53px * var(--hud-scale));
+  --history-col-shift: calc(-41px * var(--hud-scale));
 
   position: absolute;
   inset: 0;
@@ -31,6 +31,10 @@
 
 .settlement-overlay .betting-overlay__fullscreen {
   z-index: 8;
+}
+
+.settlement-overlay .betting-footer__menu-wrap {
+  z-index: 9;
 }
 
 .settlement-overlay .betting-overlay__menu-top {

@@ -67,7 +67,7 @@
   transform: none;
 }
 
-.race-overlay[data-orient='landscape'][data-compact='true'] .race-bets-sheet__panel {
+.race-overlay[data-compact='true'] .race-bets-sheet__panel {
   width: 100%;
   max-width: 100%;
 }

@@ -12,7 +12,8 @@
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay) {
   --hud-font-scale: var(--hud-scale);
-  --board-shift-x: calc(85px * var(--hud-scale));
+  /* Nudge board + HISTORY column right so they clear the letterbox black. */
+  --board-shift-x: calc(97px * var(--hud-scale));
   --pattern-label-x: 8px;
 }
 
@@ -28,7 +29,7 @@
   --hud-w: calc(980px * var(--hud-scale));
   --history-w: calc(230px * var(--hud-scale));
   /* HISTORY sits left of mid-controls; keep BALANCE under its center */
-  --history-col-shift: calc(-53px * var(--hud-scale));
+  --history-col-shift: calc(-41px * var(--hud-scale));
 
   position: absolute;
   inset: 0;
@@ -71,29 +72,45 @@
 }
 
 .betting-banner__pill {
+  position: relative;
   display: grid;
   place-items: center;
-  width: calc(200px * var(--hud-scale));
-  height: calc(30px * var(--hud-scale));
-  border-radius: calc(10px * var(--hud-scale));
-  border: calc(2px * var(--hud-scale)) solid #f0d060;
-  background: linear-gradient(
-    180deg,
-    rgba(18, 18, 18, 0.94) 0%,
-    rgba(0, 0, 0, 0.96) 100%
-  );
-  box-shadow:
-    0 0 0 1px rgba(80, 50, 0, 0.35),
-    inset 0 1px 0 rgba(255, 230, 140, 0.28),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.55);
+  /* TimerBar.png 627×152; solid ≈570×96 — shell = solid size, no CSS rounding. */
+  width: calc(190px * var(--hud-scale));
+  height: calc(32px * var(--hud-scale));
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  /* Full asset vs solid — chrome layer uses this so rounded ends aren't clipped. */
+  --timer-bar-full-w: calc(100% * 627 / 570);
+  --timer-bar-full-h: calc(100% * 152 / 96);
+}
+
+.betting-banner__chrome {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  width: var(--timer-bar-full-w);
+  height: var(--timer-bar-full-h);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  background-color: transparent;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .betting-banner__value {
-  font-size: calc(22px * var(--hud-font-scale));
+  position: relative;
+  z-index: 2;
+  font-size: calc(19px * var(--hud-font-scale));
   font-weight: 800;
   line-height: 1;
   color: #fff;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
@@ -103,33 +120,6 @@
 
 .betting-overlay[data-phase='closing'] .betting-banner__label {
   letter-spacing: 0.08em;
-}
-
-.betting-banner__pill.is-closing {
-  border-color: #ff1a1a;
-  box-shadow:
-    0 0 calc(8px * var(--hud-scale)) rgba(255, 30, 30, 0.55),
-    0 0 0 1px rgba(255, 40, 40, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.55);
-}
-
-.betting-banner__pill.is-closing[data-blink='0'] {
-  border-color: #ffffff;
-  box-shadow:
-    0 0 calc(8px * var(--hud-scale)) rgba(255, 255, 255, 0.45),
-    0 0 0 1px rgba(255, 255, 255, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.55);
-}
-
-.betting-banner__pill.is-closing[data-blink='1'] {
-  border-color: #ff1a1a;
-  box-shadow:
-    0 0 calc(8px * var(--hud-scale)) rgba(255, 30, 30, 0.55),
-    0 0 0 1px rgba(255, 40, 40, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.55);
 }
 
 /* —— Bottom HUD —— */
@@ -194,8 +184,8 @@
 }
 
 .betting-overlay__fullscreen-icon {
-  width: calc(32px * var(--hud-scale));
-  height: calc(26px * var(--hud-scale));
+  width: calc(36px * var(--hud-scale));
+  height: calc(22px * var(--hud-scale));
   object-fit: contain;
   display: block;
   pointer-events: none;
@@ -206,39 +196,70 @@
   opacity: 0.95;
 }
 
-/*
- * HISTORY / CURRENT BETS — shared MyBets_History bar + toggle arrow.
- * Asset points up; closed = up, open = down (panel opens upward).
- */
-:is(.mid-controls__history, .race-overlay__current-bets) {
-  background-position: center bottom;
-  --bets-toggle-arrow-size: calc(14px * var(--hud-scale));
-  /* Visual top rim of MyBets_History.png — circle center sits on the tab edge */
-  --bets-toggle-arrow-edge: calc(9px * var(--hud-scale));
+/* —— HUD hamburger menu panel —— */
+.hud-menu-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px * var(--hud-scale));
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: calc(4px * var(--hud-scale));
+  min-width: calc(180px * var(--hud-scale));
+  padding: calc(14px * var(--hud-scale)) calc(16px * var(--hud-scale));
+  box-sizing: border-box;
+  border: 0;
+  border-radius: calc(18px * var(--hud-scale));
+  background-color: transparent;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  box-shadow: 0 calc(6px * var(--hud-scale)) calc(16px * var(--hud-scale))
+    rgba(0, 0, 0, 0.45);
 }
 
-:is(.mid-controls__history-handle, .race-overlay__current-bets-handle) {
-  position: absolute;
-  left: 50%;
-  top: var(--bets-toggle-arrow-edge);
-  z-index: 2;
-  width: var(--bets-toggle-arrow-size);
-  height: var(--bets-toggle-arrow-size);
-  transform: translate(-50%, -50%);
+.hud-menu-panel__item {
+  display: flex;
+  align-items: center;
+  gap: calc(12px * var(--hud-scale));
+  width: 100%;
+  margin: 0;
+  padding: calc(6px * var(--hud-scale)) calc(4px * var(--hud-scale));
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: calc(15px * var(--hud-font-scale));
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.hud-menu-panel__item:hover,
+.hud-menu-panel__item:focus-visible {
+  outline: none;
+  color: #e8f4ff;
+}
+
+.hud-menu-panel__icon {
+  flex: 0 0 auto;
+  width: calc(28px * var(--hud-scale));
+  height: calc(28px * var(--hud-scale));
+  object-fit: contain;
   pointer-events: none;
 }
 
-:is(.mid-controls__history-handle, .race-overlay__current-bets-handle) img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-  transform: rotate(0deg);
-  transition: transform 280ms ease;
+.hud-menu-panel__label {
+  flex: 1 1 auto;
 }
 
-:is(.mid-controls__history.is-open, .race-overlay__current-bets.is-open)
-  :is(.mid-controls__history-handle, .race-overlay__current-bets-handle)
-  img {
-  transform: rotate(180deg);
+/*
+ * HISTORY / CURRENT BETS — History_MyBets_Inactive / Active (arrow baked in).
+ */
+:is(.mid-controls__history, .race-overlay__current-bets) {
+  background-position: center bottom;
 }

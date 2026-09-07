@@ -4,6 +4,7 @@ import { playSfx } from '../../../shared/audio/index.js'
 
 /**
  * HISTORY button + expandable sheet — shared by betting MidControls and settlement.
+ * Arrow is baked into History_MyBets_Inactive / Active assets.
  */
 export function HistoryControl({
   open = false,
@@ -11,12 +12,16 @@ export function HistoryControl({
   panelRef = null,
   landed = false,
 }) {
+  const shell = open
+    ? uiAssets.historyMyBetsActive
+    : uiAssets.historyMyBetsInactive
+
   return (
     <div className={`mid-controls__history-slot${open ? ' is-open' : ''}`}>
       <button
         type="button"
         className={`mid-controls__history${open ? ' is-open' : ''}`}
-        style={{ backgroundImage: `url(${uiAssets.myBetsHistory})` }}
+        style={{ backgroundImage: `url(${shell})` }}
         aria-expanded={open}
         onClick={() => {
           const next = !open
@@ -24,9 +29,6 @@ export function HistoryControl({
           playSfx(next ? 'sheetOpen' : 'sheetClose')
         }}
       >
-        <span className="mid-controls__history-handle" aria-hidden="true">
-          <img src={uiAssets.historyBetsToggleArrow} alt="" draggable={false} />
-        </span>
         HISTORY
       </button>
       <HistoryPanel open={open} panelRef={panelRef} landed={landed} />

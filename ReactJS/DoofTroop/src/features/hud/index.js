@@ -1,7 +1,11 @@
 export { HudFade, HudFullscreenButton, HudMenuChrome } from './components/HudChrome.jsx'
 export { StreamErrorBoundary } from './components/StreamErrorBoundary.jsx'
+export {
+  LandscapeHudOnly,
+  RotatePhonePrompt,
+} from './components/RotatePhonePrompt.jsx'
 export { useDialogFocus } from './hooks/useDialogFocus.js'
-export { HUD_DESIGN, useHudScale, useHudViewport } from './hooks/useHudScale.js'
+export { useHudViewport } from './hooks/useHudScale.js'
 export {
   useSyncHudFadeHeight,
   getDoofColorBarsFadeAnchorTop,

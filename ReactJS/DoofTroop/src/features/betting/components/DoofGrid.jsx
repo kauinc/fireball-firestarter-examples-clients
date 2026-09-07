@@ -1,6 +1,10 @@
 import { useRef } from 'react'
 import { DOOF_COLORS, DOOF_PATTERNS } from '../constants/doofs.js'
 import { getDoofBoardCell } from '../assets/doofImages.js'
+import {
+  getHighlightedDoofUrl,
+  isCellHighlightedByTarget,
+} from '../assets/highlightedDoofs.js'
 import { uiAssets } from '../assets/uiAssets.js'
 import { ChipStack } from './ChipStack.jsx'
 import {
@@ -70,6 +74,8 @@ export function DoofGrid({
   crazyComboActiveSlot = null,
   crazyComboPicks = {},
   onCrazyComboDoofPick,
+  /** Drop-target preview while dragging a chip from the tray. */
+  highlightTarget = null,
 }) {
   const playableRef = useRef(null)
 
@@ -215,11 +221,18 @@ export function DoofGrid({
                 isCrazyComboDoofTaken(crazyComboPicks, color, pattern)
               const pickable =
                 crazyComboPickActive && crazyComboActiveSlot && !alreadyTaken
+              const dragHighlight =
+                !crazyComboPickActive &&
+                isCellHighlightedByTarget(highlightTarget, color, pattern)
+              const highlightSrc = dragHighlight
+                ? getHighlightedDoofUrl(color, pattern)
+                : null
               const cellClass = [
                 'doof-grid__cell',
                 accessoryClass,
                 pickable ? 'is-crazy-combo-pickable' : '',
                 alreadyTaken ? 'is-crazy-combo-taken' : '',
+                dragHighlight ? 'is-drag-highlight' : '',
               ]
                 .filter(Boolean)
                 .join(' ')
@@ -236,7 +249,25 @@ export function DoofGrid({
                   }}
                 >
                   {cell ? (
-                    <img src={cell.src} alt="" draggable={false} />
+                    <span
+                      className={`doof-grid__sprite${highlightSrc ? ' is-highlighted' : ''}`}
+                    >
+                      {highlightSrc ? (
+                        <img
+                          className="doof-grid__sprite-glow"
+                          src={highlightSrc}
+                          alt=""
+                          draggable={false}
+                          aria-hidden="true"
+                        />
+                      ) : null}
+                      <img
+                        className="doof-grid__sprite-base"
+                        src={cell.src}
+                        alt=""
+                        draggable={false}
+                      />
+                    </span>
                   ) : (
                     <span className="doof-grid__missing">?</span>
                   )}
