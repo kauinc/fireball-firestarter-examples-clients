@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { SettlementBoard } from './SettlementBoard.jsx'
 import { SettlementFlightLayer } from './SettlementFlightLayer.jsx'
 import { SettlementPodiumLabels } from './SettlementPodiumLabels.jsx'
-import { HistoryPanel } from '../../betting/components/HistoryPanel.jsx'
 import { uiAssets } from '../../betting/assets/uiAssets.js'
 import { formatMoney } from '../../betting/utils/formatMoney.js'
 import { useCurrentRound } from '../../betting/hooks/useCurrentRound.js'
@@ -30,7 +29,7 @@ import '../styles/settlement.css'
  * Chips resolve roulette-style; podium icons fly into HISTORY.
  */
 export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
-  const { scale: viewportScale, compact, orientation } = useHudViewportContext()
+  const { scale: viewportScale, compact } = useHudViewportContext()
   const { round, status } = useCurrentRound()
   const { isFullscreen, toggleFullscreen } = useFullscreen()
   const { roundId: betsRoundId, bets } = usePublishedRoundBets()
@@ -47,7 +46,6 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
       : []
   const totalBet = sumBetTotal(visibleBets)
   const hasBets = visibleBets.length > 0
-  const showPortraitTopHistory = compact && orientation === 'portrait'
 
   const { isSettlementUiVisible, settlement, settlementRoundId } =
     useSettlementOverlayState({
@@ -118,7 +116,7 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
     enabled: Boolean(isSettlementUiVisible && settlement),
     roundId: settlementRoundId,
     winners: settlement?.winners ?? [],
-    historyOpen: showPortraitTopHistory || historyOpen,
+    historyOpen,
     onEnsureHistoryOpen: ensureHistoryOpen,
     readyForInsert: readyForHistoryInsert,
     podiumRef,
@@ -138,7 +136,7 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
     enabled: Boolean(isSettlementUiVisible && settlement),
     overlayRef,
     getAnchorTop: getFadeAnchorTop,
-    deps: [viewportScale, compact, orientation, visibleBets.length],
+    deps: [viewportScale, compact, visibleBets.length],
   })
 
   if (!isSettlementUiVisible || !settlement) {
@@ -150,7 +148,6 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
       ref={overlayRef}
       className={`settlement-overlay${settlement.didWin ? ' is-win' : ' is-lose'}`}
       data-compact={compact ? 'true' : undefined}
-      data-orient={orientation}
       data-settle-phase={phase}
       data-round-id={round?.id ?? undefined}
       data-round-status={status ?? undefined}
@@ -163,19 +160,6 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
       <SettlementFlightLayer flights={allFlights} />
 
       {compact ? <HudMenuChrome placement="top" /> : null}
-
-      {showPortraitTopHistory ? (
-        <>
-          <div className="hud-history-top__darken" aria-hidden="true" />
-          <div className="betting-overlay__history-top">
-            <HistoryPanel
-              open
-              panelRef={historyPanelRef}
-              landed={historyLanded}
-            />
-          </div>
-        </>
-      ) : null}
 
       <HudFade />
 
@@ -197,9 +181,8 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
             winBarRef={winBarRef}
             historyOpen={historyOpen}
             onHistoryOpenChange={setHistoryOpen}
-            historyPanelRef={showPortraitTopHistory ? null : historyPanelRef}
+            historyPanelRef={historyPanelRef}
             historyLanded={historyLanded}
-            showHistoryControl={!showPortraitTopHistory}
           />
 
           <footer className="betting-footer settlement-overlay__footer">
@@ -224,8 +207,6 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
                 {formatMoney(totalBet)}
               </div>
             </div>
-
-            {compact ? null : <HudMenuChrome placement="footer" />}
           </footer>
         </div>
       </div>
@@ -234,6 +215,7 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
         isFullscreen={isFullscreen}
         onToggle={toggleFullscreen}
       />
+      {compact ? null : <HudMenuChrome placement="footer" />}
     </div>
   )
 }

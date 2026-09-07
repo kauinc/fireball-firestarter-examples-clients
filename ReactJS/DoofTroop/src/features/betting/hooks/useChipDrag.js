@@ -9,7 +9,7 @@ const MOVE_THRESHOLD_PX_SQ = 36
  *
  * @param {{
  *   disabled: boolean,
- *   placeBet: (amount: number, target: Record<string, unknown>) => void,
+ *   placeBet: (amount: number, target: Record<string, unknown>, metal: string) => void,
  *   boardRef?: React.RefObject<HTMLElement | null>,
  * }} args
  */
@@ -42,18 +42,25 @@ export function useChipDrag({ disabled, placeBet, boardRef = null }) {
     if (!isDragging) return undefined
 
     function onMove(event) {
-      setDragChip((prev) => {
-        if (!prev) return prev
-        const dx = event.clientX - prev.originX
-        const dy = event.clientY - prev.originY
-        const moved =
-          prev.moved || dx * dx + dy * dy > MOVE_THRESHOLD_PX_SQ
-        return {
-          ...prev,
-          moved,
-          x: event.clientX,
-          y: event.clientY,
-        }
+      const prev = dragRef.current
+      if (!prev) return
+
+      const dx = event.clientX - prev.originX
+      const dy = event.clientY - prev.originY
+      const moved =
+        prev.moved || dx * dx + dy * dy > MOVE_THRESHOLD_PX_SQ
+
+      const root = boardRefInternal.current?.current ?? null
+      const hoverTarget = moved
+        ? resolveDropAtPoint(event.clientX, event.clientY, root)
+        : null
+
+      setDragChip({
+        ...prev,
+        moved,
+        x: event.clientX,
+        y: event.clientY,
+        hoverTarget,
       })
     }
 
@@ -66,7 +73,7 @@ export function useChipDrag({ disabled, placeBet, boardRef = null }) {
           event.clientY,
           root,
         )
-        if (target) placeBetRef.current(chip.value, target)
+        if (target) placeBetRef.current(chip.value, target, chip.metal)
       }
       setDragChip(null)
     }
@@ -81,7 +88,7 @@ export function useChipDrag({ disabled, placeBet, boardRef = null }) {
     }
   }, [isDragging])
 
-  function startDrag(event, value) {
+  function startDrag(event, value, metal) {
     event.preventDefault()
     try {
       event.currentTarget.setPointerCapture(event.pointerId)
@@ -90,11 +97,13 @@ export function useChipDrag({ disabled, placeBet, boardRef = null }) {
     }
     setDragChip({
       value,
+      metal,
       moved: false,
       originX: event.clientX,
       originY: event.clientY,
       x: event.clientX,
       y: event.clientY,
+      hoverTarget: null,
     })
   }
 

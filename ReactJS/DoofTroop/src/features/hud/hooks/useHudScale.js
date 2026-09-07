@@ -4,7 +4,8 @@ import { useSyncExternalStore } from 'react'
  * Shared HUD viewport metrics for betting, race, and settlement overlays.
  *
  * Landscape desktop (width ≥ breakpoint): fill ~stream width; soft height clamp.
- * Any portrait viewport uses the portrait layout/artboard fit, including tablets.
+ * Portrait sets orientation for LandscapeHudOnly rotate gate; scale uses the
+ * landscape artboard (HUD itself never renders in portrait).
  * Narrow landscape width uses the compact landscape layout.
  */
 export const HUD_DESIGN = Object.freeze({
@@ -16,8 +17,6 @@ export const HUD_DESIGN = Object.freeze({
   desktopMaxHeightFraction: 0.72,
   landscapeWidth: 900,
   landscapeHeight: 420,
-  portraitWidth: 390,
-  portraitHeight: 720,
   /** Below this width → phone layouts. Not tied to aspect ratio alone. */
   compactBreakpoint: 900,
   minScale: 0.35,
@@ -40,6 +39,13 @@ function roundScale(value) {
   return Math.round(value * 1000) / 1000
 }
 
+function fitLandscapeScale(width, height) {
+  return Math.min(
+    width / HUD_DESIGN.landscapeWidth,
+    height / HUD_DESIGN.landscapeHeight,
+  )
+}
+
 function computeHudViewport() {
   const vv = window.visualViewport
   const width = Math.max(0, (vv?.width ?? window.innerWidth) - HUD_DESIGN.pad * 2)
@@ -57,8 +63,18 @@ function computeHudViewport() {
   }
 
   const aspectPortrait = height > width
-  const compact = aspectPortrait || width < HUD_DESIGN.compactBreakpoint
   const orientation = aspectPortrait ? 'portrait' : 'landscape'
+
+  if (aspectPortrait) {
+    const fitted = fitLandscapeScale(width, height)
+    return {
+      scale: roundScale(Math.max(fitted, HUD_DESIGN.minScale)),
+      compact: true,
+      orientation: 'portrait',
+    }
+  }
+
+  const compact = width < HUD_DESIGN.compactBreakpoint
 
   let fitted
   if (!compact) {
@@ -68,16 +84,8 @@ function computeHudViewport() {
       (height * HUD_DESIGN.desktopMaxHeightFraction) /
       HUD_DESIGN.desktopContentHeight
     fitted = Math.min(byWidth, byMaxHeight)
-  } else if (orientation === 'portrait') {
-    fitted = Math.min(
-      width / HUD_DESIGN.portraitWidth,
-      height / HUD_DESIGN.portraitHeight,
-    )
   } else {
-    fitted = Math.min(
-      width / HUD_DESIGN.landscapeWidth,
-      height / HUD_DESIGN.landscapeHeight,
-    )
+    fitted = fitLandscapeScale(width, height)
   }
 
   const scale = roundScale(Math.max(fitted, HUD_DESIGN.minScale))
@@ -147,8 +155,4 @@ function getServerSnapshot() {
 
 export function useHudViewport() {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
-}
-
-export function useHudScale() {
-  return useHudViewport().scale
 }

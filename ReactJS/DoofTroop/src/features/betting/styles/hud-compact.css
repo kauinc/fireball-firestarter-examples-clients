@@ -1,5 +1,5 @@
 /**
- * Shared compact / portrait HUD resets for betting · race · settlement.
+ * Shared compact HUD resets for betting · race · settlement.
  */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] {
   --history-col-shift: 0px;
@@ -68,19 +68,15 @@
   min-width: 0;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orient='portrait']
-  .betting-overlay__bottom {
-  align-items: flex-end;
-}
-
 /* Compact Crazy Combo — one row; crazy longer; stay inside HUD width */
 :is(.betting-overlay, .race-overlay)[data-compact='true'] .crazy-combos-row {
   width: 100%;
   max-width: 100%;
+  margin-left: 0;
   justify-content: center;
   min-width: 0;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 }
 
 :is(.betting-overlay, .race-overlay)[data-compact='true'] .crazy-combos {
@@ -111,15 +107,21 @@
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .combo-bar,
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .crazy-combo-bar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
   grid-template-rows: auto auto;
   align-items: end;
-  overflow: hidden;
+  overflow: visible;
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .combo-bar {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .crazy-combo-bar {
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .combo-bar__caption,
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .crazy-combo-bar__caption {
-  grid-column: 1;
   grid-row: 1;
   justify-self: center;
   align-self: end;
@@ -131,15 +133,19 @@
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .combo-bar__caption {
+  grid-column: 2;
   font-size: calc(11px * var(--hud-font-scale));
   letter-spacing: 0.06em;
-  margin: 0 0 calc(-4px * var(--hud-scale));
+  margin: 0 0 calc(4px * var(--hud-scale));
+  font-style: normal;
+  transform: none;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .crazy-combo-bar__caption {
+  grid-column: 1;
   font-size: calc(11px * var(--hud-font-scale));
-  letter-spacing: 0.04em;
-  margin: 0 0 calc(-4px * var(--hud-scale) - var(--crazy-combo-caption-overlap, calc(6px * var(--hud-scale))));
+  letter-spacing: 0.06em;
+  margin: 0 0 calc(4px * var(--hud-scale) - var(--crazy-combo-caption-overlap, calc(2px * var(--hud-scale))));
   transform: rotate(var(--crazy-combo-caption-tilt, -4deg));
   transform-origin: center bottom;
 }
@@ -149,7 +155,18 @@
   display: contents;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .combo-bar__shell,
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .combo-bar__shell {
+  grid-column: 2;
+  grid-row: 2;
+  flex: none;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  height: var(--accessory-bar-h, calc(36px * var(--hud-scale)));
+  padding: 0 calc(6px * var(--hud-scale));
+  position: relative;
+}
+
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .crazy-combo-bar__shell {
   grid-column: 1;
   grid-row: 2;
@@ -157,15 +174,33 @@
   width: 100%;
   max-width: none;
   min-width: 0;
-  height: var(--accessory-bar-h, calc(55px * var(--hud-scale)));
+  height: var(--accessory-bar-h, calc(36px * var(--hud-scale)));
   padding: 0 calc(6px * var(--hud-scale));
+  position: relative;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .combo-bar__pays,
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .combo-bar__pays {
+  position: static;
+  transform: none;
+  right: auto;
+  top: auto;
+  left: auto;
+  grid-column: 1;
+  grid-row: 2;
+  align-self: center;
+  width: var(--combo-bar-pays-w, calc(40px * var(--hud-scale)));
+}
+
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .crazy-combo-bar__pays {
+  position: static;
+  transform: none;
+  right: auto;
+  top: auto;
+  left: auto;
   grid-column: 2;
   grid-row: 2;
   align-self: center;
+  width: var(--combo-bar-pays-w, calc(40px * var(--hud-scale)));
 }
 
 :is(.betting-overlay, .race-overlay)[data-compact='true'] .crazy-combo-bar__shell {
@@ -222,8 +257,8 @@
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .combo-bar__chip,
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .crazy-combo-bar__chip {
-  --chip-size: calc(26px * var(--hud-scale));
-  --chip-stack-x: calc(4px * var(--hud-scale));
+  --chip-size: calc(28px * var(--hud-scale));
+  --chip-stack-spread: calc(10px * var(--hud-scale));
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] .crazy-combo-bar__slot-label {

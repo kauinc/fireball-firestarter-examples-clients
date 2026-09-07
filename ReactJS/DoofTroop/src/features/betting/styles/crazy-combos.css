@@ -1,18 +1,38 @@
-/* —— Crazy Combo payout bars (≈ Hats/Glasses size, slightly larger) —— */
+/* —— Crazy Combo payout bars —— */
 @import './combo-bar.css';
 @import './crazy-combo-bar.css';
 
 .mid-controls-stack {
-  --accessory-bar-h: calc(55px * var(--hud-scale));
-  --accessory-bar-w: calc(199px * var(--hud-scale));
-  --combo-bar-pays-w: calc(52px * var(--hud-scale));
-  --combo-bar-extra-w: calc(28px * var(--hud-scale));
-  --combo-bar-shell-w: calc(var(--accessory-bar-w) + var(--combo-bar-extra-w));
-  --combo-bar-w: calc(var(--combo-bar-shell-w) + var(--combo-bar-pays-w));
-  --crazy-combo-bar-shell-w: calc(340px * var(--hud-scale));
-  --crazy-combo-caption-tilt: -5deg;
-  --crazy-combo-caption-overlap: calc(8px * var(--hud-scale));
-  --combo-row-h: calc(65px * var(--hud-scale));
+  /* Shared with doof-grid columns so Hats/Combo align to the field. */
+  --mid-pattern-col: calc(98px * var(--hud-scale));
+  --mid-field-col: calc(590px * var(--hud-scale));
+  --mid-col-gap: calc(4px * var(--hud-scale));
+  /* Match `.doof-grid__field` / playable grid (bet-field.png insets). */
+  --field-pad: calc(8px * var(--hud-scale));
+  --field-in-l: calc(27 / 1410);
+  --field-in-r: calc(28 / 1410);
+  --field-inner-w: calc(var(--mid-field-col) - 2 * var(--field-pad));
+  --table-inset-l: calc(
+    var(--field-pad) + var(--field-in-l) * var(--field-inner-w)
+  );
+  --table-inset-r: calc(
+    var(--field-pad) + var(--field-in-r) * var(--field-inner-w)
+  );
+  --table-col: calc(
+    var(--mid-field-col) - var(--table-inset-l) - var(--table-inset-r)
+  );
+  --accessory-gap: calc(10px * var(--hud-scale));
+  /* Hats / Glasses thinner than combo shells. */
+  --hats-glasses-h: calc(34px * var(--hud-scale));
+  --accessory-bar-h: calc(36px * var(--hud-scale));
+  --combo-bar-pays-w: calc(54px * var(--hud-scale));
+  --combo-pays-gap: calc(10px * var(--hud-scale));
+  --combo-bar-extra-w: 0px;
+  --combo-row-h: calc(56px * var(--hud-scale));
+  --crazy-combo-caption-tilt: -3deg;
+  --crazy-combo-caption-overlap: calc(6px * var(--hud-scale));
+  --combo-green: #3dff6a;
+  --crazy-red: #f03d7c;
 
   display: flex;
   flex-direction: column;
@@ -21,12 +41,11 @@
   width: calc(764px * var(--hud-scale));
   max-width: calc(764px * var(--hud-scale));
   min-width: 0;
-  /* Same --board-shift-x as `.doof-grid` (set on overlay). */
   transform: translateX(var(--board-shift-x, 0px));
   padding-left: 0;
   margin-left: 0;
   box-sizing: border-box;
-  /* Fixed layout width so opening bars never recenters the stack on X */
+  overflow: visible;
   flex-shrink: 0;
 }
 
@@ -47,12 +66,16 @@
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
-  width: 100%;
-  max-width: 100%;
+  /* Under the white table grid (same inset as Hats / Glasses). */
+  margin-left: calc(
+    var(--mid-pattern-col) + var(--mid-col-gap) + var(--table-inset-l)
+  );
+  width: var(--table-col);
+  max-width: var(--table-col);
   min-width: 0;
-  margin-top: calc(-8px * var(--hud-scale));
+  margin-top: calc(8px * var(--hud-scale));
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /*
@@ -61,7 +84,7 @@
  */
 .mid-controls-stack.is-crazy .mid-controls__history-slot {
   transform: translateY(
-    calc((-8px * var(--hud-scale)) + var(--combo-row-h))
+    calc((8px * var(--hud-scale)) + var(--combo-row-h))
   );
 }
 
@@ -69,7 +92,7 @@
   transform: translateY(calc(-18px * var(--hud-scale)));
 }
 
-/* Compact / portrait: keep Hats→combo DOM order (no desktop Y nudge). */
+/* Compact: keep Hats→combo DOM order (no desktop Y nudge). */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
   .mid-controls-stack
   .mid-controls,
@@ -82,13 +105,31 @@
 .crazy-combos {
   display: flex;
   align-items: flex-end;
-  justify-content: flex-start;
-  gap: calc(14px * var(--hud-scale));
+  justify-content: space-between;
+  gap: calc(16px * var(--hud-scale));
   flex: 1 1 auto;
   min-width: 0;
   width: 100%;
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
+}
+
+/*
+ * COMBO left = Hats left; CRAZY right = field right.
+ * Shells are shorter than Hats/Glasses so a gap stays in the middle.
+ */
+.crazy-combos > .combo-bar {
+  flex: 0 1 auto;
+  width: 40%;
+  max-width: 42%;
+  min-width: 0;
+}
+
+.crazy-combos > .crazy-combo-bar {
+  flex: 0 1 auto;
+  width: 48%;
+  max-width: 50%;
+  min-width: 0;
 }
 
 .crazy-combos-row:has(.combo-bar__chip),

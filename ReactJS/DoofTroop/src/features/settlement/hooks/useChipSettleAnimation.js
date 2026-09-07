@@ -240,8 +240,8 @@ function buildFlights({ bets, outcomes, boardEl, winBarEl }) {
     if (rect.width <= 0 || rect.height <= 0) continue
 
     const topChip = [...(bet.chips ?? [])].reverse()[0]
-    const value = topChip?.value ?? 1
-    const src = uiAssets.chips[value] ?? null
+    const metal = topChip?.metal ?? 'gold'
+    const src = uiAssets.chipsSimple?.[metal] ?? uiAssets.chips[metal] ?? null
     const from = {
       x: rect.left + rect.width / 2,
       y: rect.top + rect.height / 2,

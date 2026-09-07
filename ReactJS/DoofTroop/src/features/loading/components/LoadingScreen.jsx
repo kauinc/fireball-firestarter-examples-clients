@@ -3,6 +3,7 @@ import {
   LOADING_STATUS_LABEL,
   LoadingStatus,
 } from '../constants/loadingStatus.js'
+import loadingBackground from '../../../assets/ui/LoadingScreenBackground.png'
 import '../styles/loading-screen.css'
 
 /**
@@ -23,6 +24,7 @@ export function LoadingScreen({
       aria-live="polite"
       aria-busy="true"
       data-status={status}
+      style={{ '--loading-bg': `url(${loadingBackground})` }}
     >
       <BrandLogo />
       <p className="loading-screen__status">{text}</p>

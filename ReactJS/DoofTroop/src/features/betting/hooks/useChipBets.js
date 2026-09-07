@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { publishRoundBets } from '../state/roundBetsStore.js'
 import { betTargetKey } from '../utils/betTargets.js'
-import { consolidateChips, getBetTotal, roundMoney, stackTotal } from '../utils/chipMath.js'
+import { mergeMetalChips, getBetTotal, roundMoney, stackTotal } from '../utils/chipMath.js'
+
+const MAX_UNDO = 40
 
 let betSeq = 0
 
@@ -10,10 +12,26 @@ function nextBetId() {
   return `bet-${betSeq}`
 }
 
+function cloneBets(bets) {
+  return bets.map((bet) => ({
+    ...bet,
+    chips: bet.chips.map((chip) => ({ ...chip })),
+    positions: [...bet.positions],
+    target: { ...bet.target },
+  }))
+}
+
+function cloneTarget(target) {
+  return { ...target }
+}
+
 /**
- * Local chip placements. Same denomination stacks, then consolidates
- * into higher chips when exact combinations are possible.
+ * Local chip placements. Max 3 faces per stack (silver / gold / bronze);
+ * placing the same metal again adds to that face instead of stacking another.
  * Remount the consumer with `key={roundId}` to clear bets for a new round.
+ *
+ * UNDO — pops the last board mutation (place / clear / repeat / x2).
+ * REPEAT LAST — re-applies the most recent chip placement (same target/metal/amount).
  */
 export function useChipBets(
   selectedPositions,
@@ -23,6 +41,12 @@ export function useChipBets(
   crazyComboPicks = null,
 ) {
   const [bets, setBets] = useState([])
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRepeat, setCanRepeat] = useState(false)
+  const undoStackRef = useRef([])
+  /** @type {React.MutableRefObject<{ amount: number, target: Record<string, unknown>, metal: string } | null>} */
+  const lastPlacementRef = useRef(null)
+  const betsRef = useRef(bets)
 
   const totalBet = useMemo(
     () => roundMoney(bets.reduce((sum, bet) => sum + stackTotal(bet.chips), 0)),
@@ -33,72 +57,120 @@ export function useChipBets(
     publishRoundBets(roundId, bets, { crazyCombo, comboPick, crazyComboPicks })
   }, [roundId, bets, crazyCombo, comboPick, crazyComboPicks])
 
-  const placeBet = useCallback(
-    (amount, target) => {
-      if (!amount || !target) return
+  const applyBets = useCallback((next) => {
+    betsRef.current = next
+    setBets(next)
+  }, [])
+
+  const pushUndo = useCallback((snapshot) => {
+    const stack = undoStackRef.current
+    stack.push(cloneBets(snapshot))
+    if (stack.length > MAX_UNDO) stack.shift()
+    setCanUndo(true)
+  }, [])
+
+  const buildPlacedBets = useCallback(
+    (prev, amount, target, metal) => {
       const key = betTargetKey(target)
       const positions = [...selectedPositions]
-
-      setBets((prev) => {
-        const existing = prev.find((bet) => bet.key === key)
-        if (existing) {
-          return prev.map((bet) => {
-            if (bet.key !== key) return bet
-            const same = bet.chips.find((chip) => chip.value === amount)
-            const nextChips = same
-              ? bet.chips.map((chip) =>
-                  chip.value === amount
-                    ? { ...chip, count: chip.count + 1 }
-                    : chip,
-                )
-              : [...bet.chips, { value: amount, count: 1 }]
-            return {
-              ...bet,
-              chips: consolidateChips(nextChips),
-              positions,
-            }
-          })
-        }
-        return [
-          ...prev,
-          {
-            id: nextBetId(),
-            key,
-            chips: consolidateChips([{ value: amount, count: 1 }]),
-            target,
+      const addition = [{ metal, value: amount }]
+      const existing = prev.find((bet) => bet.key === key)
+      if (existing) {
+        return prev.map((bet) => {
+          if (bet.key !== key) return bet
+          return {
+            ...bet,
+            chips: mergeMetalChips([...bet.chips, ...addition]),
             positions,
-          },
-        ]
-      })
+          }
+        })
+      }
+      return [
+        ...prev,
+        {
+          id: nextBetId(),
+          key,
+          chips: mergeMetalChips(addition),
+          target: cloneTarget(target),
+          positions,
+        },
+      ]
     },
     [selectedPositions],
   )
 
+  const placeBet = useCallback(
+    (amount, target, metal = 'gold') => {
+      if (!amount || !target || !metal) return false
+      const prev = betsRef.current
+      pushUndo(prev)
+      lastPlacementRef.current = {
+        amount,
+        target: cloneTarget(target),
+        metal,
+      }
+      setCanRepeat(true)
+      applyBets(buildPlacedBets(prev, amount, target, metal))
+      return true
+    },
+    [applyBets, buildPlacedBets, pushUndo],
+  )
+
   const clearBets = useCallback(() => {
-    setBets([])
-  }, [])
+    const prev = betsRef.current
+    if (!prev.length) return false
+    pushUndo(prev)
+    applyBets([])
+    return true
+  }, [applyBets, pushUndo])
+
+  const undoBets = useCallback(() => {
+    const previous = undoStackRef.current.pop()
+    if (!previous) {
+      setCanUndo(false)
+      return false
+    }
+    setCanUndo(undoStackRef.current.length > 0)
+    applyBets(previous)
+    return true
+  }, [applyBets])
+
+  const repeatLastBets = useCallback(() => {
+    const last = lastPlacementRef.current
+    if (!last) {
+      setCanRepeat(false)
+      return false
+    }
+    return placeBet(last.amount, last.target, last.metal)
+  }, [placeBet])
 
   const doubleBets = useCallback(() => {
-    setBets((prev) =>
+    const prev = betsRef.current
+    if (!prev.length) return false
+    pushUndo(prev)
+    applyBets(
       prev.map((bet) => ({
         ...bet,
-        chips: consolidateChips(
+        chips: mergeMetalChips(
           bet.chips.map((chip) => ({
             ...chip,
-            count: chip.count * 2,
+            value: roundMoney(chip.value * 2),
           })),
         ),
       })),
     )
-  }, [])
+    return true
+  }, [applyBets, pushUndo])
 
   return {
     bets,
     totalBet,
+    canUndo,
+    canRepeat,
     placeBet,
     clearBets,
+    undoBets,
+    repeatLastBets,
     doubleBets,
   }
 }
-
-export { getBetTotal, consolidateChips }

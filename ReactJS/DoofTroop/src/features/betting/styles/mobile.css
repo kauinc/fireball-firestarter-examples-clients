@@ -1,5 +1,5 @@
 ﻿/**
- * Mobile betting HUD — portrait / landscape layouts matching product refs.
+ * Mobile betting HUD — compact landscape layout matching product refs.
  * Shared compact shell lives in hud-compact.css.
  */
 
@@ -11,288 +11,67 @@
   z-index: var(--z-overlay-chrome, 22);
   width: calc(48px * var(--hud-scale));
   height: calc(48px * var(--hud-scale));
+}
+
+.betting-overlay__menu-top-btn {
+  width: 100%;
+  height: 100%;
   border: 0;
   padding: 0;
   background-color: transparent;
   background-size: 100% 100%;
   background-repeat: no-repeat;
-  cursor: default;
-  place-items: center;
-  pointer-events: none;
-}
-
-.betting-overlay__menu-top .betting-footer__menu-icon {
-  width: calc(22px * var(--hud-scale));
-  height: calc(16px * var(--hud-scale));
-}
-
-/* ========== PORTRAIT ========== */
-.betting-overlay[data-orient='portrait'] {
-  --hud-w: calc(100vw - 4px);
-}
-
-.betting-overlay[data-orient='portrait'] .betting-overlay__bottom {
-  padding-left: max(2px, env(safe-area-inset-left, 0px));
-  padding-right: max(2px, env(safe-area-inset-right, 0px));
-}
-
-.betting-overlay[data-orient='portrait'] .betting-banner {
-  top: max(
-    calc(56px * var(--hud-scale)),
-    calc(48px + env(safe-area-inset-top, 0px))
-  );
-}
-
-.betting-overlay[data-orient='portrait'] .betting-overlay__hud {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: calc(8px * var(--hud-scale));
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-}
-
-/* Stack: table → Hats/Glasses (+ combo) → footer */
-.betting-overlay[data-orient='portrait'] .doof-grid {
-  grid-template-columns:
-    calc(66px * var(--hud-scale))
-    minmax(0, 1fr)
-    calc(44px * var(--hud-scale));
-  grid-template-rows: calc(36px * var(--hud-scale)) auto;
-  row-gap: 0;
-  column-gap: calc(2px * var(--hud-scale));
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  order: 1;
-}
-
-.betting-overlay[data-orient='portrait'] .mid-controls__history-slot {
-  display: none !important;
-}
-
-.betting-overlay__history-top {
-  display: none;
-}
-
-.betting-overlay[data-orient='portrait'][data-advanced='true']
-  .betting-overlay__history-top {
-  --history-sheet-w: calc(152px * var(--hud-scale));
-  --history-sheet-h: calc(192px * var(--hud-scale));
-  --history-cols-h: calc(11px * var(--hud-scale));
-
-  display: block;
-  position: absolute;
-  top: max(
-    calc(118px * var(--hud-scale)),
-    calc(108px + env(safe-area-inset-top, 0px))
-  );
-  left: 50%;
-  transform: translateX(-50%);
-  /* Below menu / fullscreen chrome */
-  z-index: var(--z-overlay-sheet, 12);
-  width: var(--history-sheet-w);
-  pointer-events: none;
-}
-
-.betting-overlay__history-top .history-sheet {
-  position: relative;
-  left: auto;
-  bottom: auto;
-  top: auto;
-  transform: none;
-  width: var(--history-sheet-w);
-}
-
-.betting-overlay__history-top .history-panel {
-  width: var(--history-sheet-w);
-  height: var(--history-sheet-h);
-}
-
-.betting-overlay[data-orient='portrait'][data-advanced='true'] .betting-banner {
-  z-index: var(--z-banner, 28);
-}
-
-.betting-overlay[data-orient='portrait'] .mid-controls-stack {
-  order: 2;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  gap: calc(6px * var(--hud-scale));
-  transform: none;
-}
-
-.betting-overlay[data-orient='portrait'] .mid-controls {
-  order: 0;
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-end;
-  gap: calc(6px * var(--hud-scale));
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  transform: none;
-  padding-left: 0;
-  flex-wrap: nowrap;
-}
-
-.betting-overlay[data-orient='portrait'] .mid-controls__accessories {
-  grid-column: auto;
-  width: auto;
-  flex: 1 1 auto;
-  max-width: min(calc(220px * var(--hud-scale)), 58%);
-  min-width: 0;
-  gap: calc(6px * var(--hud-scale));
-}
-
-.betting-overlay[data-orient='portrait'] .mid-controls__accessory {
-  min-width: 0;
-  flex: 1 1 0;
-  height: calc(44px * var(--hud-scale));
-  font-size: calc(11px * var(--hud-font-scale));
-  padding: 0 calc(8px * var(--hud-scale));
-}
-
-.betting-overlay[data-orient='portrait'] .mid-controls__accessory-icon {
-  width: calc(28px * var(--hud-scale));
-  height: calc(28px * var(--hud-scale));
-}
-
-.betting-overlay[data-orient='portrait'] .crazy-combos-row {
-  order: 0;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  overflow: visible;
-}
-
-.betting-overlay[data-orient='portrait'] .combo-bar__track,
-.betting-overlay[data-orient='portrait'] .crazy-combo-bar__track {
-  overflow: visible;
-}
-
-.betting-overlay[data-orient='portrait'] .crazy-combo-bar__track {
-  width: 100%;
-}
-
-.betting-overlay[data-orient='portrait'] .crazy-combo-bar__shell {
-  flex: 1 1 0;
-  width: auto;
-  min-width: 0;
-  max-width: none;
-}
-
-.betting-overlay[data-orient='portrait'][data-advanced='true']
-  .betting-overlay__hud {
-  gap: calc(6px * var(--hud-scale));
-}
-
-.betting-overlay[data-orient='portrait'] .betting-footer {
-  order: 3;
+  background-position: center;
+  cursor: pointer;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-areas:
-    'tray tray'
-    'bal total';
-  align-items: end;
-  column-gap: calc(8px * var(--hud-scale));
-  row-gap: calc(8px * var(--hud-scale));
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding-top: calc(2px * var(--hud-scale));
-  overflow: visible;
+  place-items: center;
 }
 
-.betting-overlay[data-orient='portrait'] .betting-footer__tray {
-  grid-area: tray;
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: center;
-  gap: calc(4px * var(--hud-scale));
-  width: 100%;
-  overflow: visible;
-  padding-bottom: calc(4px * var(--hud-scale));
+.betting-overlay__menu-top .hud-menu-panel {
+  top: calc(100% + 8px * var(--hud-scale));
+  bottom: auto;
+  right: 0;
 }
 
-.betting-overlay[data-orient='portrait'] .betting-footer__balance-wrap {
-  grid-area: bal;
-  justify-self: start;
-  margin-left: 0;
-  width: auto;
-}
-
-.betting-overlay[data-orient='portrait'] .betting-footer__total-wrap {
-  grid-area: total;
-  justify-self: end;
-}
-
-.betting-overlay[data-orient='portrait'] .betting-footer__meter {
-  width: calc(128px * var(--hud-scale));
-}
-
-.betting-overlay[data-orient='portrait'] .betting-footer__round {
-  width: calc(48px * var(--hud-scale));
-  height: calc(48px * var(--hud-scale));
-  transform: none;
-}
-
-.betting-overlay[data-orient='portrait'] .betting-footer__chips {
-  gap: calc(4px * var(--hud-scale));
-  overflow: visible;
-}
-
-.betting-overlay[data-orient='portrait'] .betting-footer__chip {
-  width: calc(46px * var(--hud-scale));
-  height: calc(46px * var(--hud-scale));
-  font-size: calc(11px * var(--hud-font-scale));
-  overflow: visible;
-}
-
-.betting-overlay[data-orient='portrait'] .betting-footer__chip.is-selected {
-  transform: translateY(calc(-2px * var(--hud-scale))) scale(1.1);
-}
-
-/* ========== LANDSCAPE compact ========== */
-.betting-overlay[data-orient='landscape'][data-compact='true'] {
+/* ========== Compact ========== */
+.betting-overlay[data-compact='true'] {
   --hud-w: calc(860px * var(--hud-scale));
 }
 
-.betting-overlay[data-orient='landscape'][data-compact='true'][data-advanced='false']
+.betting-overlay[data-compact='true'][data-advanced='false']
   .mid-controls__history-slot {
   display: none;
 }
 
 /*
  * HISTORY left column — shift only doof table + mid controls (not footer).
+ * Extra inset keeps HISTORY / BALANCE off the letterbox black.
  */
-.betting-overlay[data-orient='landscape'][data-compact='true'][data-advanced='true']
+.betting-overlay[data-compact='true'][data-advanced='true']
   .doof-grid {
-  margin-left: calc(var(--history-w) + 6px * var(--hud-scale));
-  width: calc(100% - (var(--history-w) + 6px * var(--hud-scale)));
+  margin-left: calc(var(--history-w) + 18px * var(--hud-scale));
+  width: calc(100% - (var(--history-w) + 18px * var(--hud-scale)));
   max-width: none;
   box-sizing: border-box;
 }
 
-.betting-overlay[data-orient='landscape'][data-compact='true'][data-advanced='true']
+.betting-overlay[data-compact='true'][data-advanced='true']
   .mid-controls-stack {
-  margin-left: calc(var(--history-w) + 6px * var(--hud-scale));
-  width: calc(100% - (var(--history-w) + 6px * var(--hud-scale)));
+  margin-left: calc(var(--history-w) + 18px * var(--hud-scale));
+  width: calc(100% - (var(--history-w) + 18px * var(--hud-scale)));
   max-width: none;
   padding-left: 0;
   position: relative;
   box-sizing: border-box;
 }
 
-.betting-overlay[data-orient='landscape'][data-compact='true'][data-advanced='true']
+.betting-overlay[data-compact='true'][data-advanced='true']
   .mid-controls__history-slot {
   --history-sheet-w: calc(128px * var(--hud-scale));
   --history-sheet-h: calc(168px * var(--hud-scale));
   --history-cols-h: calc(8px * var(--hud-scale));
   position: absolute;
-  left: calc(-1 * (var(--history-w) + 6px * var(--hud-scale)));
+  left: calc(-1 * (var(--history-w) + 12px * var(--hud-scale)));
   right: auto;
   bottom: 0;
   flex: none;
@@ -301,53 +80,53 @@
   z-index: 8;
 }
 
-.betting-overlay[data-orient='landscape'][data-compact='true'][data-advanced='false']
+.betting-overlay[data-compact='true'][data-advanced='false']
   .mid-controls {
   display: none;
 }
 
 /* Combo row must stay inside HUD — override desktop fixed px widths */
-.betting-overlay[data-orient='landscape'][data-compact='true'] .crazy-combos-row,
-.betting-overlay[data-orient='landscape'][data-compact='true'] .crazy-combos {
+.betting-overlay[data-compact='true'] .crazy-combos-row,
+.betting-overlay[data-compact='true'] .crazy-combos {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
 }
 
-.betting-overlay[data-orient='landscape'][data-compact='true'] .combo-bar {
+.betting-overlay[data-compact='true'] .combo-bar {
   flex: 0 1 42%;
   width: auto !important;
   max-width: 42%;
   min-width: 0;
 }
 
-.betting-overlay[data-orient='landscape'][data-compact='true'] .crazy-combo-bar {
+.betting-overlay[data-compact='true'] .crazy-combo-bar {
   flex: 1 1 auto;
   width: auto !important;
   max-width: 58%;
   min-width: 0;
 }
 
-.betting-overlay[data-orient='landscape'][data-compact='true']
+.betting-overlay[data-compact='true']
   .combo-bar__caption,
-.betting-overlay[data-orient='landscape'][data-compact='true']
+.betting-overlay[data-compact='true']
   .crazy-combo-bar__caption {
   width: 100%;
 }
 
-.betting-overlay[data-orient='landscape'][data-compact='true']
+.betting-overlay[data-compact='true']
   .combo-bar__track,
-.betting-overlay[data-orient='landscape'][data-compact='true']
+.betting-overlay[data-compact='true']
   .crazy-combo-bar__track {
   width: 100%;
   gap: 0;
 }
 
-.betting-overlay[data-orient='landscape'][data-compact='true']
+.betting-overlay[data-compact='true']
   .combo-bar__shell,
-.betting-overlay[data-orient='landscape'][data-compact='true']
+.betting-overlay[data-compact='true']
   .crazy-combo-bar__shell {
   flex: 1 1 0;
   width: auto;
@@ -356,23 +135,22 @@
 }
 
 
-.betting-overlay[data-orient='landscape'][data-compact='true'] .betting-footer {
+.betting-overlay[data-compact='true'] .betting-footer {
   max-width: 100%;
   width: 100%;
   gap: calc(6px * var(--hud-scale));
 }
 
-.betting-overlay[data-orient='landscape'][data-compact='true'] .betting-footer__balance-wrap {
-  margin-left: 0;
+.betting-overlay[data-compact='true'] .betting-footer__balance-wrap {
+  margin-left: calc(12px * var(--hud-scale));
   width: auto;
 }
 
-.betting-overlay[data-orient='landscape'][data-compact='true'] .betting-footer__meter {
+.betting-overlay[data-compact='true'] .betting-footer__meter {
   width: calc(120px * var(--hud-scale));
 }
 
-.betting-overlay[data-orient='landscape'][data-compact='true'] .betting-footer__chip {
-  width: calc(40px * var(--hud-scale));
-  height: calc(40px * var(--hud-scale));
+.betting-overlay[data-compact='true'] .betting-footer__chip {
+  width: calc(48px * var(--hud-scale));
+  height: calc(48px * var(--hud-scale));
 }
-

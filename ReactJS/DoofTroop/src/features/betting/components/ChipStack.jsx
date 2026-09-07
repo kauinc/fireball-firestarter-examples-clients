@@ -6,49 +6,59 @@ function formatChipTotal(value) {
   return String(value)
 }
 
-/** Expand merged denominations into individual stacked faces (cap depth). */
-function expandChipLayers(chips, maxLayers = 8) {
-  const layers = []
-  for (const chip of chips) {
-    for (let i = 0; i < chip.count; i += 1) {
-      layers.push(chip.value)
-      if (layers.length >= maxLayers) return layers
-    }
-  }
-  return layers
+function chipSrc(metal) {
+  return uiAssets.chipsSimple?.[metal] ?? uiAssets.chips[metal]
 }
 
 /**
- * Chips stack with rightward offset.
- * Same denomination merges in state, but each unit still gets an offset face.
- * Total amount is always shown on the top chip face.
+ * Triangle fan offsets (unit space). Hover scales these up via --chip-fan.
+ * bronze back-left · silver down-right · gold up-right  (рис 2)
+ */
+const CHIP_TRIANGLE = Object.freeze([
+  Object.freeze({ x: 0, y: 0 }),
+  Object.freeze({ x: 1, y: 0.8 }),
+  Object.freeze({ x: 1.25, y: -0.25 }),
+])
+
+/**
+ * Metal stack: at most one silver / gold / bronze face.
+ * Collapsed: tight pile, total on the top chip.
+ * Hover: chips fan into a triangle; each shows its stake.
  */
 export function ChipStack({ chips, className = '' }) {
   if (!chips?.length) return null
 
   const total = getBetTotal({ chips })
-  const layers = expandChipLayers(chips)
+  const layers = chips.slice(0, 3)
 
   return (
     <span
       className={`chip-stack ${className}`.trim()}
       title={formatChipTotal(total)}
     >
-      {layers.map((value, index) => {
-        const src = uiAssets.chips[value]
+      {layers.map((chip, index) => {
+        const src = chipSrc(chip.metal)
         const isTop = index === layers.length - 1
+        const own = chip.value * (chip.count ?? 1)
+        const tri = CHIP_TRIANGLE[index] ?? CHIP_TRIANGLE[0]
         return (
           <span
-            key={`${value}-${index}`}
+            key={`${chip.metal}-${index}`}
             className={`chip-stack__chip${isTop ? ' is-top' : ''}`}
             style={{
               zIndex: index + 1,
-              transform: `translate(calc(${index} * var(--chip-stack-x, calc(7px * var(--hud-scale))) * var(--chip-stack-dir, 1)), calc(${index} * -1 * var(--chip-stack-y, calc(2px * var(--hud-scale)))))`,
+              '--chip-tx': tri.x,
+              '--chip-ty': tri.y,
             }}
           >
             {src ? <img src={src} alt="" draggable={false} /> : null}
+            <span className="chip-stack__amount chip-stack__amount--own">
+              {formatChipTotal(own)}
+            </span>
             {isTop ? (
-              <span className="chip-stack__total">{formatChipTotal(total)}</span>
+              <span className="chip-stack__amount chip-stack__amount--total">
+                {formatChipTotal(total)}
+              </span>
             ) : null}
           </span>
         )

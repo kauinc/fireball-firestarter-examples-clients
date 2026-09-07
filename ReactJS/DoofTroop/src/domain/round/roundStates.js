@@ -15,37 +15,3 @@ export const RoundState = Object.freeze({
   ROUND_CANCELLED_OPERATOR: 'ROUND_CANCELLED_OPERATOR',
   ROUND_CANCELLED_RUNTIME: 'ROUND_CANCELLED_RUNTIME',
 })
-
-/** Terminal / idle states where a new round can start. */
-export const IDLE_ROUND_STATES = Object.freeze([
-  RoundState.ROUND_NONE,
-  RoundState.RESULTS_SENT,
-  RoundState.ROUND_COMPLETED,
-  RoundState.ROUND_CANCELLED_OPERATOR,
-  RoundState.ROUND_CANCELLED_RUNTIME,
-])
-
-/**
- * Map round status onto player-facing overlay stages.
- * @typedef {'betting' | 'race_countdown' | 'race' | 'results' | 'idle'} OverlayStage
- */
-
-/** @type {Record<string, OverlayStage>} */
-export const ROUND_STATE_TO_OVERLAY = Object.freeze({
-  [RoundState.ROUND_NONE]: 'idle',
-  // Unreal loading map — clear overlay.
-  [RoundState.ROUND_CREATED]: 'idle',
-  [RoundState.BETTING_OPEN]: 'betting',
-  // Countdown in Unreal — clear client overlay.
-  [RoundState.BETTING_CLOSED]: 'idle',
-  [RoundState.TRACK_READY]: 'race_countdown',
-  [RoundState.RACE_RUNNING]: 'race',
-  [RoundState.RESULTS_SENT]: 'results',
-  [RoundState.ROUND_COMPLETED]: 'idle',
-  [RoundState.ROUND_CANCELLED_OPERATOR]: 'idle',
-  [RoundState.ROUND_CANCELLED_RUNTIME]: 'idle',
-})
-
-export function toOverlayStage(roundState) {
-  return ROUND_STATE_TO_OVERLAY[roundState] ?? 'idle'
-}

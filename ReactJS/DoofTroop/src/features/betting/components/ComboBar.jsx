@@ -6,7 +6,8 @@ import { uiAssets } from '../assets/uiAssets.js'
 const comboDropTarget = comboTarget()
 
 /**
- * Regular COMBO payout bar (C_Bar.png). Shell stays the same in pick mode.
+ * Regular COMBO payout bar.
+ * idle → ComboBar; picking → ComboBar_Active (glow padded, scaled to solid body).
  */
 export function ComboBar({
   active = false,
@@ -29,11 +30,8 @@ export function ComboBar({
     : null
   const dropEnabled =
     !readOnly && !active && !disabled && (!comboPickRequired || comboPick)
-  const shellAsset =
-    active || comboPick || (readOnly && comboBet)
-      ? uiAssets.comboBar
-      : uiAssets.comboInactive
-  const isInactiveShell = shellAsset === uiAssets.comboInactive
+  const shellAsset = active ? uiAssets.comboBarActive : uiAssets.comboBar
+  const isInactiveShell = false
 
   function placeOnCombo() {
     if (!dropEnabled) return
@@ -46,6 +44,10 @@ export function ComboBar({
     placeOnCombo()
   }
 
+  const shellStyle = active
+    ? { '--combo-shell-bg': `url(${shellAsset})` }
+    : { backgroundImage: `url(${shellAsset})` }
+
   return (
     <article
       className={`combo-bar${active ? ' is-active' : ''}${isInactiveShell ? ' is-inactive' : ''}`}
@@ -53,9 +55,13 @@ export function ComboBar({
     >
       <h3 className="combo-bar__caption">COMBO</h3>
       <div className="combo-bar__track">
+        <div className="combo-bar__pays">
+          <span className="combo-bar__pays-label">PAYS</span>
+          <span className="combo-bar__pays-value">{paysMultiplier}</span>
+        </div>
         <div
           className="combo-bar__shell"
-          style={{ backgroundImage: `url(${shellAsset})` }}
+          style={shellStyle}
           data-bet-drop={
             dropEnabled ? JSON.stringify(comboDropTarget) : undefined
           }
@@ -121,10 +127,6 @@ export function ComboBar({
               <ChipStack chips={comboBet.chips} />
             </span>
           ) : null}
-        </div>
-        <div className="combo-bar__pays">
-          <span className="combo-bar__pays-label">PAYS</span>
-          <span className="combo-bar__pays-value">{paysMultiplier}</span>
         </div>
       </div>
     </article>

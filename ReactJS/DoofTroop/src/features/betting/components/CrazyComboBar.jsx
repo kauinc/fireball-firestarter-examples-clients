@@ -9,7 +9,10 @@ import { ChipStack } from './ChipStack.jsx'
 const crazyComboDropTarget = crazyComboTarget()
 
 /**
- * CRAZY COMBO bar — grey by default, CrazyComboBar when complete, CC_Selection on active slot while picking.
+ * CRAZY COMBO bar assets:
+ * - idle: CrazyComboBar_ActiveBackground
+ * - picking: ActiveBackground + CrazyComboBar_ActiveSmall shifted per slot (×3)
+ * - complete: CrazyComboBar
  */
 export function CrazyComboBar({
   paysMultiplier = 'x5000',
@@ -35,13 +38,13 @@ export function CrazyComboBar({
     .filter(Boolean)
     .join(' ')
 
+  const shellBg =
+    complete && !pickActive
+      ? uiAssets.crazyComboBarComplete
+      : uiAssets.crazyComboBar
+
   const shellStyle = {
-    backgroundImage: `url(${
-      complete && !pickActive
-        ? uiAssets.crazyComboBarComplete
-        : uiAssets.crazyComboBar
-    })`,
-    '--cc-selection': `url(${uiAssets.ccSelection})`,
+    backgroundImage: `url(${shellBg})`,
   }
 
   function placeOnCrazyCombo() {
@@ -129,6 +132,14 @@ export function CrazyComboBar({
           }
           onPointerUp={readOnly ? undefined : handleShellPointerUp}
         >
+          {pickActive && activeSlot ? (
+            <span
+              className="crazy-combo-bar__selection"
+              data-slot={activeSlot}
+              style={{ backgroundImage: `url(${uiAssets.ccSelection})` }}
+              aria-hidden="true"
+            />
+          ) : null}
           {slots}
           {crazyComboBet ? (
             <span

@@ -11,8 +11,7 @@ import '../../betting/styles/crazy-combos.css'
 
 /**
  * Read-only results board — same geometry as betting / race CURRENT BETS.
- * Includes HISTORY control so podium winners can animate into the sheet
- * (desktop / landscape). Portrait uses a top HistoryPanel instead.
+ * Includes HISTORY control so podium winners can animate into the sheet.
  * Combo / Crazy Combo bars are always visible (chips only when placed).
  */
 export function SettlementBoard({

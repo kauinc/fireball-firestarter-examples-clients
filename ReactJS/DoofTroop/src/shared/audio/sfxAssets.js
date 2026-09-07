@@ -8,7 +8,6 @@ import Coins_04 from '../../assets/sfx/Coins_04.WAV'
 import Coins_05 from '../../assets/sfx/Coins_05.WAV'
 import Coins_08 from '../../assets/sfx/Coins_08.WAV'
 import Coins_10 from '../../assets/sfx/Coins_10.WAV'
-import Coins_13 from '../../assets/sfx/Coins_13.WAV'
 import Click_03 from '../../assets/sfx/Click_03.WAV'
 import Flick_Switch_01 from '../../assets/sfx/Flick_Switch_01.WAV'
 import Flick_Switch_02 from '../../assets/sfx/Flick_Switch_02.WAV'
@@ -39,7 +38,6 @@ export const sfxAssets = {
   Coins_05,
   Coins_08,
   Coins_10,
-  Coins_13,
   Click_03,
   Flick_Switch_01,
   Flick_Switch_02,

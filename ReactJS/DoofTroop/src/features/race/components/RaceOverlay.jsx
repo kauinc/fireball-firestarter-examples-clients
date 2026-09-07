@@ -25,11 +25,11 @@ import '../../betting/styles/crazy-combos.css'
 import '../styles/race.css'
 
 /**
- * In-race HUD — same mobile portrait / landscape chrome as BettingOverlay:
+ * In-race HUD — same compact landscape chrome as BettingOverlay:
  * Balance | CURRENT BETS | Potential Win. Open sheet = read-only board.
  */
 export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
-  const { scale: viewportScale, compact, orientation } = useHudViewportContext()
+  const { scale: viewportScale, compact } = useHudViewportContext()
   const { round, status } = useCurrentRound()
   const { isRaceUiVisible, raceKey, raceStartedAt } = useRaceOverlayState({
     status,
@@ -70,7 +70,7 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
   const visibleComboPick = roundMatches ? publishedComboPick : null
 
   const visibleCrazyComboPicks = roundMatches ? publishedCrazyComboPicks : null
-  const viewportMode = `${orientation}:${compact ? 1 : 0}`
+  const viewportMode = compact ? '1' : '0'
 
   const showCrazyCombos = true
   const showComboBar = true
@@ -192,15 +192,18 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
       ref={currentBetsToggleRef}
       type="button"
       className={`race-overlay__current-bets${betsOpen ? ' is-open' : ''}`}
-      style={{ backgroundImage: `url(${uiAssets.myBetsHistory})` }}
+      style={{
+        backgroundImage: `url(${
+          betsOpen
+            ? uiAssets.historyMyBetsActive
+            : uiAssets.historyMyBetsInactive
+        })`,
+      }}
       aria-label="Current bets"
       aria-expanded={betsOpen}
       aria-controls="race-current-bets-dialog"
       onClick={toggleCurrentBets}
     >
-      <span className="race-overlay__current-bets-handle" aria-hidden="true">
-        <img src={uiAssets.historyBetsToggleArrow} alt="" draggable={false} />
-      </span>
       CURRENT BETS
     </button>
   )
@@ -210,7 +213,6 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
       ref={overlayRef}
       className={`race-overlay${betsOpen ? ' is-bets-open' : ''}`}
       data-compact={compact ? 'true' : undefined}
-      data-orient={orientation}
       data-round-id={round?.id ?? undefined}
       data-round-status={status ?? undefined}
       style={{ '--hud-scale': viewportScale }}
@@ -280,8 +282,6 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
                 {formatMoney(potentialWin)}
               </div>
             </div>
-
-            {compact ? null : <HudMenuChrome placement="footer" />}
           </footer>
         </div>
       </div>
@@ -290,6 +290,7 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
         isFullscreen={isFullscreen}
         onToggle={toggleFullscreen}
       />
+      {compact ? null : <HudMenuChrome placement="footer" />}
     </div>
   )
 }

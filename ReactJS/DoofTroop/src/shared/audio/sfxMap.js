@@ -66,6 +66,10 @@ export const sfxMap = {
   sheetOpen: { sound: 'Musical_Click_01', volume: 0.55 },
   /** Sheet closes. */
   sheetClose: { sound: 'Back_Click_03', volume: 0.55 },
+  /** Hamburger menu opens. */
+  menuOpen: { sound: 'Musical_Click_01', volume: 0.55 },
+  /** Hamburger menu closes. */
+  menuClose: { sound: 'Back_Click_03', volume: 0.55 },
   /** Fullscreen toggle. */
   fullscreenToggle: { sound: 'Flick_Switch_03', volume: 0.5 },
 

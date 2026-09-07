@@ -1,209 +1,54 @@
 ﻿/**
- * Settlement overlay mobile — portrait / compact.
+ * Settlement overlay mobile — compact landscape.
  * Shared compact shell lives in hud-compact.css.
  */
 
-.settlement-overlay[data-orient='portrait'] {
-  --hud-w: calc(100vw - 4px);
-}
-
-.settlement-overlay[data-orient='portrait'] .betting-overlay__bottom {
-  padding-left: max(2px, env(safe-area-inset-left, 0px));
-  padding-right: max(2px, env(safe-area-inset-right, 0px));
-}
-
-.settlement-overlay[data-orient='portrait'] .betting-overlay__hud {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: calc(12px * var(--hud-scale));
-  width: 100%;
-  max-width: 100%;
-  overflow-x: clip;
-}
-
-.settlement-overlay[data-orient='portrait'] .settlement-board {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  overflow-x: clip;
-}
-
-.settlement-overlay[data-orient='portrait'] .mid-controls {
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-end;
-  gap: calc(10px * var(--hud-scale));
-  width: 100%;
-  transform: none;
-}
-
-.settlement-overlay[data-orient='portrait'] .mid-controls__accessories {
-  grid-column: auto;
-  width: auto;
-  flex: 1 1 auto;
-  max-width: calc(220px * var(--hud-scale));
-}
-
-.settlement-overlay[data-orient='portrait'] .mid-controls__history-slot {
-  display: none !important;
-}
-
-.settlement-overlay[data-orient='portrait'] .betting-overlay__history-top {
-  --history-sheet-w: calc(152px * var(--hud-scale));
-  --history-sheet-h: calc(192px * var(--hud-scale));
-  --history-cols-h: calc(11px * var(--hud-scale));
-
-  display: block;
-  position: absolute;
-  top: max(
-    calc(48px * var(--hud-scale)),
-    calc(44px + env(safe-area-inset-top, 0px))
-  );
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: var(--z-overlay-sheet, 18);
-  width: var(--history-sheet-w);
-  pointer-events: none;
-}
-
-.settlement-overlay .betting-overlay__history-top .history-sheet {
-  position: relative;
-  left: auto;
-  bottom: auto;
-  top: auto;
-  transform: none;
-  width: var(--history-sheet-w);
-}
-
-.settlement-overlay .betting-overlay__history-top .history-panel {
-  width: var(--history-sheet-w);
-  height: var(--history-sheet-h);
-}
-
-.settlement-overlay[data-orient='portrait'] .settlement-overlay__footer {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  grid-template-areas: 'bal mid total';
-  align-items: end;
-  column-gap: calc(8px * var(--hud-scale));
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  box-sizing: border-box;
-}
-
-.settlement-overlay[data-orient='portrait'] .betting-footer__balance-wrap {
-  grid-area: bal;
-  justify-self: start;
-  margin-left: 0;
-  width: auto;
-  max-width: 100%;
-  min-width: 0;
-}
-
-.settlement-overlay[data-orient='portrait'] .settlement-overlay__mid {
-  grid-area: mid;
-  justify-self: center;
-  min-width: 0;
-  width: 0;
-  overflow: hidden;
-}
-
-.settlement-overlay[data-orient='portrait'] .betting-footer__total-wrap {
-  grid-area: total;
-  justify-self: end;
-  max-width: 100%;
-  min-width: 0;
-}
-
-.settlement-overlay[data-orient='portrait'] .betting-footer__meter {
-  width: calc(128px * var(--hud-scale));
-}
-
-.settlement-overlay[data-orient='portrait'] .settlement-win__label {
-  font-size: calc(11px * var(--hud-font-scale));
-}
-
-.settlement-overlay[data-orient='portrait'] .settlement-win {
-  transform: translate(-50%, calc(-100% - 8px * var(--hud-scale)));
-}
-
-.settlement-overlay[data-orient='portrait'] .settlement-win__bar {
-  min-width: calc(200px * var(--hud-scale));
-  height: calc(36px * var(--hud-scale));
-  padding: 0 calc(24px * var(--hud-scale));
-}
-
-.settlement-overlay[data-orient='portrait'] .settlement-win__amount {
-  font-size: calc(20px * var(--hud-font-scale));
-}
-
-/* ========== LANDSCAPE compact ========== */
-.settlement-overlay[data-orient='landscape'][data-compact='true'] {
+.settlement-overlay[data-compact='true'] {
   --hud-w: calc(860px * var(--hud-scale));
 }
 
-.settlement-overlay[data-orient='landscape'][data-compact='true'] .betting-overlay__hud {
+.settlement-overlay[data-compact='true'] .betting-overlay__hud {
   width: min(var(--hud-w), 100%);
   max-width: 100%;
+  gap: calc(8px * var(--hud-scale));
 }
 
-.settlement-overlay[data-orient='landscape'][data-compact='true'] .settlement-overlay__footer {
+.settlement-overlay[data-compact='true'] .settlement-overlay__footer {
   max-width: 100%;
   width: 100%;
 }
 
-.settlement-overlay[data-orient='landscape'][data-compact='true'] .betting-footer__meter {
+.settlement-overlay[data-compact='true'] .betting-footer__meter {
   width: calc(128px * var(--hud-scale));
 }
 
-/* Keep the results podium visible — compact landscape */
-.settlement-overlay[data-orient='landscape'][data-compact='true'] .betting-overlay__hud {
+.settlement-overlay[data-compact='true'] .settlement-board {
   gap: calc(8px * var(--hud-scale));
 }
 
-.settlement-overlay[data-orient='landscape'][data-compact='true'] .settlement-board {
-  gap: calc(8px * var(--hud-scale));
-}
-
-.settlement-overlay[data-orient='landscape'][data-compact='true'] .settlement-win {
+.settlement-overlay[data-compact='true'] .settlement-win {
   gap: calc(2px * var(--hud-scale));
   transform: translate(-50%, calc(-100% - 6px * var(--hud-scale)));
 }
 
-.settlement-overlay[data-orient='landscape'][data-compact='true'] .settlement-win__label {
+.settlement-overlay[data-compact='true'] .settlement-win__label {
   font-size: calc(9px * var(--hud-font-scale));
 }
 
-.settlement-overlay[data-orient='landscape'][data-compact='true'] .settlement-win__bar {
+.settlement-overlay[data-compact='true'] .settlement-win__bar {
   min-width: calc(160px * var(--hud-scale));
   height: calc(28px * var(--hud-scale));
   padding: 0 calc(18px * var(--hud-scale));
 }
 
-.settlement-overlay[data-orient='landscape'][data-compact='true'] .settlement-win__amount {
+.settlement-overlay[data-compact='true'] .settlement-win__amount {
   font-size: calc(16px * var(--hud-font-scale));
 }
 
-.settlement-overlay[data-orient='landscape'][data-compact='true'] .settlement-podium {
+.settlement-overlay[data-compact='true'] .settlement-podium {
   --podium-icon: clamp(48px, 5.5vw, 120px);
   --podium-place: clamp(15px, 1.8vw, 28px);
   --podium-time: clamp(11px, 1.3vw, 18px);
   top: clamp(2%, 3.5vh, 7%);
   width: min(560px, 54vw);
-}
-
-.settlement-overlay[data-orient='portrait'] .settlement-podium {
-  --stream-h: min(100vw * 9 / 16, 100%);
-  --podium-icon: clamp(44px, 11vw, 100px);
-  --podium-place: clamp(14px, 3.2vw, 24px);
-  --podium-time: clamp(11px, 2.4vw, 16px);
-  top: calc((100% - var(--stream-h)) / 2 + 2%);
-  width: min(320px, 78vw);
-}
-
-.settlement-overlay[data-orient='portrait'] .settlement-podium__col--1st {
-  transform: translateY(calc(-0.8 * var(--podium-gap) - 4px));
 }
