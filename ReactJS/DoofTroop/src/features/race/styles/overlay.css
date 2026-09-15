@@ -109,10 +109,6 @@
   z-index: 7;
 }
 
-.race-overlay .betting-overlay__fullscreen {
-  z-index: 8;
-}
-
 .race-overlay .betting-footer__menu-wrap {
   z-index: 9;
 }

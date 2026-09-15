@@ -5,7 +5,6 @@ import { SettlementPodiumLabels } from './SettlementPodiumLabels.jsx'
 import { uiAssets } from '../../betting/assets/uiAssets.js'
 import { formatMoney } from '../../betting/utils/formatMoney.js'
 import { useCurrentRound } from '../../betting/hooks/useCurrentRound.js'
-import { useFullscreen } from '../../betting/hooks/useFullscreen.js'
 import { useHudViewportContext } from '../../hud/index.js'
 import { usePublishedRoundBets } from '../../betting/state/roundBetsStore.js'
 import { useSettlementOverlayState } from '../hooks/useSettlementOverlay.js'
@@ -15,7 +14,6 @@ import { sumBetTotal } from '../../betting/utils/betTotals.js'
 import { DEFAULT_BALANCE } from '../../betting/constants/defaults.js'
 import {
   HudFade,
-  HudFullscreenButton,
   HudMenuChrome,
   getDoofColorBarsFadeAnchorTop,
   useSyncHudFadeHeight,
@@ -31,7 +29,6 @@ import '../styles/settlement.css'
 export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
   const { scale: viewportScale, compact } = useHudViewportContext()
   const { round, status } = useCurrentRound()
-  const { isFullscreen, toggleFullscreen } = useFullscreen()
   const { roundId: betsRoundId, bets } = usePublishedRoundBets()
   const boardRef = useRef(null)
   const overlayRef = useRef(null)
@@ -211,10 +208,6 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
         </div>
       </div>
 
-      <HudFullscreenButton
-        isFullscreen={isFullscreen}
-        onToggle={toggleFullscreen}
-      />
       {compact ? null : <HudMenuChrome placement="footer" />}
     </div>
   )

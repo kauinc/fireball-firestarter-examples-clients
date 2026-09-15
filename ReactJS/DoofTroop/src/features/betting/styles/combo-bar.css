@@ -62,9 +62,12 @@
 }
 
 /*
- * ComboBar_Active is 592×190 with glow; solid body is 496×94 (same as ComboBar).
- * Paint it on a larger ::before so the rounded pill + glow aren't clipped to the
- * rectangular shell (which caused square green corners).
+ * Shell assets (496×94 solid body):
+ *   ComboBar_NoBet → no pick
+ *   ComboBar → pick selected
+ *   ComboBar_Active (592×190 with glow) → picking
+ * Active is painted on a larger ::before so the rounded pill + glow aren't
+ * clipped to the rectangular shell (which caused square green corners).
  */
 .combo-bar.is-active .combo-bar__shell {
   background-image: none;
@@ -179,8 +182,9 @@
 }
 
 .combo-bar__pick-icon--accessory {
-  width: calc(28px * var(--hud-scale));
-  height: calc(28px * var(--hud-scale));
+  width: auto;
+  height: var(--hats-glasses-icon-h, calc(0.95 * var(--hats-glasses-h, calc(34px * var(--hud-scale)))));
+  max-height: none;
 }
 
 .combo-bar__pick-icon--doof {

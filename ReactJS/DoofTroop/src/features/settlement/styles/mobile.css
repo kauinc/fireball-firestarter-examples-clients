@@ -3,10 +3,6 @@
  * Shared compact shell lives in hud-compact.css.
  */
 
-.settlement-overlay[data-compact='true'] {
-  --hud-w: calc(860px * var(--hud-scale));
-}
-
 .settlement-overlay[data-compact='true'] .betting-overlay__hud {
   width: min(var(--hud-w), 100%);
   max-width: 100%;

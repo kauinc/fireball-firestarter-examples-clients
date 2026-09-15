@@ -9,10 +9,10 @@ import { ChipStack } from './ChipStack.jsx'
 const crazyComboDropTarget = crazyComboTarget()
 
 /**
- * CRAZY COMBO bar assets:
- * - idle: CrazyComboBar_ActiveBackground
- * - picking: ActiveBackground + CrazyComboBar_ActiveSmall shifted per slot (×3)
- * - complete: CrazyComboBar
+ * CRAZY COMBO bar assets (three shell states):
+ * - no bet: CrazyComboBar_ActiveBackground
+ * - selected/complete: CrazyComboBar
+ * - active/picking: ActiveBackground + CrazyComboBar_ActiveSmall shifted per slot (×3)
  */
 export function CrazyComboBar({
   paysMultiplier = 'x5000',
@@ -151,7 +151,7 @@ export function CrazyComboBar({
                 placeOnCrazyCombo()
               }}
             >
-              <ChipStack chips={crazyComboBet.chips} />
+              <ChipStack chips={crazyComboBet.chips} skin="crazyCombo" />
             </span>
           ) : null}
         </div>

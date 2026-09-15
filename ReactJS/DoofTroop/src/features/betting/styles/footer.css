@@ -101,7 +101,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: calc(4px * var(--hud-scale));
+  gap: 0;
 }
 
 .betting-footer__chip-label {
@@ -113,6 +113,12 @@
   text-transform: uppercase;
   white-space: nowrap;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+  margin-bottom: calc(-2px * var(--hud-scale));
+}
+
+.betting-footer__chip-slot--winner .betting-footer__chip-label {
+  font-size: calc(14px * var(--hud-font-scale));
+  letter-spacing: 0.05em;
 }
 
 .betting-footer__chip {
@@ -129,6 +135,12 @@
   font-size: calc(15px * var(--hud-font-scale));
   font-weight: 800;
   line-height: 1;
+}
+
+.betting-footer__chip-slot--winner .betting-footer__chip {
+  width: calc(98px * var(--hud-scale));
+  height: calc(98px * var(--hud-scale));
+  font-size: calc(17px * var(--hud-font-scale));
 }
 
 .betting-footer__chip img {
@@ -148,8 +160,6 @@
 
 .betting-footer__chip.is-selected {
   z-index: 1;
-  transform-origin: center bottom;
-  transform: translateY(calc(-4px * var(--hud-scale))) scale(1.1);
 }
 
 .betting-footer__stake-step {
@@ -182,16 +192,9 @@
 }
 
 .betting-footer__menu-wrap {
-  /* Sit beside fullscreen chrome (bottom-right), not over TOTAL BET. */
   position: absolute;
   z-index: var(--z-overlay-chrome, 22);
-  right: max(
-    calc(10px + 44px * var(--hud-scale) + 8px * var(--hud-scale)),
-    calc(
-      env(safe-area-inset-right, 0px) + 44px * var(--hud-scale) +
-        8px * var(--hud-scale)
-    )
-  );
+  right: max(10px, env(safe-area-inset-right, 0px));
   bottom: max(10px, env(safe-area-inset-bottom, 0px));
   flex: 0 0 auto;
   width: calc(48px * var(--hud-scale));

@@ -69,11 +69,15 @@ export function BettingFooter({
         <div className="betting-footer__chips" role="group" aria-label="Chips">
           {CHIP_METALS.map((metal) => {
             const selected = selectedMetal === metal
+            const isWinner = metal === 'gold'
             const src = selected
               ? (uiAssets.chipsSelected[metal] ?? uiAssets.chips[metal])
               : uiAssets.chips[metal]
             return (
-              <div key={metal} className="betting-footer__chip-slot">
+              <div
+                key={metal}
+                className={`betting-footer__chip-slot${isWinner ? ' betting-footer__chip-slot--winner' : ''}`}
+              >
                 <span className="betting-footer__chip-label">
                   {CHIP_METAL_LABELS[metal]}
                 </span>

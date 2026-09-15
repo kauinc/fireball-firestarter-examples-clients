@@ -241,7 +241,13 @@ function buildFlights({ bets, outcomes, boardEl, winBarEl }) {
 
     const topChip = [...(bet.chips ?? [])].reverse()[0]
     const metal = topChip?.metal ?? 'gold'
-    const src = uiAssets.chipsSimple?.[metal] ?? uiAssets.chips[metal] ?? null
+    const targetType = bet.target?.type
+    const src =
+      targetType === 'combo'
+        ? uiAssets.chipsCombo
+        : targetType === 'crazyCombo'
+          ? uiAssets.chipsCrazyCombo
+          : (uiAssets.chipsSimple?.[metal] ?? uiAssets.chips[metal] ?? null)
     const from = {
       x: rect.left + rect.width / 2,
       y: rect.top + rect.height / 2,

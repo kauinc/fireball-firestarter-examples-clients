@@ -29,10 +29,6 @@
   z-index: 7;
 }
 
-.settlement-overlay .betting-overlay__fullscreen {
-  z-index: 8;
-}
-
 .settlement-overlay .betting-footer__menu-wrap {
   z-index: 9;
 }

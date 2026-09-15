@@ -8,10 +8,6 @@
   width: auto;
 }
 
-.race-overlay[data-compact='true'] {
-  --hud-w: calc(860px * var(--hud-scale));
-}
-
 .race-overlay[data-compact='true'] .betting-footer__meter {
   width: calc(140px * var(--hud-scale));
 }

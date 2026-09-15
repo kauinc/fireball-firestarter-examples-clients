@@ -189,8 +189,8 @@
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  width: calc(28px * var(--hud-scale));
-  height: calc(28px * var(--hud-scale));
+  width: auto;
+  height: var(--hats-glasses-icon-h, calc(0.95 * var(--hats-glasses-h, calc(34px * var(--hud-scale)))));
   object-fit: contain;
   pointer-events: none;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));

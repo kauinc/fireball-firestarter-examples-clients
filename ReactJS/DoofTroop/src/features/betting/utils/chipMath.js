@@ -29,6 +29,19 @@ export function mergeMetalChips(chips) {
   }))
 }
 
+/**
+ * Combo / Crazy Combo bars ignore Winner / Top 2 / Top 3 —
+ * every placement adds to one stake face.
+ */
+export function mergeComboChips(chips) {
+  const total = roundMoney(stackTotal(chips))
+  return total > 0 ? [{ metal: 'gold', value: total }] : []
+}
+
+export function isComboBarTarget(target) {
+  return target?.type === 'combo' || target?.type === 'crazyCombo'
+}
+
 export function getBetTotal(bet) {
   return roundMoney(stackTotal(bet?.chips ?? []))
 }

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { BettingBanner } from '../../betting/components/BettingBanner.jsx'
 import { uiAssets } from '../../betting/assets/uiAssets.js'
 import { formatMoney } from '../../betting/utils/formatMoney.js'
-import { useFullscreen } from '../../betting/hooks/useFullscreen.js'
 import { useHudViewportContext } from '../../hud/index.js'
 import { useCurrentRound } from '../../betting/hooks/useCurrentRound.js'
 import { usePublishedRoundBets } from '../../betting/state/roundBetsStore.js'
@@ -15,7 +14,6 @@ import { CurrentBetsBoard } from './CurrentBetsSheet.jsx'
 import { DEFAULT_BALANCE } from '../../betting/constants/defaults.js'
 import {
   HudFade,
-  HudFullscreenButton,
   HudMenuChrome,
   useDialogFocus,
 } from '../../hud/index.js'
@@ -41,7 +39,6 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
     raceKey,
   })
   const potentialWin = useMockPotentialWin({ active: isRaceUiVisible })
-  const { isFullscreen, toggleFullscreen } = useFullscreen()
   const { roundId: betsRoundId, bets, comboPick: publishedComboPick, crazyComboPicks: publishedCrazyComboPicks } =
     usePublishedRoundBets()
   const [betsOpenForKey, setBetsOpenForKey] = useState(null)
@@ -286,10 +283,6 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
         </div>
       </div>
 
-      <HudFullscreenButton
-        isFullscreen={isFullscreen}
-        onToggle={toggleFullscreen}
-      />
       {compact ? null : <HudMenuChrome placement="footer" />}
     </div>
   )

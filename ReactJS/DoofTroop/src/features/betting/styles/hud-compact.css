@@ -3,7 +3,9 @@
  */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] {
   --history-col-shift: 0px;
+  --board-shift-x: 0px;
   --pattern-label-x: 4px;
+  --hud-w: 100%;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']

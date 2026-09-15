@@ -3,22 +3,28 @@ import { useSyncExternalStore } from 'react'
 /**
  * Shared HUD viewport metrics for betting, race, and settlement overlays.
  *
- * Landscape desktop (width ≥ breakpoint): fill ~stream width; soft height clamp.
- * Portrait sets orientation for LandscapeHudOnly rotate gate; scale uses the
- * landscape artboard (HUD itself never renders in portrait).
- * Narrow landscape width uses the compact landscape layout.
+ * DevTools / desktop (tall enough landscape): same as git — desktop layout when
+ * width ≥ 900, scale from layout size.
+ *
+ * Real iPhone Safari: browser chrome shortens the visible box. We then:
+ * - read #root / visualViewport (after optional pin)
+ * - switch to compact when short, so Hats/Combo don't stack into the board
+ * DevTools keeps vv ≈ layout, so it stays on the desktop path.
  */
 export const HUD_DESIGN = Object.freeze({
   width: 1200,
   height: 640,
-  /** Bottom HUD stack height at scale 1 (board + mid + footer). */
   desktopContentHeight: 400,
   desktopWidthFraction: 0.96,
   desktopMaxHeightFraction: 0.72,
   landscapeWidth: 900,
   landscapeHeight: 420,
-  /** Below this width → phone layouts. Not tied to aspect ratio alone. */
   compactBreakpoint: 900,
+  /**
+   * Below this height use compact packing. DevTools Pro Max landscape is ~440
+   * → stays desktop. Real Safari with chrome is often ≤380 → compact.
+   */
+  compactMaxHeight: 400,
   minScale: 0.35,
   pad: 8,
 })
@@ -46,13 +52,35 @@ function fitLandscapeScale(width, height) {
   )
 }
 
-function computeHudViewport() {
+function readViewportSize() {
+  const root = document.getElementById('root')
+  if (root) {
+    const { width, height } = root.getBoundingClientRect()
+    if (width > 1 && height > 1) return { width, height }
+  }
+
+  const layoutW =
+    window.innerWidth || document.documentElement.clientWidth || 1
+  const layoutH =
+    window.innerHeight || document.documentElement.clientHeight || 1
   const vv = window.visualViewport
-  const width = Math.max(0, (vv?.width ?? window.innerWidth) - HUD_DESIGN.pad * 2)
-  const height = Math.max(
-    0,
-    (vv?.height ?? window.innerHeight) - HUD_DESIGN.pad * 2,
-  )
+
+  // Prefer the smaller visible box when chrome eats height (real iPhone).
+  // DevTools: vv ≈ layout → unchanged.
+  if (vv && vv.height > 1 && vv.width > 1) {
+    return {
+      width: Math.max(1, Math.min(layoutW, vv.width)),
+      height: Math.max(1, Math.min(layoutH, vv.height)),
+    }
+  }
+
+  return { width: Math.max(1, layoutW), height: Math.max(1, layoutH) }
+}
+
+function computeHudViewport() {
+  const size = readViewportSize()
+  const width = Math.max(0, size.width - HUD_DESIGN.pad * 2)
+  const height = Math.max(0, size.height - HUD_DESIGN.pad * 2)
 
   if (width <= 0 || height <= 0) {
     return {
@@ -74,7 +102,10 @@ function computeHudViewport() {
     }
   }
 
-  const compact = width < HUD_DESIGN.compactBreakpoint
+  // Short visible height (real phone chrome) → compact. DevTools ~440 stays desktop.
+  const compact =
+    width < HUD_DESIGN.compactBreakpoint ||
+    height < HUD_DESIGN.compactMaxHeight
 
   let fitted
   if (!compact) {

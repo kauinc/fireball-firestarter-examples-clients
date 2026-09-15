@@ -272,16 +272,12 @@
 
 .mid-controls__accessory-icon {
   flex: 0 0 auto;
-  width: calc(24px * var(--hud-scale));
-  height: calc(24px * var(--hud-scale));
+  /* Keep icon size locked to the Hats/Glasses button height. */
+  height: var(--hats-glasses-icon-h, 95%);
+  width: auto;
   object-fit: contain;
   pointer-events: none;
   display: block;
-  transform: rotate(-16deg);
-}
-
-.mid-controls__accessory-icon--glasses {
-  transform: rotate(-10deg);
 }
 
 .mid-controls__accessory-chip {

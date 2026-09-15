@@ -85,11 +85,7 @@ export function MidControls({
                 <img
                   src={iconSrc}
                   alt=""
-                  className={`mid-controls__accessory-icon${
-                    item === 'Glasses'
-                      ? ' mid-controls__accessory-icon--glasses'
-                      : ''
-                  }`}
+                  className="mid-controls__accessory-icon"
                   draggable={false}
                 />
                 {stack ? (

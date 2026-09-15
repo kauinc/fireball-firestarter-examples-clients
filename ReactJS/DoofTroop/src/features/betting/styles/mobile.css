@@ -34,10 +34,6 @@
 }
 
 /* ========== Compact ========== */
-.betting-overlay[data-compact='true'] {
-  --hud-w: calc(860px * var(--hud-scale));
-}
-
 .betting-overlay[data-compact='true'][data-advanced='false']
   .mid-controls__history-slot {
   display: none;

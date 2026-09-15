@@ -6,7 +6,9 @@ function formatChipTotal(value) {
   return String(value)
 }
 
-function chipSrc(metal) {
+function chipSrc(metal, skin = null) {
+  if (skin === 'combo') return uiAssets.chipsCombo
+  if (skin === 'crazyCombo') return uiAssets.chipsCrazyCombo
   return uiAssets.chipsSimple?.[metal] ?? uiAssets.chips[metal]
 }
 
@@ -24,8 +26,9 @@ const CHIP_TRIANGLE = Object.freeze([
  * Metal stack: at most one silver / gold / bronze face.
  * Collapsed: tight pile, total on the top chip.
  * Hover: chips fan into a triangle; each shows its stake.
+ * `skin`: combo (green) / crazyCombo (pink) — overrides metal art on those bars.
  */
-export function ChipStack({ chips, className = '' }) {
+export function ChipStack({ chips, className = '', skin = null }) {
   if (!chips?.length) return null
 
   const total = getBetTotal({ chips })
@@ -37,7 +40,7 @@ export function ChipStack({ chips, className = '' }) {
       title={formatChipTotal(total)}
     >
       {layers.map((chip, index) => {
-        const src = chipSrc(chip.metal)
+        const src = chipSrc(chip.metal, skin)
         const isTop = index === layers.length - 1
         const own = chip.value * (chip.count ?? 1)
         const tri = CHIP_TRIANGLE[index] ?? CHIP_TRIANGLE[0]
