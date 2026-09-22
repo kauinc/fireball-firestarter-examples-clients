@@ -6,8 +6,10 @@ import { uiAssets } from '../assets/uiAssets.js'
 const comboDropTarget = comboTarget()
 
 /**
- * Regular COMBO payout bar.
- * idle → ComboBar; picking → ComboBar_Active (glow padded, scaled to solid body).
+ * Regular COMBO payout bar (mirrors Crazy Combo’s three shell states):
+ * - no bet: ComboBar_NoBet
+ * - selected: ComboBar (+ pick icon)
+ * - active/picking: ComboBar_Active (same canvas size as ComboBar)
  */
 export function ComboBar({
   active = false,
@@ -21,17 +23,22 @@ export function ComboBar({
   settleClass = '',
   comboPickRequired = false,
 }) {
+  const hasPick = Boolean(comboPick)
   const pickIcon =
-    !active && comboPick
+    !active && hasPick
       ? getComboBarIcon(comboPick.kind, comboPick.key)
       : null
-  const pickVariant = comboPick
+  const pickVariant = hasPick
     ? getComboBarIconVariant(comboPick.kind)
     : null
   const dropEnabled =
-    !readOnly && !active && !disabled && (!comboPickRequired || comboPick)
-  const shellAsset = active ? uiAssets.comboBarActive : uiAssets.comboBar
-  const isInactiveShell = false
+    !readOnly && !active && !disabled && (!comboPickRequired || hasPick)
+  const shellAsset = active
+    ? uiAssets.comboBarActive
+    : hasPick
+      ? uiAssets.comboBar
+      : uiAssets.comboBarNoBet
+  const isInactiveShell = !active && !hasPick
 
   function placeOnCombo() {
     if (!dropEnabled) return
@@ -44,16 +51,26 @@ export function ComboBar({
     placeOnCombo()
   }
 
-  const shellStyle = active
-    ? { '--combo-shell-bg': `url(${shellAsset})` }
-    : { backgroundImage: `url(${shellAsset})` }
+  const shellStyle = {
+    // Active art is painted on ::before (desktop) / ::after (portrait) so the
+    // glow pad can scale; inline background would show a second, undersized copy.
+    ...(active ? {} : { backgroundImage: `url(${shellAsset})` }),
+    '--combo-shell-bg': `url(${shellAsset})`,
+    '--portrait-shell-bg': `url(${shellAsset})`,
+  }
 
   return (
     <article
-      className={`combo-bar${active ? ' is-active' : ''}${isInactiveShell ? ' is-inactive' : ''}`}
+      className={`combo-bar${active ? ' is-active' : ''}${hasPick && !active ? ' is-selected' : ''}${isInactiveShell ? ' is-inactive' : ''}`}
       aria-label="Combo"
     >
-      <h3 className="combo-bar__caption">COMBO</h3>
+      <h3 className="combo-bar__caption">
+        <span className="combo-bar__caption-title">COMBO</span>
+        <span className="combo-bar__caption-pays">
+          <span className="combo-bar__caption-pays-label">pays</span>
+          <span className="combo-bar__caption-pays-value">{paysMultiplier}</span>
+        </span>
+      </h3>
       <div className="combo-bar__track">
         <div className="combo-bar__pays">
           <span className="combo-bar__pays-label">PAYS</span>
@@ -71,7 +88,9 @@ export function ComboBar({
             {readOnly ? (
               <span className="combo-bar__open combo-bar__open--label">
                 <span className="combo-bar__open-label combo-bar__open-label--full">
-                  1st 2nd &amp; 3rd:
+                  <span className="combo-bar__open-line">1st</span>
+                  <span className="combo-bar__open-line">2nd</span>
+                  <span className="combo-bar__open-line">&amp; 3rd:</span>
                 </span>
                 <span className="combo-bar__open-label combo-bar__open-label--compact" aria-hidden="true">
                   1·2·3
@@ -90,7 +109,9 @@ export function ComboBar({
                 onPointerUp={(event) => event.stopPropagation()}
               >
                 <span className="combo-bar__open-label combo-bar__open-label--full">
-                  1st 2nd &amp; 3rd:
+                  <span className="combo-bar__open-line">1st</span>
+                  <span className="combo-bar__open-line">2nd</span>
+                  <span className="combo-bar__open-line">&amp; 3rd:</span>
                 </span>
                 <span className="combo-bar__open-label combo-bar__open-label--compact" aria-hidden="true">
                   1·2·3
@@ -124,7 +145,7 @@ export function ComboBar({
                 placeOnCombo()
               }}
             >
-              <ChipStack chips={comboBet.chips} />
+              <ChipStack chips={comboBet.chips} skin="combo" />
             </span>
           ) : null}
         </div>

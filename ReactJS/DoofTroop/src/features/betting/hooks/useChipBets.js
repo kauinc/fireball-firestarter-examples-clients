@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { publishRoundBets } from '../state/roundBetsStore.js'
 import { betTargetKey } from '../utils/betTargets.js'
-import { mergeMetalChips, getBetTotal, roundMoney, stackTotal } from '../utils/chipMath.js'
+import {
+  mergeMetalChips,
+  mergeComboChips,
+  isComboBarTarget,
+  roundMoney,
+  stackTotal,
+} from '../utils/chipMath.js'
 
 const MAX_UNDO = 40
 
@@ -25,9 +31,14 @@ function cloneTarget(target) {
   return { ...target }
 }
 
+function mergeChipsForTarget(target, chips) {
+  return isComboBarTarget(target) ? mergeComboChips(chips) : mergeMetalChips(chips)
+}
+
 /**
  * Local chip placements. Max 3 faces per stack (silver / gold / bronze);
  * placing the same metal again adds to that face instead of stacking another.
+ * Combo / Crazy Combo bars merge every metal into one stake.
  * Remount the consumer with `key={roundId}` to clear bets for a new round.
  *
  * UNDO — pops the last board mutation (place / clear / repeat / x2).
@@ -73,14 +84,15 @@ export function useChipBets(
     (prev, amount, target, metal) => {
       const key = betTargetKey(target)
       const positions = [...selectedPositions]
-      const addition = [{ metal, value: amount }]
+      const stakeMetal = isComboBarTarget(target) ? 'gold' : metal
+      const addition = [{ metal: stakeMetal, value: amount }]
       const existing = prev.find((bet) => bet.key === key)
       if (existing) {
         return prev.map((bet) => {
           if (bet.key !== key) return bet
           return {
             ...bet,
-            chips: mergeMetalChips([...bet.chips, ...addition]),
+            chips: mergeChipsForTarget(target, [...bet.chips, ...addition]),
             positions,
           }
         })
@@ -90,7 +102,7 @@ export function useChipBets(
         {
           id: nextBetId(),
           key,
-          chips: mergeMetalChips(addition),
+          chips: mergeChipsForTarget(target, addition),
           target: cloneTarget(target),
           positions,
         },
@@ -151,7 +163,8 @@ export function useChipBets(
     applyBets(
       prev.map((bet) => ({
         ...bet,
-        chips: mergeMetalChips(
+        chips: mergeChipsForTarget(
+          bet.target,
           bet.chips.map((chip) => ({
             ...chip,
             value: roundMoney(chip.value * 2),

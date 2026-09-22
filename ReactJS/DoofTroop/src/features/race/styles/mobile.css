@@ -3,19 +3,18 @@
  * Shared compact shell lives in hud-compact.css.
  */
 
-.race-overlay[data-compact='true'] .betting-footer__balance-wrap {
+.race-overlay[data-compact='true']:not([data-orientation='portrait'])
+  .betting-footer__balance-wrap {
   margin-left: 0;
   width: auto;
 }
 
-.race-overlay[data-compact='true'] {
-  --hud-w: calc(860px * var(--hud-scale));
-}
-
-.race-overlay[data-compact='true'] .betting-footer__meter {
+.race-overlay[data-compact='true']:not([data-orientation='portrait'])
+  .betting-footer__meter {
   width: calc(140px * var(--hud-scale));
 }
 
-.race-overlay[data-compact='true'] .race-overlay__current-bets {
+.race-overlay[data-compact='true']:not([data-orientation='portrait'])
+  .race-overlay__current-bets {
   width: calc(200px * var(--hud-scale));
 }

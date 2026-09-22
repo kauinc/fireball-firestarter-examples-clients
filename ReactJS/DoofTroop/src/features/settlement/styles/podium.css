@@ -27,8 +27,14 @@
   text-align: center;
 }
 
+/* 1st raised; 2nd / 3rd sit lower (same icon size). */
 .settlement-podium__col--1st {
-  transform: translateY(calc(-0.9 * var(--podium-gap) - 8px));
+  transform: translateY(calc(-1.1 * var(--podium-gap) - 14px));
+}
+
+.settlement-podium__col--2nd,
+.settlement-podium__col--3rd {
+  transform: translateY(calc(0.6 * var(--podium-gap) + 12px));
 }
 
 .settlement-podium__icon {

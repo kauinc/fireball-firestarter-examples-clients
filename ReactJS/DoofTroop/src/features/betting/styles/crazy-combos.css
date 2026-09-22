@@ -24,6 +24,8 @@
   --accessory-gap: calc(10px * var(--hud-scale));
   /* Hats / Glasses thinner than combo shells. */
   --hats-glasses-h: calc(34px * var(--hud-scale));
+  /* Same Hats/Glasses art size on accessory bars, Combo, and Crazy Combo. */
+  --hats-glasses-icon-h: calc(0.95 * var(--hats-glasses-h));
   --accessory-bar-h: calc(36px * var(--hud-scale));
   --combo-bar-pays-w: calc(54px * var(--hud-scale));
   --combo-pays-gap: calc(10px * var(--hud-scale));
@@ -93,10 +95,10 @@
 }
 
 /* Compact: keep Hats→combo DOM order (no desktop Y nudge). */
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .mid-controls-stack
   .mid-controls,
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .mid-controls-stack.is-crazy
   .mid-controls {
   transform: none;

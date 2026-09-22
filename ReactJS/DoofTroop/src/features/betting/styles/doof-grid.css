@@ -14,12 +14,18 @@
   overflow: visible;
 }
 
-.doof-grid__spacer,
-.doof-grid__odds-spacer {
-  min-height: 1px;
+.doof-grid__spacer {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.doof-grid__rail {
+  display: contents;
 }
 
 .doof-grid__colors {
+  grid-column: 2;
+  grid-row: 1;
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: calc(5px * var(--hud-scale));
@@ -29,21 +35,57 @@
   margin-bottom: calc(-2px * var(--hud-scale));
 }
 
-.doof-grid__colors .doof-grid__chip-label {
-  width: 100%;
-  height: calc(34px * var(--hud-scale));
-  margin-left: 0;
-  background-size: 100% 100%;
-  transform: none;
+.doof-grid__odds-spacer {
+  grid-column: 3;
+  grid-row: 1;
 }
 
 .doof-grid__patterns {
+  grid-column: 1;
+  grid-row: 2;
   display: grid;
   grid-template-rows: repeat(3, 1fr);
   gap: calc(8px * var(--hud-scale));
   margin-block: calc(8px * var(--hud-scale));
   align-self: stretch;
   overflow: visible;
+}
+
+.doof-grid__field {
+  grid-column: 2;
+  grid-row: 2;
+  /* bet-field.png inner grid: L27 R1382 T27 B318 of 1410×346 */
+  --field-pad: calc(8px * var(--hud-scale));
+  --chip-size: calc(34px * var(--hud-scale));
+  --chip-stack-spread: calc(18px * var(--hud-scale));
+  --field-in-l: calc(27 / 1410);
+  --field-in-r: calc(28 / 1410);
+  --field-in-t: calc(27 / 346);
+  --field-in-b: calc(28 / 346);
+  container-type: size;
+  container-name: doof-field;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1410 / 346;
+  min-height: calc(132px * var(--hud-scale));
+  padding: var(--field-pad);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  /* Keep PNG grid aligned with CSS cells (not stretched into padding). */
+  background-origin: content-box;
+  background-clip: content-box;
+  border-radius: calc(8px * var(--hud-scale));
+  overflow: visible;
+  touch-action: none;
+}
+
+.doof-grid__colors .doof-grid__chip-label {
+  width: 100%;
+  height: calc(34px * var(--hud-scale));
+  margin-left: 0;
+  background-size: 100% 100%;
+  transform: none;
 }
 
 .doof-grid__chip-label {
@@ -105,31 +147,13 @@
   z-index: 0;
 }
 
-.doof-grid__field {
-  /* bet-field.png inner grid: L27 R1382 T27 B318 of 1410×346 */
-  --field-pad: calc(8px * var(--hud-scale));
-  --chip-size: calc(34px * var(--hud-scale));
-  --chip-stack-spread: calc(18px * var(--hud-scale));
-  --field-in-l: calc(27 / 1410);
-  --field-in-r: calc(28 / 1410);
-  --field-in-t: calc(27 / 346);
-  --field-in-b: calc(28 / 346);
-  container-type: size;
-  container-name: doof-field;
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1410 / 346;
-  min-height: calc(132px * var(--hud-scale));
-  padding: var(--field-pad);
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  background-position: center;
-  /* Keep PNG grid aligned with CSS cells (not stretched into padding). */
-  background-origin: content-box;
-  background-clip: content-box;
-  border-radius: calc(8px * var(--hud-scale));
-  overflow: visible;
-  touch-action: none;
+.doof-grid__side-meters {
+  display: none;
+}
+
+.doof-grid__spacer,
+.doof-grid__odds-spacer {
+  min-height: 1px;
 }
 
 /* CSS cells/chips match the drawn PNG lines, not the texture border margin. */
@@ -400,6 +424,8 @@
 }
 
 .doof-grid__odds {
+  grid-column: 3;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
   justify-content: center;

@@ -4,15 +4,22 @@ import {
   BETTING_CLOSING_THRESHOLD_SECONDS,
   BETTING_WINDOW_SECONDS,
   BettingPhase,
+  timerBarVariantFor,
 } from '../constants/bettingPhase.js'
 import { RoundState } from '../../../domain/round/index.js'
 
 /** Mock window start per round — survives remount/reconnect for the same id. */
 const openedAtByRoundId = new Map()
 
+/** Pre-race statuses that keep the red “BETS CLOSED” TimerBar over Unreal’s 3-2-1. */
+const BANNER_ONLY_STATUSES = new Set([
+  RoundState.BETTING_CLOSED,
+  RoundState.TRACK_READY,
+])
+
 /**
  * Overlay UI from round `status` only (no timestamp inference for visibility).
- * Visible while `status === BETTING_OPEN` (client mock countdown for PLACE/NO MORE BETS).
+ * Full board while `status === BETTING_OPEN`; TimerBar only through TRACK_READY.
  *
  * @param {{
  *   status: string | null,
@@ -64,9 +71,27 @@ export function useBettingOverlayState({ status, round = null }) {
         phase,
         secondsLeft,
         bannerLabel: BETTING_BANNER[phase],
+        timerVariant: timerBarVariantFor(secondsLeft, phase),
+        isBannerVisible: true,
+        isBoardVisible: true,
         isBettingUiVisible: true,
         canPlaceBets: secondsLeft > 0,
         disabled: secondsLeft <= 0,
+      }
+    }
+
+    if (BANNER_ONLY_STATUSES.has(status)) {
+      const phase = BettingPhase.CLOSED
+      return {
+        phase,
+        secondsLeft: 0,
+        bannerLabel: BETTING_BANNER[phase],
+        timerVariant: timerBarVariantFor(0, phase),
+        isBannerVisible: true,
+        isBoardVisible: false,
+        isBettingUiVisible: false,
+        canPlaceBets: false,
+        disabled: true,
       }
     }
 
@@ -74,6 +99,9 @@ export function useBettingOverlayState({ status, round = null }) {
       phase: BettingPhase.HIDDEN,
       secondsLeft: 0,
       bannerLabel: null,
+      timerVariant: timerBarVariantFor(0, BettingPhase.HIDDEN),
+      isBannerVisible: false,
+      isBoardVisible: false,
       isBettingUiVisible: false,
       canPlaceBets: false,
       disabled: true,

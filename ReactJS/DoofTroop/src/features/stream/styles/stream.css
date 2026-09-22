@@ -58,6 +58,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .stream-viewport__video,
@@ -69,4 +70,57 @@
   max-height: 100%;
   object-fit: contain !important;
   background: #000;
+}
+
+/*
+ * Portrait: full-bleed top strip (px from --portrait-video-h). Cover fills
+ * the width like fig 2 — contain left a postage-stamp with side letterbox.
+ */
+.stream-shell[data-orientation='portrait'] .stream-shell__room,
+.stream-shell[data-orientation='portrait'] .stream-viewport,
+.stream-shell[data-orientation='portrait'] .stream-viewport--empty {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: var(--portrait-video-h, 32%);
+  max-height: var(--portrait-video-h, 32%);
+  overflow: hidden;
+  background: #000;
+}
+
+.stream-shell[data-orientation='portrait'] .stream-viewport {
+  display: block;
+}
+
+.stream-shell[data-orientation='portrait'] .stream-viewport__video,
+.stream-shell[data-orientation='portrait'] .stream-viewport video,
+.stream-shell[data-orientation='portrait'] .stream-viewport .lk-participant-media-video,
+.stream-shell[data-orientation='portrait'] .stream-viewport .lk-participant-media-video video {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+}
+
+.stream-shell[data-orientation='portrait'].is-mobile-portrait
+  .stream-viewport__video,
+.stream-shell[data-orientation='portrait'].is-mobile-portrait
+  .stream-viewport
+  video,
+.stream-shell[data-orientation='portrait'].is-mobile-portrait
+  .stream-viewport
+  .lk-participant-media-video,
+.stream-shell[data-orientation='portrait'].is-mobile-portrait
+  .stream-viewport
+  .lk-participant-media-video
+  video {
+  /* Keep header inside the video strip — scale(1.2) bled past the shell. */
+  transform: none;
+  transform-origin: center center;
 }

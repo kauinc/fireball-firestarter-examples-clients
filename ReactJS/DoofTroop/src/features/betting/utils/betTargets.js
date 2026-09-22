@@ -8,6 +8,13 @@ function cellKey(color, pattern) {
   return `${color}:${pattern}`
 }
 
+function isPortraitField(el) {
+  return Boolean(
+    el?.closest?.('.doof-grid[data-portrait="true"]') ||
+      el?.closest?.('[data-orientation="portrait"] .doof-grid'),
+  )
+}
+
 /** Build a stable placement key for stacking chips on the same target. */
 export function betTargetKey(target) {
   switch (target.type) {
@@ -38,14 +45,26 @@ export function betTargetKey(target) {
  * Resolve roulette-style field target from normalized 0..1 coords
  * inside the PNG inner grid (doof-grid__playable), not the texture border.
  *
+ * Landscape: X = colors (6), Y = patterns (3).
+ * Portrait:  X = patterns (3), Y = colors (6) — mapped into landscape anchors.
+ *
  * Priority: corner (4) → edge split (2) → single cell (1).
  * Four-way chips sit on the intersection of internal grid lines.
+ *
+ * @param {number} nx
+ * @param {number} ny
+ * @param {{ portrait?: boolean }} [options]
  */
-export function resolveFieldTarget(nx, ny) {
+export function resolveFieldTarget(nx, ny, options = {}) {
+  const portrait = options.portrait === true
+  // Portrait visual → landscape logical (color on X, pattern on Y).
+  const lx = portrait ? ny : nx
+  const ly = portrait ? nx : ny
+
   const cols = DOOF_COLORS.length
   const rows = DOOF_PATTERNS.length
-  const gx = clampIndex(nx * cols, cols - 0.0001)
-  const gy = clampIndex(ny * rows, rows - 0.0001)
+  const gx = clampIndex(lx * cols, cols - 0.0001)
+  const gy = clampIndex(ly * rows, rows - 0.0001)
 
   const vertLine = Math.round(gx)
   const horzLine = Math.round(gy)
@@ -80,7 +99,7 @@ export function resolveFieldTarget(nx, ny) {
     }
   }
 
-  // 2 Doofs — vertical line (same row, two colors)
+  // 2 Doofs — vertical line in landscape (same pattern, two colors)
   if (validVert && Math.abs(gx - vertLine) < EDGE_HIT) {
     const ri = Math.min(rows - 1, Math.floor(gy))
     const c0 = vertLine - 1
@@ -96,7 +115,7 @@ export function resolveFieldTarget(nx, ny) {
     }
   }
 
-  // 2 Doofs — horizontal line (same color, two patterns)
+  // 2 Doofs — horizontal line in landscape (same color, two patterns)
   if (validHorz && Math.abs(gy - horzLine) < EDGE_HIT) {
     const ci = Math.min(cols - 1, Math.floor(gx))
     return {
@@ -167,10 +186,26 @@ export function crazyComboTarget() {
   }
 }
 
-/** CSS placement for a chip overlay inside the 6×3 field. */
-export function fieldChipStyle(anchor) {
-  const left = ((anchor.col + anchor.ox) / DOOF_COLORS.length) * 100
-  const top = ((anchor.row + anchor.oy) / DOOF_PATTERNS.length) * 100
+/**
+ * CSS placement for a chip overlay inside the field.
+ * Anchors stay landscape-semantic (col = color index, row = pattern index).
+ *
+ * @param {{ col: number, row: number, ox?: number, oy?: number }} anchor
+ * @param {{ portrait?: boolean }} [options]
+ */
+export function fieldChipStyle(anchor, options = {}) {
+  const ox = anchor.ox ?? 0
+  const oy = anchor.oy ?? 0
+  if (options.portrait) {
+    const left = ((anchor.row + oy) / DOOF_PATTERNS.length) * 100
+    const top = ((anchor.col + ox) / DOOF_COLORS.length) * 100
+    return {
+      left: `${left}%`,
+      top: `${top}%`,
+    }
+  }
+  const left = ((anchor.col + ox) / DOOF_COLORS.length) * 100
+  const top = ((anchor.row + oy) / DOOF_PATTERNS.length) * 100
   return {
     left: `${left}%`,
     top: `${top}%`,
@@ -207,6 +242,7 @@ export function resolveDropAtPoint(clientX, clientY, root = null) {
       return resolveFieldTarget(
         (clientX - rect.left) / rect.width,
         (clientY - rect.top) / rect.height,
+        { portrait: isPortraitField(playable) },
       )
     }
   }

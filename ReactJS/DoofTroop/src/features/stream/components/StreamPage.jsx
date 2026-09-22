@@ -3,7 +3,11 @@ import { BettingOverlay } from '../../betting/index.js'
 import { RaceOverlay } from '../../race/index.js'
 import { SettlementOverlay } from '../../settlement/index.js'
 import { LoadingScreen, LoadingStatus } from '../../loading/index.js'
-import { HudViewportProvider, LandscapeHudOnly } from '../../hud/index.js'
+import {
+  HudViewportProvider,
+  FullscreenHomeScreenHint,
+  useHudViewportContext,
+} from '../../hud/index.js'
 import { useCurrentRound } from '../../betting/hooks/useCurrentRound.js'
 import { RoundState } from '../../../domain/round/index.js'
 import { useViewerSession } from '../hooks/useViewerSession.js'
@@ -15,6 +19,29 @@ function isCancelledStatus(status) {
   return (
     status === RoundState.ROUND_CANCELLED_OPERATOR ||
     status === RoundState.ROUND_CANCELLED_RUNTIME
+  )
+}
+
+/**
+ * Applies portrait/landscape shell attrs from shared HUD viewport metrics.
+ */
+function StreamShell({ children }) {
+  const { orientation, mobilePortrait, portraitVideoPx, portraitVideoFraction } =
+    useHudViewportContext()
+
+  return (
+    <div
+      className={`stream-shell${mobilePortrait ? ' is-mobile-portrait' : ''}`}
+      data-orientation={orientation}
+      style={{
+        '--portrait-video-h':
+          portraitVideoPx > 0
+            ? `${portraitVideoPx}px`
+            : `${portraitVideoFraction * 100}%`,
+      }}
+    >
+      {children}
+    </div>
   )
 }
 
@@ -56,63 +83,66 @@ export function StreamPage() {
 
   if (error) {
     return (
-      <div className="stream-shell">
-        <LoadingScreen status={LoadingStatus.LOADING} label="TAP TO RETRY..." />
-        <button
-          type="button"
-          className="stream-shell__retry"
-          aria-label="Retry connection"
-          title={error}
-          onClick={() => {
-            setRoomError(null)
-            setHasVideo(false)
-            reload()
-          }}
-        />
-      </div>
+      <HudViewportProvider>
+        <StreamShell>
+          <LoadingScreen status={LoadingStatus.LOADING} label="TAP TO RETRY..." />
+          <button
+            type="button"
+            className="stream-shell__retry"
+            aria-label="Retry connection"
+            title={error}
+            onClick={() => {
+              setRoomError(null)
+              setHasVideo(false)
+              reload()
+            }}
+          />
+        </StreamShell>
+      </HudViewportProvider>
     )
   }
 
   if (isLoading || !session) {
     return (
-      <div className="stream-shell">
-        <LoadingScreen status={LoadingStatus.LOADING} />
-      </div>
+      <HudViewportProvider>
+        <StreamShell>
+          <LoadingScreen status={LoadingStatus.LOADING} />
+        </StreamShell>
+      </HudViewportProvider>
     )
   }
 
   return (
-    <div className="stream-shell">
-      {!hasVideo && <LoadingScreen status={LoadingStatus.CONNECTING} />}
+    <HudViewportProvider>
+      <StreamShell>
+        {!hasVideo && <LoadingScreen status={LoadingStatus.CONNECTING} />}
 
-      {roundsIssue ? (
-        <div className="stream-shell__banner" role="status">
-          Round feed unavailable. Reconnecting…
-        </div>
-      ) : null}
+        {roundsIssue ? (
+          <div className="stream-shell__banner" role="status">
+            Round feed unavailable. Reconnecting…
+          </div>
+        ) : null}
 
-      {isCancelledStatus(roundStatus) ? (
-        <div className="stream-shell__banner stream-shell__banner--warn" role="status">
-          Round cancelled
-        </div>
-      ) : null}
+        {isCancelledStatus(roundStatus) ? (
+          <div className="stream-shell__banner stream-shell__banner--warn" role="status">
+            Round cancelled
+          </div>
+        ) : null}
 
-      <Suspense fallback={<LoadingScreen status={LoadingStatus.CONNECTING} />}>
-        <StreamRoom
-          session={session}
-          onVideoAvailableChange={handleVideoAvailableChange}
-          onRoomError={handleRoomError}
-          onDisconnected={handleDisconnected}
-        />
-      </Suspense>
+        <Suspense fallback={<LoadingScreen status={LoadingStatus.CONNECTING} />}>
+          <StreamRoom
+            session={session}
+            onVideoAvailableChange={handleVideoAvailableChange}
+            onRoomError={handleRoomError}
+            onDisconnected={handleDisconnected}
+          />
+        </Suspense>
 
-      <HudViewportProvider>
-        <LandscapeHudOnly>
-          <BettingOverlay key="betting-round" />
-          <RaceOverlay key="race-round" />
-          <SettlementOverlay key="settlement-round" />
-        </LandscapeHudOnly>
-      </HudViewportProvider>
-    </div>
+        <BettingOverlay key="betting-round" />
+        <RaceOverlay key="race-round" />
+        <SettlementOverlay key="settlement-round" />
+        <FullscreenHomeScreenHint />
+      </StreamShell>
+    </HudViewportProvider>
   )
 }

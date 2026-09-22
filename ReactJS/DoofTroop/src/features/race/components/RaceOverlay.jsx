@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { BettingBanner } from '../../betting/components/BettingBanner.jsx'
 import { uiAssets } from '../../betting/assets/uiAssets.js'
 import { formatMoney } from '../../betting/utils/formatMoney.js'
-import { useFullscreen } from '../../betting/hooks/useFullscreen.js'
+import { getBetTotal } from '../../betting/utils/chipMath.js'
 import { useHudViewportContext } from '../../hud/index.js'
 import { useCurrentRound } from '../../betting/hooks/useCurrentRound.js'
 import { usePublishedRoundBets } from '../../betting/state/roundBetsStore.js'
@@ -15,21 +15,28 @@ import { CurrentBetsBoard } from './CurrentBetsSheet.jsx'
 import { DEFAULT_BALANCE } from '../../betting/constants/defaults.js'
 import {
   HudFade,
-  HudFullscreenButton,
   HudMenuChrome,
   useDialogFocus,
 } from '../../hud/index.js'
 import { playSfx } from '../../../shared/audio/index.js'
 import '../../betting/styles/hud-shared.css'
 import '../../betting/styles/crazy-combos.css'
+import '../../betting/styles/portrait.css'
 import '../styles/race.css'
 
 /**
- * In-race HUD — same compact landscape chrome as BettingOverlay:
- * Balance | CURRENT BETS | Potential Win. Open sheet = read-only board.
+ * In-race HUD:
+ * - Landscape compact: Balance | CURRENT BETS | Potential Win (+ sheet board).
+ * - Portrait: same board as betting (read-only), no chip footer; timer on stream edge.
  */
 export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
-  const { scale: viewportScale, compact } = useHudViewportContext()
+  const {
+    scale: viewportScale,
+    compact,
+    orientation,
+    portraitVideoPx,
+  } = useHudViewportContext()
+  const isPortrait = orientation === 'portrait'
   const { round, status } = useCurrentRound()
   const { isRaceUiVisible, raceKey, raceStartedAt } = useRaceOverlayState({
     status,
@@ -41,7 +48,6 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
     raceKey,
   })
   const potentialWin = useMockPotentialWin({ active: isRaceUiVisible })
-  const { isFullscreen, toggleFullscreen } = useFullscreen()
   const { roundId: betsRoundId, bets, comboPick: publishedComboPick, crazyComboPicks: publishedCrazyComboPicks } =
     usePublishedRoundBets()
   const [betsOpenForKey, setBetsOpenForKey] = useState(null)
@@ -49,7 +55,9 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
   if (betsOpenForKey != null && betsOpenForKey !== raceKey) {
     setBetsOpenForKey(null)
   }
-  const betsOpen = Boolean(isRaceUiVisible && betsOpenForKey === raceKey)
+  const betsOpen = Boolean(
+    !isPortrait && isRaceUiVisible && betsOpenForKey === raceKey,
+  )
   const betsDialogRef = useRef(null)
   const betsTableRef = useRef(null)
   const currentBetsToggleRef = useRef(null)
@@ -70,6 +78,11 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
   const visibleComboPick = roundMatches ? publishedComboPick : null
 
   const visibleCrazyComboPicks = roundMatches ? publishedCrazyComboPicks : null
+  const totalBet = useMemo(
+    () =>
+      visibleBets.reduce((sum, bet) => sum + getBetTotal(bet), 0),
+    [visibleBets],
+  )
   const viewportMode = compact ? '1' : '0'
 
   const showCrazyCombos = true
@@ -77,6 +90,7 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
   const showCrazyComboBar = true
 
   function toggleCurrentBets() {
+    if (isPortrait) return
     if (betsOpen) {
       setBetsOpenForKey(null)
       playSfx('sheetClose')
@@ -96,6 +110,8 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
   }, [betsOpen, closeBets])
 
   useLayoutEffect(() => {
+    if (isPortrait) return undefined
+
     const root = overlayRef.current
     if (!root) return undefined
 
@@ -177,6 +193,7 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
     }
   }, [
     betsOpen,
+    isPortrait,
     visibleBets.length,
     showCrazyCombos,
     viewportScale,
@@ -185,6 +202,74 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
 
   if (!isRaceUiVisible) {
     return null
+  }
+
+  const board = (
+    <CurrentBetsBoard
+      bets={visibleBets}
+      tableRef={isPortrait ? null : betsTableRef}
+      showCrazyCombos={showCrazyCombos}
+      showComboBar={showComboBar}
+      showCrazyComboBar={showCrazyComboBar}
+      comboPick={visibleComboPick}
+      crazyComboPicks={visibleCrazyComboPicks}
+      portrait={isPortrait}
+    />
+  )
+
+  if (isPortrait) {
+    return (
+      <div
+        ref={overlayRef}
+        className="race-overlay"
+        data-compact={compact ? 'true' : undefined}
+        data-orientation="portrait"
+        data-round-id={round?.id ?? undefined}
+        data-round-status={status ?? undefined}
+        style={{
+          '--hud-scale': viewportScale,
+          ...(portraitVideoPx > 0
+            ? { '--portrait-video-h': `${portraitVideoPx}px` }
+            : null),
+        }}
+      >
+        <BettingBanner secondsLeft={elapsedLabel} />
+        <HudMenuChrome placement="top" />
+        <HudFade />
+
+        <div className="betting-overlay__bottom">
+          <div className="betting-overlay__hud">
+            {board}
+
+            {/*
+              Zero-height footer anchors Balance / Total Bet meters
+              (same absolute placement as betting portrait) — no chips.
+            */}
+            <footer className="betting-footer race-overlay__footer race-overlay__footer--meters-only">
+              <div className="betting-footer__balance-wrap">
+                <span className="betting-footer__caption">BALANCE:</span>
+                <div
+                  className="betting-footer__meter"
+                  style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
+                >
+                  {formatMoney(balance)}
+                </div>
+              </div>
+
+              <div className="betting-footer__total-wrap">
+                <span className="betting-footer__caption">TOTAL BET:</span>
+                <div
+                  className="betting-footer__meter"
+                  style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
+                >
+                  {formatMoney(totalBet)}
+                </div>
+              </div>
+            </footer>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const currentBetsToggle = (
@@ -213,6 +298,7 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
       ref={overlayRef}
       className={`race-overlay${betsOpen ? ' is-bets-open' : ''}`}
       data-compact={compact ? 'true' : undefined}
+      data-orientation={orientation}
       data-round-id={round?.id ?? undefined}
       data-round-status={status ?? undefined}
       style={{ '--hud-scale': viewportScale }}
@@ -244,15 +330,7 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
               aria-label="Current bets"
               tabIndex={-1}
             >
-              <CurrentBetsBoard
-                bets={visibleBets}
-                tableRef={betsTableRef}
-                showCrazyCombos={showCrazyCombos}
-                showComboBar={showComboBar}
-                showCrazyComboBar={showCrazyComboBar}
-                comboPick={visibleComboPick}
-                crazyComboPicks={visibleCrazyComboPicks}
-              />
+              {board}
             </div>
           ) : null}
 
@@ -286,10 +364,6 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
         </div>
       </div>
 
-      <HudFullscreenButton
-        isFullscreen={isFullscreen}
-        onToggle={toggleFullscreen}
-      />
       {compact ? null : <HudMenuChrome placement="footer" />}
     </div>
   )

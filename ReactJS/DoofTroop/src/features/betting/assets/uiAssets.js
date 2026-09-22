@@ -1,6 +1,7 @@
 import textBar from '../../../assets/ui/TableButton.png'
 import comboBar from '../../../assets/ui/ComboBar.png'
 import comboBarActive from '../../../assets/ui/ComboBar_Active.png'
+import comboBarNoBet from '../../../assets/ui/ComboBar_NoBet.png'
 import crazyComboBar from '../../../assets/ui/CrazyComboBar_ActiveBackground.png'
 import crazyComboBarComplete from '../../../assets/ui/CrazyComboBar.png'
 import historyBar from '../../../assets/ui/history-bar.png'
@@ -21,13 +22,14 @@ import colorGreenBar from '../../../assets/ui/green.png'
 import colorCyanBar from '../../../assets/ui/cyan.png'
 import colorBlueBar from '../../../assets/ui/blue.png'
 import colorMagentaBar from '../../../assets/ui/magenta.png'
-import hatIcon from '../../../assets/ui/hats.png'
-import glassesIcon from '../../../assets/ui/glasses.png'
+import hatIcon from '../../../assets/ui/Hats.png'
+import glassesIcon from '../../../assets/ui/Glasses.png'
 import betField from '../../../assets/ui/bet-field.png'
 import roundButton from '../../../assets/ui/RoundButton.png'
 import menuButton from '../../../assets/ui/MenuButton.png'
 import menuPanel from '../../../assets/ui/Menu.png'
 import menuSoundIcon from '../../../assets/ui/Menu_SoundIcon.png'
+import menuSoundIconMute from '../../../assets/ui/Menu_SoundIcon_Mute.png'
 import menuCommentIcon from '../../../assets/ui/Menu_CommentIcon.png'
 import menuInfoIcon from '../../../assets/ui/Menu_InfoIcon.png'
 import menuHomeIcon from '../../../assets/ui/Menu_HomeIcon.png'
@@ -42,14 +44,19 @@ import bronzeChipSelected from '../../../assets/ui/Chip_Bronze_Selected.png'
 import silverChipSimple from '../../../assets/ui/Chip_Silver_Simple.png'
 import goldChipSimple from '../../../assets/ui/Chip_Gold_Simple.png'
 import bronzeChipSimple from '../../../assets/ui/Chip_Bronze_Simple.png'
+import comboChip from '../../../assets/ui/Chips_Combo.png'
+import crazyComboChip from '../../../assets/ui/Chips_CrazyCombo.png'
 import fullscreen from '../../../assets/ui/FullScreen.png'
 import backgroundFade from '../../../assets/ui/Background_Fade.png'
 import timerBar from '../../../assets/ui/TimerBar.png'
+import timerBarYellow from '../../../assets/ui/TimerBar_Yellow.png'
+import timerBarRed from '../../../assets/ui/TimerBar_Red.png'
 
 export const uiAssets = Object.freeze({
   textBar,
   comboBar,
   comboBarActive,
+  comboBarNoBet,
   crazyComboBar,
   crazyComboBarComplete,
   historyBar,
@@ -70,7 +77,7 @@ export const uiAssets = Object.freeze({
       Green: colorGreenBar,
       Cyan: colorCyanBar,
       Blue: colorBlueBar,
-      Magenta: colorMagentaBar,
+      Pink: colorMagentaBar,
     }),
     patterns: Object.freeze({
       Dots: patternDots,
@@ -88,6 +95,7 @@ export const uiAssets = Object.freeze({
   menuPanel,
   menuIcons: Object.freeze({
     sound: menuSoundIcon,
+    soundMute: menuSoundIconMute,
     commentary: menuCommentIcon,
     howToPlay: menuInfoIcon,
     home: menuHomeIcon,
@@ -97,6 +105,8 @@ export const uiAssets = Object.freeze({
   fullscreen,
   backgroundFade,
   timerBar,
+  timerBarYellow,
+  timerBarRed,
   /** Tray chips keyed by metal. */
   chips: Object.freeze({
     silver: silverChip,
@@ -114,4 +124,7 @@ export const uiAssets = Object.freeze({
     gold: goldChipSimple,
     bronze: bronzeChipSimple,
   }),
+  /** Combo bar stacks — same art for every metal face. */
+  chipsCombo: comboChip,
+  chipsCrazyCombo: crazyComboChip,
 })

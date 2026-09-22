@@ -1,8 +1,8 @@
-/** UI labels for position tabs (internal keys stay 1st / 2nd / 3rd). */
+/** UI labels for Crazy Combo slots (internal keys stay 1st / 2nd / 3rd). */
 export const POSITION_LABELS = Object.freeze({
   '1st': '1st',
-  '2nd': 'Top 2',
-  '3rd': 'Top 3',
+  '2nd': '2nd',
+  '3rd': '3rd',
 })
 
 /** Fill width of All position bar inside the inset track (P1 / P2 / P3). */

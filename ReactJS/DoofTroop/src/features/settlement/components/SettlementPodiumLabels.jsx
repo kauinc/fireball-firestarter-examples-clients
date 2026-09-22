@@ -54,6 +54,7 @@ function podiumAccent(color) {
       return '#5defff'
     case 'Blue':
       return '#5aa8ff'
+    case 'Pink':
     case 'Magenta':
       return '#ff6ec7'
     default:

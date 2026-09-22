@@ -1,25 +1,86 @@
 import { useEffect } from 'react'
 import {
+  AudioTrack,
   LiveKitRoom,
-  RoomAudioRenderer,
   useRoomContext,
+  useTracks,
 } from '@livekit/components-react'
-import { LogLevel, setLogLevel } from 'livekit-client'
+import { LogLevel, RoomEvent, Track, setLogLevel } from 'livekit-client'
+import { useAudioMuted } from '../../../shared/audio/index.js'
 import { StreamViewport } from './StreamViewport.jsx'
 
 // LiveKit logs "already connected" at info when React re-renders reconnect;
 // keep warnings/errors only.
 setLogLevel(LogLevel.warn)
 
+const AUDIO_SOURCES = [
+  Track.Source.Microphone,
+  Track.Source.ScreenShareAudio,
+  Track.Source.Unknown,
+]
+
 /**
- * Keep stream audio on: unlock playback on connect + any user gesture.
+ * @param {import('@livekit/components-react').TrackReference} trackRef
+ */
+function trackKey(trackRef) {
+  return `${trackRef.participant.identity}:${trackRef.publication?.trackSid ?? trackRef.source}`
+}
+
+/**
+ * @param {import('livekit-client').Room} room
+ * @param {boolean} muted
+ */
+function applyRemoteAudioMute(room, muted) {
+  const volume = muted ? 0 : 1
+  for (const participant of room.remoteParticipants.values()) {
+    for (const publication of participant.audioTrackPublications.values()) {
+      const track = publication.track
+      if (!track || typeof track.setVolume !== 'function') continue
+      try {
+        track.setVolume(volume)
+      } catch {
+        // Ignore tracks that reject volume changes.
+      }
+    }
+  }
+
+  // Belt-and-suspenders for WebAudio / element playback paths.
+  if (typeof document !== 'undefined') {
+    for (const el of document.querySelectorAll(
+      '.stream-shell audio, .stream-shell video',
+    )) {
+      el.muted = muted
+      try {
+        el.volume = volume
+      } catch {
+        // Some browsers reject volume writes on remote streams.
+      }
+    }
+  }
+}
+
+/**
+ * Renders remote stream audio and follows the HUD mute toggle.
+ * Custom track list so mute/volume always apply, including Unknown
+ * WHIP/ingress audio sources.
  */
 function StreamAudio() {
   const room = useRoomContext()
+  const muted = useAudioMuted()
+  const tracks = useTracks(AUDIO_SOURCES, {
+    onlySubscribed: true,
+    room,
+  }).filter(
+    (ref) =>
+      !ref.participant.isLocal && ref.publication?.kind === Track.Kind.Audio,
+  )
 
   useEffect(() => {
     function unlock() {
-      room.startAudio().catch(() => {})
+      room
+        .startAudio()
+        .then(() => applyRemoteAudioMute(room, muted))
+        .catch(() => {})
     }
 
     unlock()
@@ -29,9 +90,35 @@ function StreamAudio() {
       window.removeEventListener('pointerdown', unlock)
       window.removeEventListener('keydown', unlock)
     }
-  }, [room])
+  }, [room, muted])
 
-  return <RoomAudioRenderer volume={1} muted={false} />
+  useEffect(() => {
+    const sync = () => applyRemoteAudioMute(room, muted)
+    sync()
+    room.on(RoomEvent.TrackSubscribed, sync)
+    room.on(RoomEvent.TrackUnmuted, sync)
+    room.on(RoomEvent.ParticipantConnected, sync)
+    return () => {
+      room.off(RoomEvent.TrackSubscribed, sync)
+      room.off(RoomEvent.TrackUnmuted, sync)
+      room.off(RoomEvent.ParticipantConnected, sync)
+    }
+  }, [room, muted])
+
+  if (muted) return null
+
+  return (
+    <div className="stream-shell__audio" aria-hidden="true">
+      {tracks.map((trackRef) => (
+        <AudioTrack
+          key={trackKey(trackRef)}
+          trackRef={trackRef}
+          volume={1}
+          muted={false}
+        />
+      ))}
+    </div>
+  )
 }
 
 /**

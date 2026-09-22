@@ -12,7 +12,8 @@ const VIDEO_SOURCES = [
 ]
 
 /**
- * Renders the first subscribed remote video track edge-to-edge without cropping.
+ * Renders the first subscribed remote video track.
+ * Landscape: edge-to-edge contain. Portrait strip: cover (+ mobile zoom in CSS).
  *
  * @param {{ onVideoAvailableChange?: (available: boolean) => void }} props
  */
@@ -35,11 +36,7 @@ export function StreamViewport({ onVideoAvailableChange }) {
 
   return (
     <div className="stream-viewport">
-      <VideoTrack
-        trackRef={primary}
-        className="stream-viewport__video"
-        style={{ objectFit: 'contain' }}
-      />
+      <VideoTrack trackRef={primary} className="stream-viewport__video" />
     </div>
   )
 }

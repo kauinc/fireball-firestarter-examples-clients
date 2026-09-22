@@ -1,4 +1,5 @@
 import { sfxAssets } from './sfxAssets.js'
+import { isAudioMuted } from './audioMuteStore.js'
 import { MASTER_VOLUME, SFX_ENABLED, sfxMap } from './sfxMap.js'
 
 /** @type {AudioContext | null} */
@@ -55,7 +56,7 @@ export function installSfxUnlock() {
  * @param {{ volume?: number }} [opts]
  */
 export function playSfx(eventId, opts = {}) {
-  if (!SFX_ENABLED) return
+  if (!SFX_ENABLED || isAudioMuted()) return
 
   const entry = sfxMap[eventId]
   if (!entry || entry.sound == null) return

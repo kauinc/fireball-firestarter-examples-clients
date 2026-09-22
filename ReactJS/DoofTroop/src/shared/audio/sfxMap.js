@@ -56,9 +56,9 @@ export const sfxMap = {
   // --- Betting phase cues ---
   /** Betting overlay opens (PLACE YOUR BETS). */
   bettingOpen: { sound: 'Special_Musical_03', volume: 0.7 },
-  /** Enter BETS CLOSING (≤5s). */
+  /** Enter BETS CLOSING (≤10s). */
   bettingClosing: { sound: 'Gong_01', volume: 0.65 },
-  /** NO MORE BETS. */
+  /** BETS CLOSED. */
   bettingClosed: { sound: 'Gong_02', volume: 0.75 },
 
   // --- Sheets / chrome ---

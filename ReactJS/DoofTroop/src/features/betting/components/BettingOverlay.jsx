@@ -7,7 +7,6 @@ import { useCurrentRound } from '../hooks/useCurrentRound.js'
 import { useBettingOverlayState } from '../hooks/useBettingOverlayState.js'
 import { useChipBets } from '../hooks/useChipBets.js'
 import { useChipDrag } from '../hooks/useChipDrag.js'
-import { useFullscreen } from '../hooks/useFullscreen.js'
 import { uiAssets } from '../assets/uiAssets.js'
 import {
   canPlaceBetTarget,
@@ -24,7 +23,6 @@ import {
 } from '../constants/doofs.js'
 import {
   HudFade,
-  HudFullscreenButton,
   HudMenuChrome,
   getDoofColorBarsFadeAnchorTop,
   useHudViewportContext,
@@ -43,17 +41,21 @@ function BettingRoundSession({
   phase,
   secondsLeft,
   bannerLabel,
+  timerVariant,
   disabled,
   compact,
   viewportScale,
+  orientation = 'landscape',
+  portraitVideoPx = 0,
   round,
   status,
-  isFullscreen,
-  toggleFullscreen,
   hidden = false,
+  boardHidden = false,
   historyOpen,
   onHistoryOpenChange,
 }) {
+  const isPortrait = orientation === 'portrait'
+  const displayBalance = 5100
   const boardRef = useRef(null)
   const overlayRef = useRef(null)
   const [accessory, setAccessory] = useState(null)
@@ -241,16 +243,17 @@ function BettingRoundSession({
   // Round-scoped betting state remounts via parent `key={sessionKey}`.
   // History preference lives in BettingOverlay and persists across rounds.
 
-  const showAdvancedChrome = true
+  const showAdvancedChrome = !boardHidden
   const getFadeAnchorTop = useCallback(
     () => getDoofColorBarsFadeAnchorTop(overlayRef.current),
     [],
   )
   useSyncHudFadeHeight({
-    enabled: showAdvancedChrome && !hidden,
+    // Portrait uses CSS height (stream overlap); landscape syncs to color bars.
+    enabled: showAdvancedChrome && !hidden && !isPortrait,
     overlayRef,
     getAnchorTop: getFadeAnchorTop,
-    deps: [viewportScale, compact, showAdvancedChrome],
+    deps: [viewportScale, compact, showAdvancedChrome, isPortrait],
   })
 
   if (hidden) return null
@@ -285,8 +288,11 @@ function BettingRoundSession({
       ref={overlayRef}
       className="betting-overlay"
       data-phase={phase}
+      data-timer-variant={timerVariant}
       data-compact={compact ? 'true' : undefined}
+      data-orientation={orientation}
       data-advanced={showAdvancedChrome ? 'true' : 'false'}
+      data-banner-only={boardHidden ? 'true' : undefined}
       data-crazy={crazyCombo ? 'true' : 'false'}
       data-combo={comboActive ? 'true' : 'false'}
       data-crazy-combo-pick={crazyComboPickActive ? 'true' : 'false'}
@@ -294,113 +300,138 @@ function BettingRoundSession({
       data-round-id={round?.id ?? undefined}
       data-round-number={round?.round_number ?? undefined}
       data-round-status={status ?? undefined}
-      style={{ '--hud-scale': viewportScale }}
+      style={{
+        '--hud-scale': viewportScale,
+        ...(isPortrait && portraitVideoPx > 0
+          ? { '--portrait-video-h': `${portraitVideoPx}px` }
+          : null),
+      }}
     >
-      <BettingBanner label={bannerLabel} secondsLeft={secondsLeft} />
-
-      {compact ? <HudMenuChrome placement="top" /> : null}
-
-      {showAdvancedChrome ? <HudFade /> : null}
-
-      <div className="betting-overlay__bottom">
-        <div className="betting-overlay__hud" ref={boardRef}>
-          <DoofGrid
-            disabled={boardBettingDisabled}
-            bets={bets}
-            labelBets={labelBets}
-            onPlaceBet={handlePlaceBet}
-            comboActive={comboActive}
-            crazyComboPickActive={crazyComboPickActive}
-            crazyComboActiveSlot={crazyComboActiveSlot}
-            crazyComboPicks={crazyComboPicks}
-            onCrazyComboDoofPick={handleCrazyComboDoofPick}
-            onComboBarPick={handleComboBarPick}
-            highlightTarget={
-              dragChip?.moved ? dragChip.hoverTarget : null
-            }
-          />
-
-          {showAdvancedChrome ? (
-            <MidControls
-              accessory={accessory}
-              onAccessoryChange={setAccessory}
-              disabled={disabled}
-              bets={accessoryBets}
-              onPlaceBet={handlePlaceBet}
-              historyOpen={historyOpen}
-              onHistoryOpenChange={onHistoryOpenChange}
-              comboActive={comboActive}
-              onComboBarPick={handleComboBarPick}
-              onComboToggle={handleComboToggle}
-              comboPick={comboPick}
-              comboBet={comboBet}
-              crazyComboBet={crazyComboBet}
-              onPlaceComboBet={handlePlaceBet}
-              crazyComboPickActive={crazyComboPickActive}
-              crazyComboActiveSlot={crazyComboActiveSlot}
-              crazyComboPicks={crazyComboPicks}
-              onCrazyComboBarClick={handleCrazyComboBarClick}
-              comboPickRequired={comboPickRequired}
-            />
-          ) : null}
-
-          <BettingFooter
-            disabled={disabled}
-            stakeValue={selectedChip}
-            selectedMetal={selectedMetal}
-            onSelectMetal={handleSelectMetal}
-            onChipDragStart={startDrag}
-            onClear={handleClear}
-            onUndo={handleUndo}
-            onRepeat={handleRepeat}
-            onDouble={handleDouble}
-            onIncreaseChip={() => stepSelectedChip(1)}
-            onDecreaseChip={() => stepSelectedChip(-1)}
-            canUndo={canUndo}
-            canRepeat={canRepeat}
-            canDouble={totalBet > 0}
-            totalBet={totalBet}
-            hideMenu
-          />
-        </div>
-      </div>
-
-      <HudFullscreenButton
-        isFullscreen={isFullscreen}
-        onToggle={toggleFullscreen}
+      <BettingBanner
+        label={bannerLabel}
+        secondsLeft={secondsLeft}
+        variant={timerVariant}
       />
-      {compact ? null : <HudMenuChrome placement="footer" />}
 
-      {ghostSrc ? (
-        <div
-          className="betting-chip-ghost"
-          style={{
-            left: dragChip.x,
-            top: dragChip.y,
-            backgroundImage: `url(${ghostSrc})`,
-          }}
-          aria-hidden="true"
-        >
-          <span>{dragChip.value}</span>
-        </div>
-      ) : null}
+      {boardHidden ? null : (
+        <>
+          {compact || isPortrait ? <HudMenuChrome placement="top" /> : null}
+
+          {/* Portrait: always paint Background_Fade over lower half of stream. */}
+          {showAdvancedChrome || isPortrait ? <HudFade /> : null}
+
+          <div className="betting-overlay__bottom">
+            <div className="betting-overlay__hud" ref={boardRef}>
+              <DoofGrid
+                disabled={boardBettingDisabled}
+                bets={bets}
+                labelBets={labelBets}
+                onPlaceBet={handlePlaceBet}
+                comboActive={comboActive}
+                crazyComboPickActive={crazyComboPickActive}
+                crazyComboActiveSlot={crazyComboActiveSlot}
+                crazyComboPicks={crazyComboPicks}
+                onCrazyComboDoofPick={handleCrazyComboDoofPick}
+                onComboBarPick={handleComboBarPick}
+                highlightTarget={
+                  dragChip?.moved ? dragChip.hoverTarget : null
+                }
+                portrait={isPortrait}
+                balance={null}
+                totalBet={null}
+              />
+
+              {showAdvancedChrome ? (
+                <MidControls
+                  accessory={accessory}
+                  onAccessoryChange={setAccessory}
+                  disabled={disabled}
+                  bets={accessoryBets}
+                  onPlaceBet={handlePlaceBet}
+                  historyOpen={isPortrait ? false : historyOpen}
+                  onHistoryOpenChange={isPortrait ? undefined : onHistoryOpenChange}
+                  comboActive={comboActive}
+                  onComboBarPick={handleComboBarPick}
+                  onComboToggle={handleComboToggle}
+                  comboPick={comboPick}
+                  comboBet={comboBet}
+                  crazyComboBet={crazyComboBet}
+                  onPlaceComboBet={handlePlaceBet}
+                  crazyComboPickActive={crazyComboPickActive}
+                  crazyComboActiveSlot={crazyComboActiveSlot}
+                  crazyComboPicks={crazyComboPicks}
+                  onCrazyComboBarClick={handleCrazyComboBarClick}
+                  comboPickRequired={comboPickRequired}
+                />
+              ) : null}
+
+              <BettingFooter
+                disabled={disabled}
+                stakeValue={selectedChip}
+                selectedMetal={selectedMetal}
+                onSelectMetal={handleSelectMetal}
+                onChipDragStart={startDrag}
+                onClear={handleClear}
+                onUndo={handleUndo}
+                onRepeat={handleRepeat}
+                onDouble={handleDouble}
+                onIncreaseChip={() => stepSelectedChip(1)}
+                onDecreaseChip={() => stepSelectedChip(-1)}
+                canUndo={canUndo}
+                canRepeat={canRepeat}
+                canDouble={totalBet > 0}
+                balance={displayBalance}
+                totalBet={totalBet}
+                hideMenu
+              />
+            </div>
+          </div>
+
+          {compact ? null : <HudMenuChrome placement="footer" />}
+
+          {ghostSrc ? (
+            <div
+              className="betting-chip-ghost"
+              style={{
+                left: dragChip.x,
+                top: dragChip.y,
+                backgroundImage: `url(${ghostSrc})`,
+              }}
+              aria-hidden="true"
+            >
+              <span>{dragChip.value}</span>
+            </div>
+          ) : null}
+        </>
+      )}
     </div>
   )
 }
 
 /**
  * Betting HUD driven by Supabase `rounds.status` (Realtime).
- * Visible only while status === BETTING_OPEN.
+ * Full board while BETTING_OPEN; TimerBar through BETTING_CLOSED / TRACK_READY.
  *
  * Mobile (compact): landscape layout matches product refs.
  * Combo controls are always visible during betting.
  */
 export function BettingOverlay() {
-  const { scale: viewportScale, compact } = useHudViewportContext()
+  const {
+    scale: viewportScale,
+    compact,
+    orientation,
+    portraitVideoPx,
+  } = useHudViewportContext()
   const { round, status } = useCurrentRound()
-  const { phase, secondsLeft, bannerLabel, isBettingUiVisible, disabled } =
-    useBettingOverlayState({ status, round })
-  const { isFullscreen, toggleFullscreen } = useFullscreen()
+  const {
+    phase,
+    secondsLeft,
+    bannerLabel,
+    timerVariant,
+    isBannerVisible,
+    isBoardVisible,
+    disabled,
+  } = useBettingOverlayState({ status, round })
   const [historyOpen, setHistoryOpen] = useState(false)
 
   // Keep bets for the whole round (race HUD reads the same placements).
@@ -413,14 +444,16 @@ export function BettingOverlay() {
       phase={phase}
       secondsLeft={secondsLeft}
       bannerLabel={bannerLabel}
+      timerVariant={timerVariant}
       disabled={disabled}
       compact={compact}
       viewportScale={viewportScale}
+      orientation={orientation}
+      portraitVideoPx={portraitVideoPx}
       round={round}
       status={status}
-      isFullscreen={isFullscreen}
-      toggleFullscreen={toggleFullscreen}
-      hidden={!isBettingUiVisible}
+      hidden={!isBannerVisible}
+      boardHidden={!isBoardVisible}
       historyOpen={historyOpen}
       onHistoryOpenChange={setHistoryOpen}
     />

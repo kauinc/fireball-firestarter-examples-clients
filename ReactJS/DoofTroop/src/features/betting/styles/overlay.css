@@ -17,7 +17,7 @@
   --pattern-label-x: 8px;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] {
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait']) {
   --hud-font-scale: calc(var(--hud-scale) * 0.82);
 }
 
@@ -75,7 +75,7 @@
   position: relative;
   display: grid;
   place-items: center;
-  /* TimerBar.png 627×152; solid ≈570×96 — shell = solid size, no CSS rounding. */
+  /* TimerBar.png 583×142; solid ≈ shell size — chrome expands so ends aren't clipped. */
   width: calc(190px * var(--hud-scale));
   height: calc(32px * var(--hud-scale));
   border: 0;
@@ -84,8 +84,8 @@
   box-shadow: none;
   overflow: visible;
   /* Full asset vs solid — chrome layer uses this so rounded ends aren't clipped. */
-  --timer-bar-full-w: calc(100% * 627 / 570);
-  --timer-bar-full-h: calc(100% * 152 / 96);
+  --timer-bar-full-w: calc(100% * 583 / 530);
+  --timer-bar-full-h: calc(100% * 142 / 90);
 }
 
 .betting-banner__chrome {
@@ -101,6 +101,33 @@
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: center;
+}
+
+.betting-banner__chrome--under {
+  z-index: 1;
+}
+
+.betting-banner__chrome--flash {
+  z-index: 1;
+  animation: betting-timer-bar-flash 0.4s steps(1, end) infinite;
+}
+
+@keyframes betting-timer-bar-flash {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .betting-banner__chrome--flash {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 .betting-banner__value {
@@ -166,36 +193,6 @@
   gap: calc(8px * var(--hud-scale));
 }
 
-/* Fullscreen — pinned to viewport bottom-right on any screen size */
-.betting-overlay__fullscreen {
-  position: absolute;
-  z-index: 5;
-  right: max(10px, env(safe-area-inset-right, 0px));
-  bottom: max(10px, env(safe-area-inset-bottom, 0px));
-  width: calc(44px * var(--hud-scale));
-  height: calc(44px * var(--hud-scale));
-  margin: 0;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
-
-.betting-overlay__fullscreen-icon {
-  width: calc(36px * var(--hud-scale));
-  height: calc(22px * var(--hud-scale));
-  object-fit: contain;
-  display: block;
-  pointer-events: none;
-}
-
-.betting-overlay__fullscreen.is-active .betting-overlay__fullscreen-icon {
-  transform: scale(0.92);
-  opacity: 0.95;
-}
-
 /* —— HUD hamburger menu panel —— */
 .hud-menu-panel {
   position: absolute;
@@ -253,6 +250,11 @@
   pointer-events: none;
 }
 
+.hud-menu-panel__icon--wide {
+  width: calc(34px * var(--hud-scale));
+  height: calc(22px * var(--hud-scale));
+}
+
 .hud-menu-panel__label {
   flex: 1 1 auto;
 }
@@ -262,4 +264,34 @@
  */
 :is(.mid-controls__history, .race-overlay__current-bets) {
   background-position: center bottom;
+}
+
+/*
+ * Short landscape (real iPhone with browser chrome, or Pro Max DevTools):
+ * desktop mid-controls translateY pulls Hats/Combo into the board. Drop the
+ * overlap nudge; keep the same desktop scale so the HUD matches DevTools.
+ */
+@media (orientation: landscape) and (max-height: 500px) {
+  :is(.betting-overlay, .race-overlay, .settlement-overlay) {
+    --board-shift-x: 0px;
+  }
+
+  :is(.betting-overlay, .race-overlay, .settlement-overlay)
+    .mid-controls,
+  :is(.betting-overlay, .race-overlay, .settlement-overlay)
+    .mid-controls-stack
+    .mid-controls,
+  :is(.betting-overlay, .race-overlay, .settlement-overlay)
+    .mid-controls-stack.is-crazy
+    .mid-controls {
+    transform: none;
+  }
+
+  :is(.betting-overlay, .race-overlay, .settlement-overlay)
+    .betting-overlay__bottom {
+    padding-bottom: max(
+      calc(8px * var(--hud-scale)),
+      calc(env(safe-area-inset-bottom, 0px) + 4px)
+    );
+  }
 }

@@ -1,4 +1,5 @@
-export { HudFade, HudFullscreenButton, HudMenuChrome } from './components/HudChrome.jsx'
+export { HudFade, HudMenuChrome } from './components/HudChrome.jsx'
+export { FullscreenHomeScreenHint } from './components/FullscreenHomeScreenHint.jsx'
 export { StreamErrorBoundary } from './components/StreamErrorBoundary.jsx'
 export {
   LandscapeHudOnly,
