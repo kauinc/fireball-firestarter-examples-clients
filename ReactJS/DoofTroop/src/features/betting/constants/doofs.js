@@ -4,10 +4,10 @@ export const DOOF_COLORS = Object.freeze([
   'Green',
   'Cyan',
   'Blue',
-  'Magenta',
+  'Pink',
 ])
 
-export const DOOF_PATTERNS = Object.freeze(['Dots', 'Solid', 'Stripes'])
+export const DOOF_PATTERNS = Object.freeze(['Stripes', 'Solid', 'Dots'])
 
 export const DOOF_ACCESSORIES = Object.freeze(['Hats', 'Glasses'])
 

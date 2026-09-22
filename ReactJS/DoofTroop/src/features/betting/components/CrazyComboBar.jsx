@@ -45,6 +45,7 @@ export function CrazyComboBar({
 
   const shellStyle = {
     backgroundImage: `url(${shellBg})`,
+    '--portrait-shell-bg': `url(${shellBg})`,
   }
 
   function placeOnCrazyCombo() {
@@ -122,7 +123,13 @@ export function CrazyComboBar({
       className={`crazy-combo-bar${pickActive ? ' is-pick-active' : ''}${complete ? ' is-complete' : ''}`}
       aria-label="Crazy Combo"
     >
-      <h3 className="crazy-combo-bar__caption">CRAZY COMBO</h3>
+      <h3 className="crazy-combo-bar__caption">
+        <span className="crazy-combo-bar__caption-title">CRAZY COMBO</span>
+        <span className="crazy-combo-bar__caption-pays">
+          <span className="crazy-combo-bar__caption-pays-label">pays</span>
+          <span className="crazy-combo-bar__caption-pays-value">{paysMultiplier}</span>
+        </span>
+      </h3>
       <div className="crazy-combo-bar__track">
         <div
           className={shellClass}

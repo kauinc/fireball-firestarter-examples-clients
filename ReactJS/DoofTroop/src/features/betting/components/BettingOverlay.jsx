@@ -45,6 +45,8 @@ function BettingRoundSession({
   disabled,
   compact,
   viewportScale,
+  orientation = 'landscape',
+  portraitVideoPx = 0,
   round,
   status,
   hidden = false,
@@ -52,6 +54,8 @@ function BettingRoundSession({
   historyOpen,
   onHistoryOpenChange,
 }) {
+  const isPortrait = orientation === 'portrait'
+  const displayBalance = 5100
   const boardRef = useRef(null)
   const overlayRef = useRef(null)
   const [accessory, setAccessory] = useState(null)
@@ -245,10 +249,11 @@ function BettingRoundSession({
     [],
   )
   useSyncHudFadeHeight({
-    enabled: showAdvancedChrome && !hidden,
+    // Portrait uses CSS height (stream overlap); landscape syncs to color bars.
+    enabled: showAdvancedChrome && !hidden && !isPortrait,
     overlayRef,
     getAnchorTop: getFadeAnchorTop,
-    deps: [viewportScale, compact, showAdvancedChrome],
+    deps: [viewportScale, compact, showAdvancedChrome, isPortrait],
   })
 
   if (hidden) return null
@@ -285,6 +290,7 @@ function BettingRoundSession({
       data-phase={phase}
       data-timer-variant={timerVariant}
       data-compact={compact ? 'true' : undefined}
+      data-orientation={orientation}
       data-advanced={showAdvancedChrome ? 'true' : 'false'}
       data-banner-only={boardHidden ? 'true' : undefined}
       data-crazy={crazyCombo ? 'true' : 'false'}
@@ -294,7 +300,12 @@ function BettingRoundSession({
       data-round-id={round?.id ?? undefined}
       data-round-number={round?.round_number ?? undefined}
       data-round-status={status ?? undefined}
-      style={{ '--hud-scale': viewportScale }}
+      style={{
+        '--hud-scale': viewportScale,
+        ...(isPortrait && portraitVideoPx > 0
+          ? { '--portrait-video-h': `${portraitVideoPx}px` }
+          : null),
+      }}
     >
       <BettingBanner
         label={bannerLabel}
@@ -304,9 +315,10 @@ function BettingRoundSession({
 
       {boardHidden ? null : (
         <>
-          {compact ? <HudMenuChrome placement="top" /> : null}
+          {compact || isPortrait ? <HudMenuChrome placement="top" /> : null}
 
-          {showAdvancedChrome ? <HudFade /> : null}
+          {/* Portrait: always paint Background_Fade over lower half of stream. */}
+          {showAdvancedChrome || isPortrait ? <HudFade /> : null}
 
           <div className="betting-overlay__bottom">
             <div className="betting-overlay__hud" ref={boardRef}>
@@ -324,6 +336,9 @@ function BettingRoundSession({
                 highlightTarget={
                   dragChip?.moved ? dragChip.hoverTarget : null
                 }
+                portrait={isPortrait}
+                balance={null}
+                totalBet={null}
               />
 
               {showAdvancedChrome ? (
@@ -333,8 +348,8 @@ function BettingRoundSession({
                   disabled={disabled}
                   bets={accessoryBets}
                   onPlaceBet={handlePlaceBet}
-                  historyOpen={historyOpen}
-                  onHistoryOpenChange={onHistoryOpenChange}
+                  historyOpen={isPortrait ? false : historyOpen}
+                  onHistoryOpenChange={isPortrait ? undefined : onHistoryOpenChange}
                   comboActive={comboActive}
                   onComboBarPick={handleComboBarPick}
                   onComboToggle={handleComboToggle}
@@ -365,6 +380,7 @@ function BettingRoundSession({
                 canUndo={canUndo}
                 canRepeat={canRepeat}
                 canDouble={totalBet > 0}
+                balance={displayBalance}
                 totalBet={totalBet}
                 hideMenu
               />
@@ -400,7 +416,12 @@ function BettingRoundSession({
  * Combo controls are always visible during betting.
  */
 export function BettingOverlay() {
-  const { scale: viewportScale, compact } = useHudViewportContext()
+  const {
+    scale: viewportScale,
+    compact,
+    orientation,
+    portraitVideoPx,
+  } = useHudViewportContext()
   const { round, status } = useCurrentRound()
   const {
     phase,
@@ -427,6 +448,8 @@ export function BettingOverlay() {
       disabled={disabled}
       compact={compact}
       viewportScale={viewportScale}
+      orientation={orientation}
+      portraitVideoPx={portraitVideoPx}
       round={round}
       status={status}
       hidden={!isBannerVisible}

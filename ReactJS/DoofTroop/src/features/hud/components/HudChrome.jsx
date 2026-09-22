@@ -174,7 +174,9 @@ export function HudFade() {
   return (
     <div
       className="betting-overlay__fade"
-      style={{ backgroundImage: `url(${uiAssets.backgroundFade})` }}
+      style={{
+        backgroundImage: `url(${uiAssets.backgroundFade})`,
+      }}
       aria-hidden="true"
     />
   )

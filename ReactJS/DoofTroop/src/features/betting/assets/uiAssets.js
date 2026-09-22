@@ -77,7 +77,7 @@ export const uiAssets = Object.freeze({
       Green: colorGreenBar,
       Cyan: colorCyanBar,
       Blue: colorBlueBar,
-      Magenta: colorMagentaBar,
+      Pink: colorMagentaBar,
     }),
     patterns: Object.freeze({
       Dots: patternDots,

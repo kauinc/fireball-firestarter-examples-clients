@@ -27,19 +27,19 @@ const HIGHLIGHT_ROSTER = Object.freeze({
   'Green-Dots': greenDotsHats,
   'Cyan-Dots': cyanDotsGlasses,
   'Blue-Dots': blueDotsHats,
-  'Magenta-Dots': magentaDotsGlasses,
+  'Pink-Dots': magentaDotsGlasses,
   'Red-Solid': redSolidGlasses,
   'Yellow-Solid': yellowSolidHats,
   'Green-Solid': greenSolidGlasses,
   'Cyan-Solid': cyanSolidHats,
   'Blue-Solid': blueSolidGlasses,
-  'Magenta-Solid': magentaSolidHats,
+  'Pink-Solid': magentaSolidHats,
   'Red-Stripes': redStripesHats,
   'Yellow-Stripes': yellowStripesGlasses,
   'Green-Stripes': greenStripesHats,
   'Cyan-Stripes': cyanStripesGlasses,
   'Blue-Stripes': blueStripesHats,
-  'Magenta-Stripes': magentaStripesGlasses,
+  'Pink-Stripes': magentaStripesGlasses,
 })
 
 /**

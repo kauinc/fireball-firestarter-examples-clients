@@ -62,12 +62,9 @@
 }
 
 /*
- * Shell assets (496×94 solid body):
- *   ComboBar_NoBet → no pick
- *   ComboBar → pick selected
- *   ComboBar_Active (592×190 with glow) → picking
- * Active is painted on a larger ::before so the rounded pill + glow aren't
- * clipped to the rectangular shell (which caused square green corners).
+ * Solid body is 496×94 (same as ComboBar / ComboBar_NoBet).
+ * ComboBar_Active canvas is 592×190 — extra pixels are glow pad only.
+ * Scale ::before so the solid pill matches the shell; glow may bleed outside.
  */
 .combo-bar.is-active .combo-bar__shell {
   background-image: none;
@@ -142,6 +139,15 @@
 
 .combo-bar__open-label {
   flex: 0 0 auto;
+}
+
+/* Landscape: keep "1st 2nd & 3rd:" on one line; portrait stacks via portrait.css */
+.combo-bar__open-line {
+  display: inline;
+}
+
+.combo-bar__open-line + .combo-bar__open-line::before {
+  content: ' ';
 }
 
 .combo-bar__open--label {
@@ -241,4 +247,9 @@
   text-shadow: 0 0 6px rgba(61, 255, 106, 0.45);
   -webkit-text-stroke: calc(0.5px * var(--hud-scale)) #000;
   paint-order: stroke fill;
+}
+
+/* Portrait stacks title + pays in the caption; hide on landscape. */
+.combo-bar__caption-pays {
+  display: none;
 }

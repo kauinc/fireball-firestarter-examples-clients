@@ -69,7 +69,10 @@ export function MidControls({
                 key={item}
                 type="button"
                 className={`mid-controls__accessory${comboActive && accessoryHighlight ? ' is-combo-inactive' : ''}`}
-                style={{ backgroundImage: `url(${barAsset})` }}
+                style={{
+                  backgroundImage: `url(${barAsset})`,
+                  '--accessory-bar-image': `url(${barAsset})`,
+                }}
                 disabled={disabled || crazyComboPickActive}
                 data-bet-drop={comboActive ? undefined : JSON.stringify(target)}
                 onPointerUp={(event) => {

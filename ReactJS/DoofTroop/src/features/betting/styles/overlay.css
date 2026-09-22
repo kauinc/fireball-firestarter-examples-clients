@@ -17,7 +17,7 @@
   --pattern-label-x: 8px;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] {
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait']) {
   --hud-font-scale: calc(var(--hud-scale) * 0.82);
 }
 

@@ -10,6 +10,8 @@ import { useSyncExternalStore } from 'react'
  * - read #root / visualViewport (after optional pin)
  * - switch to compact when short, so Hats/Combo don't stack into the board
  * DevTools keeps vv ≈ layout, so it stays on the desktop path.
+ *
+ * Portrait: video strip on top; HUD scale fits the board pane below it.
  */
 export const HUD_DESIGN = Object.freeze({
   width: 1200,
@@ -27,15 +29,41 @@ export const HUD_DESIGN = Object.freeze({
   compactMaxHeight: 400,
   minScale: 0.35,
   pad: 8,
+  /**
+   * Portrait video strip: full-width ~16:9 (fig 2 ~30% of phone height).
+   * Prefer at least 30% so the race reads large; clamp so the board fits.
+   */
+  portraitVideoAspect: 16 / 9,
+  portraitVideoMaxFraction: 0.34,
+  portraitVideoMinFraction: 0.26,
+  portraitVideoPreferFraction: 0.28,
+  /** Design width of the portrait betting board column. */
+  portraitDesignWidth: 390,
+  /** Design height of board + combo rails + footer in the lower pane. */
+  portraitBoardDesignHeight: 520,
+  /** Narrow portrait viewports get the mobile video zoom. */
+  mobilePortraitMaxWidth: 900,
 })
 
 const SERVER_VIEWPORT = Object.freeze({
   scale: 1,
   compact: false,
   orientation: 'landscape',
+  mobilePortrait: false,
+  portraitVideoFraction: 0.28,
+  portraitVideoPx: 0,
 })
 
-/** @type {{ scale: number, compact: boolean, orientation: 'portrait' | 'landscape' }} */
+/**
+ * @type {{
+ *   scale: number,
+ *   compact: boolean,
+ *   orientation: 'portrait' | 'landscape',
+ *   mobilePortrait: boolean,
+ *   portraitVideoFraction: number,
+ *   portraitVideoPx: number,
+ * }}
+ */
 let snapshot = SERVER_VIEWPORT
 const listeners = new Set()
 let windowBound = false
@@ -50,6 +78,27 @@ function fitLandscapeScale(width, height) {
     width / HUD_DESIGN.landscapeWidth,
     height / HUD_DESIGN.landscapeHeight,
   )
+}
+
+function fitPortraitScale(boardWidth, boardHeight) {
+  return Math.min(
+    boardWidth / HUD_DESIGN.portraitDesignWidth,
+    boardHeight / HUD_DESIGN.portraitBoardDesignHeight,
+  )
+}
+
+/** Full-width ~16:9 strip height, clamped for board space (fig 2). */
+function portraitVideoMetrics(size) {
+  const byAspect = size.width / HUD_DESIGN.portraitVideoAspect
+  const preferred = size.height * HUD_DESIGN.portraitVideoPreferFraction
+  const maxH = size.height * HUD_DESIGN.portraitVideoMaxFraction
+  const minH = size.height * HUD_DESIGN.portraitVideoMinFraction
+  const target = Math.max(byAspect, preferred)
+  const videoPx = Math.round(Math.min(maxH, Math.max(minH, target)))
+  return {
+    portraitVideoPx: videoPx,
+    portraitVideoFraction: videoPx / Math.max(1, size.height),
+  }
 }
 
 function readViewportSize() {
@@ -87,18 +136,31 @@ function computeHudViewport() {
       scale: HUD_DESIGN.minScale,
       compact: true,
       orientation: 'portrait',
+      mobilePortrait: true,
+      portraitVideoFraction: HUD_DESIGN.portraitVideoMinFraction,
+      portraitVideoPx: 0,
     }
   }
 
   const aspectPortrait = height > width
   const orientation = aspectPortrait ? 'portrait' : 'landscape'
+  const mobilePortrait =
+    orientation === 'portrait' && width < HUD_DESIGN.mobilePortraitMaxWidth
 
   if (aspectPortrait) {
-    const fitted = fitLandscapeScale(width, height)
+    const video = portraitVideoMetrics(size)
+    const boardH = Math.max(
+      1,
+      size.height - video.portraitVideoPx - HUD_DESIGN.pad * 2,
+    )
+    const fitted = fitPortraitScale(width, boardH)
     return {
       scale: roundScale(Math.max(fitted, HUD_DESIGN.minScale)),
       compact: true,
       orientation: 'portrait',
+      mobilePortrait,
+      portraitVideoFraction: video.portraitVideoFraction,
+      portraitVideoPx: video.portraitVideoPx,
     }
   }
 
@@ -121,7 +183,14 @@ function computeHudViewport() {
 
   const scale = roundScale(Math.max(fitted, HUD_DESIGN.minScale))
 
-  return { scale, compact, orientation }
+  return {
+    scale,
+    compact,
+    orientation,
+    mobilePortrait: false,
+    portraitVideoFraction: HUD_DESIGN.portraitVideoMinFraction,
+    portraitVideoPx: 0,
+  }
 }
 
 function applyViewportRefresh() {
@@ -130,7 +199,10 @@ function applyViewportRefresh() {
   if (
     next.scale === snapshot.scale &&
     next.compact === snapshot.compact &&
-    next.orientation === snapshot.orientation
+    next.orientation === snapshot.orientation &&
+    next.mobilePortrait === snapshot.mobilePortrait &&
+    next.portraitVideoFraction === snapshot.portraitVideoFraction &&
+    next.portraitVideoPx === snapshot.portraitVideoPx
   ) {
     return
   }

@@ -74,20 +74,6 @@ function exitNativeFullscreen() {
   return Promise.resolve()
 }
 
-function lockLandscape() {
-  const orientation = screen.orientation
-  if (!orientation?.lock) return
-  void orientation.lock('landscape').catch(() => {})
-}
-
-function unlockOrientation() {
-  try {
-    screen.orientation?.unlock?.()
-  } catch {
-    // ignore
-  }
-}
-
 let immersiveActive = false
 let homeScreenHint = false
 
@@ -114,10 +100,7 @@ function emit() {
   ) {
     return
   }
-  const wasFs = snapshot.isFullscreen
   snapshot = next
-  if (snapshot.isFullscreen && !wasFs) lockLandscape()
-  else if (!snapshot.isFullscreen && wasFs) unlockOrientation()
   for (const listener of listeners) listener()
 }
 

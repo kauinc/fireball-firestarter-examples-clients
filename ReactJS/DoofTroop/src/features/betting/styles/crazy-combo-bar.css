@@ -255,7 +255,12 @@
   paint-order: stroke fill;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+/* Portrait stacks title + pays in the caption; hide on landscape. */
+.crazy-combo-bar__caption-pays {
+  display: none;
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .mid-controls-stack {
   --crazy-combo-caption-tilt: -2deg;
   --crazy-combo-caption-overlap: calc(6px * var(--hud-scale));

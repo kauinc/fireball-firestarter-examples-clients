@@ -1,15 +1,15 @@
-ï»¿/**
+/**
  * Shared compact doof-grid board tweaks for betting / race / settlement.
  */
 
-/* ========== Compact board (betting Â· race Â· settlement) ========== */
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true'] {
+/* ========== Compact board (betting · race · settlement) ========== */
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait']) {
   --history-w: calc(140px * var(--hud-scale));
   --history-sheet-w: calc(128px * var(--hud-scale));
   --history-sheet-h: calc(168px * var(--hud-scale));
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .doof-grid {
   grid-template-columns:
     calc(84px * var(--hud-scale))
@@ -23,7 +23,7 @@
   align-self: center;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .mid-controls-stack {
   width: 100%;
   max-width: 100%;
@@ -34,7 +34,7 @@
   align-self: center;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .mid-controls {
   width: 100%;
   max-width: 100%;
@@ -47,7 +47,7 @@
   box-sizing: border-box;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .mid-controls__accessories {
   grid-column: 1 / 3;
   justify-self: start;
@@ -58,9 +58,9 @@
   padding-right: 0;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .settlement-board,
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .race-bets-sheet__board {
   width: 100%;
   max-width: 100%;
@@ -71,7 +71,7 @@
 /*
  * Compact: scale field chips with cell size (board stretches, --hud-scale alone is too small).
  */
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .doof-grid__field {
   --chip-size: clamp(
     calc(26px * var(--hud-scale)),
@@ -81,7 +81,7 @@
   --chip-stack-spread: calc(var(--chip-size) * 0.5);
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .doof-grid__colors
   .doof-grid__label-chip {
   right: auto;
@@ -97,12 +97,12 @@
   --chip-stack-dir: -1;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .doof-grid__colors {
   margin-inline: calc(4px * var(--hud-scale));
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .doof-grid__colors
   .doof-grid__chip-label {
   height: calc(30px * var(--hud-scale));
@@ -111,7 +111,7 @@
   transform: none;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .doof-grid__colors
   .doof-grid__label-chip {
   --chip-size: clamp(
@@ -121,18 +121,18 @@
   );
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .doof-grid__patterns {
   margin-block: calc(2px * var(--hud-scale));
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .doof-grid__patterns
   .doof-grid__chip-label {
   transform: none;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .doof-grid__patterns
   .doof-grid__label-chip {
   --chip-size: clamp(
@@ -144,7 +144,7 @@
   --chip-stack-dir: -1;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .doof-grid__patterns
   .doof-grid__chip-label {
   font-size: calc(10px * var(--hud-font-scale));
@@ -152,14 +152,14 @@
   transform: none;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .doof-grid__patterns
   .doof-grid__chip-label::before {
   width: 100%;
   height: var(--pattern-label-h);
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .mid-controls__accessory-chip {
   --chip-size: clamp(
     calc(24px * var(--hud-scale)),

@@ -42,7 +42,7 @@ export function installRuntimeManifest() {
     scope: scopeUrl.href,
     id: startUrl.pathname + startUrl.search,
     display: 'standalone',
-    orientation: 'landscape',
+    orientation: 'any',
     background_color: '#000000',
     theme_color: '#000000',
     icons: [

@@ -7,6 +7,11 @@ import { formatMoney } from '../../betting/utils/formatMoney.js'
 import { useCurrentRound } from '../../betting/hooks/useCurrentRound.js'
 import { useHudViewportContext } from '../../hud/index.js'
 import { usePublishedRoundBets } from '../../betting/state/roundBetsStore.js'
+import {
+  beginHistoryInsert,
+  finishHistoryInsert,
+  historyRowFromWinners,
+} from '../../betting/state/historyStore.js'
 import { useSettlementOverlayState } from '../hooks/useSettlementOverlay.js'
 import { useChipSettleAnimation } from '../hooks/useChipSettleAnimation.js'
 import { useHistoryInsertAnimation } from '../hooks/useHistoryInsertAnimation.js'
@@ -20,14 +25,21 @@ import {
 } from '../../hud/index.js'
 import { playSfx } from '../../../shared/audio/index.js'
 import '../../betting/styles/hud-shared.css'
+import '../../betting/styles/portrait.css'
 import '../styles/settlement.css'
 
 /**
  * Game settlement HUD — RESULTS_SENT.
- * Chips resolve roulette-style; podium icons fly into HISTORY.
+ * Chips resolve roulette-style; podium icons fly into HISTORY (landscape only).
  */
 export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
-  const { scale: viewportScale, compact } = useHudViewportContext()
+  const {
+    scale: viewportScale,
+    compact,
+    orientation,
+    portraitVideoPx,
+  } = useHudViewportContext()
+  const isPortrait = orientation === 'portrait'
   const { round, status } = useCurrentRound()
   const { roundId: betsRoundId, bets } = usePublishedRoundBets()
   const boardRef = useRef(null)
@@ -109,8 +121,9 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
     Boolean(isSettlementUiVisible && settlement) &&
     (hasBets ? phase === 'done' : true)
 
+  // Landscape only: open History + fly podium doofs into the sheet.
   const { historyFlights, historyLanded } = useHistoryInsertAnimation({
-    enabled: Boolean(isSettlementUiVisible && settlement),
+    enabled: Boolean(isSettlementUiVisible && settlement && !isPortrait),
     roundId: settlementRoundId,
     winners: settlement?.winners ?? [],
     historyOpen,
@@ -120,9 +133,32 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
     historyPanelRef,
   })
 
+  // Portrait: still commit the history row (no UI / no fly-in).
+  const silentHistoryKeyRef = useRef('')
+  useEffect(() => {
+    if (!isPortrait || !isSettlementUiVisible || !settlement || !settlementRoundId) {
+      return
+    }
+    if (!readyForHistoryInsert) return
+    const key = String(settlementRoundId)
+    if (silentHistoryKeyRef.current === key) return
+
+    const row = historyRowFromWinners(key, settlement.winners)
+    const began = beginHistoryInsert(row)
+    silentHistoryKeyRef.current = key
+    if (began.alreadyPresent && !began.exitingId) return
+    finishHistoryInsert()
+  }, [
+    isPortrait,
+    isSettlementUiVisible,
+    settlement,
+    settlementRoundId,
+    readyForHistoryInsert,
+  ])
+
   const allFlights = useMemo(
-    () => [...flights, ...historyFlights],
-    [flights, historyFlights],
+    () => (isPortrait ? flights : [...flights, ...historyFlights]),
+    [isPortrait, flights, historyFlights],
   )
 
   const getFadeAnchorTop = useCallback(
@@ -130,25 +166,89 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
     [],
   )
   useSyncHudFadeHeight({
-    enabled: Boolean(isSettlementUiVisible && settlement),
+    enabled: Boolean(isSettlementUiVisible && settlement && !isPortrait),
     overlayRef,
     getAnchorTop: getFadeAnchorTop,
-    deps: [viewportScale, compact, visibleBets.length],
+    deps: [viewportScale, compact, visibleBets.length, isPortrait],
   })
+
+  const winAmount =
+    settlement?.didWin
+      ? phase === 'done'
+        ? settlement.totalWin
+        : displayedWin
+      : 0
 
   if (!isSettlementUiVisible || !settlement) {
     return null
   }
+
+  const board = (
+    <SettlementBoard
+      bets={visibleBets}
+      didWin={settlement.didWin}
+      displayedWin={winAmount}
+      settleByBetId={settleByBetId}
+      hideSettledChips={hideSourceChips}
+      boardRef={isPortrait ? null : boardRef}
+      winBarRef={isPortrait ? null : winBarRef}
+      historyOpen={isPortrait ? false : historyOpen}
+      onHistoryOpenChange={isPortrait ? undefined : setHistoryOpen}
+      historyPanelRef={historyPanelRef}
+      historyLanded={historyLanded}
+      showHistoryControl={!isPortrait}
+      portrait={isPortrait}
+      showWinBarInBoard={!isPortrait}
+    />
+  )
+
+  const metersFooter = (
+    <footer
+      className={`betting-footer settlement-overlay__footer${
+        isPortrait ? ' settlement-overlay__footer--meters-only' : ''
+      }`}
+    >
+      <div className="betting-footer__balance-wrap">
+        <span className="betting-footer__caption">BALANCE:</span>
+        <div
+          className="betting-footer__meter"
+          style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
+        >
+          {formatMoney(balance)}
+        </div>
+      </div>
+
+      {isPortrait ? null : (
+        <div className="settlement-overlay__mid" aria-hidden="true" />
+      )}
+
+      <div className="betting-footer__total-wrap">
+        <span className="betting-footer__caption">TOTAL BET:</span>
+        <div
+          className="betting-footer__meter"
+          style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
+        >
+          {formatMoney(totalBet)}
+        </div>
+      </div>
+    </footer>
+  )
 
   return (
     <div
       ref={overlayRef}
       className={`settlement-overlay${settlement.didWin ? ' is-win' : ' is-lose'}`}
       data-compact={compact ? 'true' : undefined}
+      data-orientation={orientation}
       data-settle-phase={phase}
       data-round-id={round?.id ?? undefined}
       data-round-status={status ?? undefined}
-      style={{ '--hud-scale': viewportScale }}
+      style={{
+        '--hud-scale': viewportScale,
+        ...(isPortrait && portraitVideoPx > 0
+          ? { '--portrait-video-h': `${portraitVideoPx}px` }
+          : null),
+      }}
     >
       <SettlementPodiumLabels
         winners={settlement.winners}
@@ -160,51 +260,24 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
 
       <HudFade />
 
+      {isPortrait && settlement.didWin ? (
+        <div className="settlement-win settlement-win--portrait" role="status">
+          <span className="settlement-win__label">TOTAL WIN:</span>
+          <div className="settlement-win__bar" ref={winBarRef}>
+            <strong className="settlement-win__amount">
+              {formatMoney(winAmount)}
+            </strong>
+          </div>
+        </div>
+      ) : null}
+
       <div className="betting-overlay__bottom">
-        <div className="betting-overlay__hud">
-          <SettlementBoard
-            bets={visibleBets}
-            didWin={settlement.didWin}
-            displayedWin={
-              settlement.didWin
-                ? phase === 'done'
-                  ? settlement.totalWin
-                  : displayedWin
-                : 0
-            }
-            settleByBetId={settleByBetId}
-            hideSettledChips={hideSourceChips}
-            boardRef={boardRef}
-            winBarRef={winBarRef}
-            historyOpen={historyOpen}
-            onHistoryOpenChange={setHistoryOpen}
-            historyPanelRef={historyPanelRef}
-            historyLanded={historyLanded}
-          />
-
-          <footer className="betting-footer settlement-overlay__footer">
-            <div className="betting-footer__balance-wrap">
-              <span className="betting-footer__caption">BALANCE:</span>
-              <div
-                className="betting-footer__meter"
-                style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
-              >
-                {formatMoney(balance)}
-              </div>
-            </div>
-
-            <div className="settlement-overlay__mid" aria-hidden="true" />
-
-            <div className="betting-footer__total-wrap">
-              <span className="betting-footer__caption">TOTAL BET:</span>
-              <div
-                className="betting-footer__meter"
-                style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
-              >
-                {formatMoney(totalBet)}
-              </div>
-            </div>
-          </footer>
+        <div
+          className="betting-overlay__hud"
+          ref={isPortrait ? boardRef : undefined}
+        >
+          {board}
+          {metersFooter}
         </div>
       </div>
 

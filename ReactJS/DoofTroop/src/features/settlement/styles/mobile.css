@@ -1,47 +1,57 @@
 ﻿/**
  * Settlement overlay mobile — compact landscape.
  * Shared compact shell lives in hud-compact.css.
+ * Portrait layout is handled by betting/styles/portrait.css.
  */
 
-.settlement-overlay[data-compact='true'] .betting-overlay__hud {
+.settlement-overlay[data-compact='true']:not([data-orientation='portrait'])
+  .betting-overlay__hud {
   width: min(var(--hud-w), 100%);
   max-width: 100%;
   gap: calc(8px * var(--hud-scale));
 }
 
-.settlement-overlay[data-compact='true'] .settlement-overlay__footer {
+.settlement-overlay[data-compact='true']:not([data-orientation='portrait'])
+  .settlement-overlay__footer {
   max-width: 100%;
   width: 100%;
 }
 
-.settlement-overlay[data-compact='true'] .betting-footer__meter {
+.settlement-overlay[data-compact='true']:not([data-orientation='portrait'])
+  .betting-footer__meter {
   width: calc(128px * var(--hud-scale));
 }
 
-.settlement-overlay[data-compact='true'] .settlement-board {
+.settlement-overlay[data-compact='true']:not([data-orientation='portrait'])
+  .settlement-board {
   gap: calc(8px * var(--hud-scale));
 }
 
-.settlement-overlay[data-compact='true'] .settlement-win {
+.settlement-overlay[data-compact='true']:not([data-orientation='portrait'])
+  .settlement-win {
   gap: calc(2px * var(--hud-scale));
   transform: translate(-50%, calc(-100% - 6px * var(--hud-scale)));
 }
 
-.settlement-overlay[data-compact='true'] .settlement-win__label {
+.settlement-overlay[data-compact='true']:not([data-orientation='portrait'])
+  .settlement-win__label {
   font-size: calc(9px * var(--hud-font-scale));
 }
 
-.settlement-overlay[data-compact='true'] .settlement-win__bar {
+.settlement-overlay[data-compact='true']:not([data-orientation='portrait'])
+  .settlement-win__bar {
   min-width: calc(160px * var(--hud-scale));
   height: calc(28px * var(--hud-scale));
   padding: 0 calc(18px * var(--hud-scale));
 }
 
-.settlement-overlay[data-compact='true'] .settlement-win__amount {
+.settlement-overlay[data-compact='true']:not([data-orientation='portrait'])
+  .settlement-win__amount {
   font-size: calc(16px * var(--hud-font-scale));
 }
 
-.settlement-overlay[data-compact='true'] .settlement-podium {
+.settlement-overlay[data-compact='true']:not([data-orientation='portrait'])
+  .settlement-podium {
   --podium-icon: clamp(48px, 5.5vw, 120px);
   --podium-place: clamp(15px, 1.8vw, 28px);
   --podium-time: clamp(11px, 1.3vw, 18px);

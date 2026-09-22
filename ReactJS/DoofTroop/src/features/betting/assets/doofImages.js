@@ -27,21 +27,21 @@ const BOARD_ROSTER = Object.freeze({
   'Green-Dots': { src: greenDotsHats, accessory: 'Hats' },
   'Cyan-Dots': { src: cyanDotsGlasses, accessory: 'Glasses' },
   'Blue-Dots': { src: blueDotsHats, accessory: 'Hats' },
-  'Magenta-Dots': { src: magentaDotsGlasses, accessory: 'Glasses' },
+  'Pink-Dots': { src: magentaDotsGlasses, accessory: 'Glasses' },
 
   'Red-Solid': { src: redSolidGlasses, accessory: 'Glasses' },
   'Yellow-Solid': { src: yellowSolidHats, accessory: 'Hats' },
   'Green-Solid': { src: greenSolidGlasses, accessory: 'Glasses' },
   'Cyan-Solid': { src: cyanSolidHats, accessory: 'Hats' },
   'Blue-Solid': { src: blueSolidGlasses, accessory: 'Glasses' },
-  'Magenta-Solid': { src: magentaSolidHats, accessory: 'Hats' },
+  'Pink-Solid': { src: magentaSolidHats, accessory: 'Hats' },
 
   'Red-Stripes': { src: redStripesHats, accessory: 'Hats' },
   'Yellow-Stripes': { src: yellowStripesGlasses, accessory: 'Glasses' },
   'Green-Stripes': { src: greenStripesHats, accessory: 'Hats' },
   'Cyan-Stripes': { src: cyanStripesGlasses, accessory: 'Glasses' },
   'Blue-Stripes': { src: blueStripesHats, accessory: 'Hats' },
-  'Magenta-Stripes': { src: magentaStripesGlasses, accessory: 'Glasses' },
+  'Pink-Stripes': { src: magentaStripesGlasses, accessory: 'Glasses' },
 })
 
 /** Roster sprite URLs (history / random picks). */

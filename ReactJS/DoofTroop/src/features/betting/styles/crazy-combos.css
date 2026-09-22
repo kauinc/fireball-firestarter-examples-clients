@@ -95,10 +95,10 @@
 }
 
 /* Compact: keep Hats→combo DOM order (no desktop Y nudge). */
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .mid-controls-stack
   .mid-controls,
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .mid-controls-stack.is-crazy
   .mid-controls {
   transform: none;
