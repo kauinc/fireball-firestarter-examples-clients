@@ -48,6 +48,7 @@ import comboChip from '../../../assets/ui/Chips_Combo.png'
 import crazyComboChip from '../../../assets/ui/Chips_CrazyCombo.png'
 import fullscreen from '../../../assets/ui/FullScreen.png'
 import backgroundFade from '../../../assets/ui/Background_Fade.png'
+import backgroundPortrait from '../../../assets/ui/Background_Portrait.png'
 import timerBar from '../../../assets/ui/TimerBar.png'
 import timerBarYellow from '../../../assets/ui/TimerBar_Yellow.png'
 import timerBarRed from '../../../assets/ui/TimerBar_Red.png'
@@ -104,6 +105,7 @@ export const uiAssets = Object.freeze({
   decreaseBet,
   fullscreen,
   backgroundFade,
+  backgroundPortrait,
   timerBar,
   timerBarYellow,
   timerBarRed,
