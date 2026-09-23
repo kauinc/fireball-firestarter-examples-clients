@@ -14,15 +14,24 @@
    * Fluid tokens — phone fills width; tablets keep growing chrome
    * (combo / hats / color / meters) so the field does not dominate.
    */
-  /* Background_Fade covers lower half of the stream (to ~start line). */
-  --portrait-stream-overlap: calc(var(--portrait-video-h, 32%) * 0.5);
+  /* Background_Portrait sits under the stream (no mid-video overlap). */
+  --portrait-stream-overlap: 0px;
   --portrait-board-gap: 0px;
-  --portrait-meters-w: clamp(60px, 13vw, 128px);
+  /* Balance / Total Bet column — phones narrow, tablets grow. */
+  --portrait-meters-w: clamp(70px, 17vw, 180px);
   --portrait-rail-w: clamp(84px, 22vw, 190px);
   --portrait-accessory-w: clamp(28px, 7vw, 60px);
   /* Clear gap between COMBO rails and Hats/Glasses. */
   --portrait-combo-accessories-gap: clamp(8px, 2vw, 18px);
-  --portrait-color-col: clamp(30px, 7.5vw, 68px);
+  --portrait-color-col: clamp(36px, 9vw, 72px);
+  /* Top pattern bar thickness (= side color bars). Cells match this. */
+  --portrait-pattern-bar-w: calc(var(--portrait-color-col) * 0.92);
+  /*
+   * bet-field.png chrome after rotate(90deg): landscape T/B → portrait L/R.
+   * Was 12/346 (too tight) — bars looked past the table border.
+   */
+  --portrait-field-chrome-l: calc(28 / 346);
+  --portrait-field-chrome-r: calc(27 / 346);
   --portrait-combo-shell-thick: clamp(40px, 10vw, 88px);
   --portrait-accessory-shell-thick: clamp(26px, 6.5vw, 52px);
   --portrait-accessory-icon: clamp(18px, 5.5vw, 36px);
@@ -30,11 +39,17 @@
   --hats-glasses-h: auto;
   --accessory-gap: clamp(4px, 1vh, 8px);
   /* Match doof-grid field chrome so accessories sit inside the table. */
-  --field-in-t: calc(14 / 1410);
-  --field-in-b: calc(14 / 1410);
+  --field-in-t: calc(27 / 1410);
+  --field-in-b: calc(28 / 1410);
   --portrait-pattern-gap: clamp(1px, 0.4vw, 3px);
-  /* Chip tray — vw grows on tablets; max fits winner chip + label pad. */
-  --portrait-footer-h: clamp(78px, 11vh, 128px);
+  /* Chip tray — room for winner chip + label + a few px so bottoms aren’t clipped. */
+  --portrait-chip-tray-h: clamp(84px, 12svh, 132px);
+  --portrait-footer-label-pad: clamp(12px, 1.8svh, 18px);
+  /*
+   * Default 0 → board fills to the bottom (race / settlement).
+   * Betting overrides to --portrait-chip-tray-h for the chip row.
+   */
+  --portrait-footer-h: 0px;
   /*
    * Field: phones (~52vw) fill out to the Balance column; tablets soft-cap
    * at 300px so combo / hats / color keep growing instead.
@@ -43,10 +58,24 @@
   /* Doof sprites — scale with cell. */
   --portrait-doof-h: clamp(16px, 6.5vw, 40px);
   --portrait-doof-w: clamp(16px, 6.8vw, 42px);
-  --portrait-footer-chip: clamp(46px, 11vw, 84px);
-  --portrait-footer-chip-winner: clamp(56px, 13.5vw, 100px);
-  --portrait-footer-round: clamp(48px, 11.5vw, 88px);
-  --portrait-meter-h: clamp(20px, 4.5vw, 36px);
+  /*
+   * Footer controls — leave 4px slack under the chip so overflow parents
+   * don’t shave the bottom curve. Narrow phones squeeze below.
+   */
+  --portrait-footer-chip-winner: min(
+    clamp(56px, 13.5vw, 100px),
+    calc(var(--portrait-chip-tray-h) - var(--portrait-footer-label-pad) - 4px)
+  );
+  --portrait-footer-chip: min(
+    clamp(46px, 11vw, 84px),
+    calc(var(--portrait-footer-chip-winner) * 0.82)
+  );
+  --portrait-footer-round: min(
+    clamp(48px, 11.5vw, 88px),
+    calc(var(--portrait-chip-tray-h) - 8px)
+  );
+  --portrait-footer-round-wide: clamp(60px, 15vw, 110px);
+  --portrait-meter-h: clamp(17px, 4.2vw, 44px);
   /* Board + pattern/color bar bet chips (match combo/hats scale; no % of thin bars). */
   --portrait-board-chip: clamp(32px, 9vw, 56px);
   --portrait-bar-chip: clamp(28px, 8vw, 50px);
@@ -55,8 +84,32 @@
 }
 
 /*
- * Background_Fade — covers lower half of the stream + board (mobile portrait).
- * Prefer top+bottom over height calc so px/% --portrait-video-h both work.
+ * Very narrow portrait (Galaxy A55-class ~360px): shrink tray so CLEAR…x2
+ * fit without clipping. Larger phones keep the tokens above.
+ */
+@media (max-width: 380px) {
+  :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] {
+    --portrait-chip-tray-h: clamp(74px, 11svh, 100px);
+    --portrait-footer-label-pad: clamp(10px, 1.4svh, 14px);
+    --portrait-footer-chip-winner: min(
+      clamp(42px, 11.5vw, 56px),
+      calc(var(--portrait-chip-tray-h) - var(--portrait-footer-label-pad) - 4px)
+    );
+    --portrait-footer-chip: min(
+      clamp(34px, 9.5vw, 46px),
+      calc(var(--portrait-footer-chip-winner) * 0.82)
+    );
+    --portrait-footer-round: min(
+      clamp(36px, 10vw, 48px),
+      calc(var(--portrait-chip-tray-h) - 8px)
+    );
+    --portrait-footer-round-wide: clamp(48px, 13vw, 64px);
+  }
+}
+
+/*
+ * Background_Portrait — plate behind the betting HUD only.
+ * Opaque art must NOT cover the stream (old Fade started mid-video).
  */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-overlay__fade,
 .race-overlay[data-orientation='portrait'] .betting-overlay__fade,
@@ -68,20 +121,21 @@
   left: 0;
   right: 0;
   width: 100%;
-  /* Midpoint of the stream strip → down to overlay bottom. */
-  top: calc(var(--portrait-video-h, 32%) / 2);
+  /* Flush under the video strip — tiny tuck so the seam isn’t a hard cut. */
+  top: calc(var(--portrait-video-h, 32%) - 2px);
   bottom: 0;
   height: auto !important;
   z-index: 3;
+  background-image: var(--bg-portrait) !important;
   background-repeat: no-repeat;
-  background-position: center bottom;
-  background-size: 100% 100%;
+  background-position: center top;
+  background-size: cover;
   pointer-events: none;
 }
 
-/* Banner + timer just above Stripes / Solid / Dots. */
+/* Banner + timer on the stream's bottom edge (same on every overlay). */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-banner {
-  top: calc(var(--portrait-video-h, 32%) + clamp(2px, 0.6vh, 6px));
+  top: var(--portrait-video-h, 32%);
   bottom: auto;
   left: 50%;
   right: auto;
@@ -89,7 +143,7 @@
   max-width: calc(100% - 24px);
   transform: translate(-50%, -100%);
   z-index: 5;
-  padding-bottom: calc(4px * var(--hud-scale));
+  padding-bottom: clamp(2px, 0.5vh, 6px);
   box-sizing: border-box;
   overflow: visible;
 }
@@ -98,11 +152,18 @@
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: calc(12px * var(--hud-font-scale));
 }
 
+/* Fig 2: compact timer pill on the stream seam (~1 pattern-col wide). */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-banner__pill {
-  width: min(calc(190px * var(--hud-scale)), calc(100vw - 48px));
+  width: min(calc(96px * var(--hud-scale)), 24vw);
+  height: calc(22px * var(--hud-scale));
   max-width: 100%;
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-banner__value {
+  font-size: calc(13px * var(--hud-font-scale));
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'][data-banner-only='true']
@@ -113,10 +174,10 @@
 }
 
 /*
- * Board pane — sits under the stream, packed down toward the footer.
+ * Board pane — race geometry for every overlay (under stream → bottom).
  */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-overlay__bottom {
-  top: calc(var(--portrait-video-h, 32%) + clamp(4px, 1vh, 10px));
+  top: calc(var(--portrait-video-h, 32%) + clamp(2px, 0.5vh, 6px));
   bottom: 0;
   left: 0;
   right: 0;
@@ -128,7 +189,10 @@
   padding-top: 0;
   padding-left: max(4px, env(safe-area-inset-left, 0px));
   padding-right: max(4px, env(safe-area-inset-right, 0px));
-  padding-bottom: max(2px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(
+    clamp(8px, 1.4svh, 14px),
+    calc(env(safe-area-inset-bottom, 0px) + 4px)
+  );
   box-sizing: border-box;
   overflow: hidden;
   /* Above fade so board stays sharp; fade still covers lower half of stream. */
@@ -152,8 +216,8 @@
     minmax(0, var(--portrait-stack-w))
     var(--portrait-meters-w);
   /*
-   * Explicit footer track (not auto) so 1fr always eats leftover space
-   * and the table bottom sits on the chip row.
+   * Board + footer track. Footer is 0 on race/settlement (table fills
+   * down); betting sets --portrait-footer-h to the chip tray height.
    */
   grid-template-rows: minmax(0, 1fr) var(--portrait-footer-h);
   column-gap: var(--portrait-hud-gap);
@@ -187,12 +251,17 @@
   --portrait-board-h: 100%;
   --portrait-cell: calc((100cqh - var(--portrait-footer-h)) / 7);
   /*
-   * Field fills the center lane on phones (to Balance meters).
-   * On tablets field-w-max wins so chrome can stay wide.
+   * Field width: 3 cells × pattern-bar width (+ chrome).
+   * Keeps Stripes/Solid/Dots edges on the table column seams (fig 2).
    */
   --portrait-field-w-lane: min(
     var(--portrait-field-w-max),
-    max(110px, calc(var(--portrait-cell) * 3.15)),
+    calc(
+      (3 * var(--portrait-pattern-bar-w)) /
+        (
+          1 - var(--portrait-field-chrome-l) - var(--portrait-field-chrome-r)
+        )
+    ),
     calc(
       var(--portrait-center-w) - var(--portrait-color-col) -
         var(--portrait-board-gap)
@@ -214,12 +283,12 @@
   --portrait-label-thick: var(--portrait-color-col);
 }
 
-/* Board + rails fill the HUD board row down to the chip footer. */
+/* Board column is only as wide as field+colors — don't stretch the table. */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .doof-grid {
   grid-column: 2;
   grid-row: 1;
   align-self: stretch;
-  justify-self: stretch;
+  justify-self: center;
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -275,11 +344,14 @@
   gap: 0;
   margin: 0;
   padding-top: 0;
-  padding-bottom: 0;
+  /* Keep chip bottoms clear of the overlay clip edge. */
+  padding-bottom: 2px;
+  padding-right: 0;
   height: 100%;
   min-height: 0;
-  max-height: none;
+  max-height: 100%;
   box-sizing: border-box;
+  /* Visible so Balance / Total meters (above the track) are not clipped. */
   overflow: visible;
 }
 
@@ -298,11 +370,11 @@
   justify-content: stretch;
   container-type: size;
   --field-pad: 0px;
-  /* Tighter chrome inset so playable reaches pattern/color bar chips. */
-  --field-in-t: calc(14 / 1410);
-  --field-in-r: calc(12 / 346);
-  --field-in-b: calc(14 / 1410);
-  --field-in-l: calc(12 / 346);
+  /* Landscape chrome mapped through rotate(90deg) — match bet-field.png seams. */
+  --field-in-t: calc(27 / 1410);
+  --field-in-r: calc(27 / 346);
+  --field-in-b: calc(28 / 1410);
+  --field-in-l: calc(28 / 346);
   grid-template-areas:
     'patterns .'
     'field    colors';
@@ -391,12 +463,16 @@
   max-width: none;
   margin: 0 !important;
   margin-block: 0 !important;
-  padding-left: calc(
-    var(--field-pad) + var(--field-in-l) * (100% - 2 * var(--field-pad))
-  );
-  padding-right: calc(
-    var(--field-pad) + var(--field-in-r) * (100% - 2 * var(--field-pad))
-  );
+  /*
+   * Pin L/R chrome here (same as .doof-grid__playable) so a missing
+   * inherited --field-in-* cannot zero the padding and let Stripes/Dots
+   * spill past the table.
+   */
+  --field-pad: 0px;
+  --field-in-l: calc(28 / 346);
+  --field-in-r: calc(27 / 346);
+  padding-left: calc(var(--field-in-l) * 100%);
+  padding-right: calc(var(--field-in-r) * 100%);
   padding-top: 0;
   padding-bottom: 0;
   box-sizing: border-box;
@@ -417,7 +493,8 @@
 }
 
 /*
- * Top bars: fill each column slot; glued to field; chips centered on bar.
+ * Top pattern bars — same TableButton as landscape, rotated −90° into each
+ * column (matches fig 1). Slot fills the column; art rotates in place.
  */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .doof-grid[data-portrait='true'] .doof-grid__patterns .doof-grid__chip-label {
   position: absolute;
@@ -429,11 +506,12 @@
   z-index: 1;
   appearance: none;
   -webkit-appearance: none;
+  /* Slightly under column width so Stripes/Solid/Dots have a hairline gap. */
   width: 86% !important;
   height: 94% !important;
   min-width: 0 !important;
   min-height: 0 !important;
-  max-width: 92% !important;
+  max-width: 90% !important;
   max-height: none !important;
   margin: 0;
   transform: translateX(-50%) !important;
@@ -441,8 +519,15 @@
   background-color: transparent !important;
   background-image: none !important;
   border: 0;
-  font-size: clamp(8px, 2.4vw, 11px);
-  letter-spacing: 0.01em;
+  /*
+   * Largest size that still fits "Stripes" (~7 × 0.6em) in the bar.
+   * Tied to --portrait-pattern-bar-w so it tracks bar size on every device.
+   */
+  font-size: min(
+    13px,
+    calc(var(--portrait-pattern-bar-w) * 0.86 * 0.94 / 4.2)
+  ) !important;
+  letter-spacing: 0;
   writing-mode: horizontal-tb !important;
   text-orientation: mixed;
   border-radius: 0;
@@ -457,10 +542,10 @@
   position: relative;
   z-index: 2;
   display: block;
-  max-width: 92%;
+  max-width: 98%;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: unset;
   writing-mode: horizontal-tb !important;
   transform: none !important;
   text-align: center;
@@ -498,8 +583,7 @@
 }
 
 /*
- * TableButton_ComboActive is 283×148 vs TableButton 227×92 (glow pad).
- * Scale ::before so the solid pill matches idle size (same as landscape).
+ * TableButton_ComboActive glow pad (rotated same as idle).
  */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait']
   .doof-grid[data-portrait='true']
@@ -554,7 +638,8 @@
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .doof-grid[data-portrait='true'] .doof-grid__colors .doof-grid__label-slot {
-  display: flex;
+  display: grid;
+  place-items: center;
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -562,32 +647,39 @@
 }
 
 /*
- * Color bars: fill the side rail; chips centered on each bar.
+ * Color bars: fill the row band; thickness = color column.
+ * Text scales with bar width so Yellow fits.
  */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .doof-grid[data-portrait='true'] .doof-grid__colors .doof-grid__chip-label {
   position: relative;
-  flex: 1 1 auto;
-  align-self: stretch;
   z-index: 1;
   appearance: none;
   -webkit-appearance: none;
-  width: 100% !important;
-  height: 94% !important;
-  max-height: none !important;
+  width: 92% !important;
+  height: 92% !important;
+  max-width: 100% !important;
+  max-height: 96% !important;
   min-height: 0 !important;
-  margin: auto 0;
+  margin: auto;
   overflow: visible !important;
   background-image: none !important;
   background-color: transparent !important;
   border: 0;
-  font-size: clamp(8px, 2.4vw, 11px);
-  letter-spacing: 0.02em;
+  /*
+   * Largest size that still fits "Yellow" (~6 × 0.6em) in the color bar.
+   * Same token family as patterns — grows/shrinks with --portrait-color-col.
+   */
+  font-size: min(
+    13px,
+    calc(var(--portrait-color-col) * 0.92 * 0.94 / 3.6)
+  ) !important;
+  letter-spacing: 0;
   line-height: 1;
   writing-mode: horizontal-tb !important;
   text-orientation: mixed;
   transform: none !important;
   border-radius: 0;
-  padding: 0;
+  padding: 0 4%;
   box-sizing: border-box;
   display: grid;
   place-items: center;
@@ -598,10 +690,10 @@
   position: relative;
   z-index: 2;
   display: block;
-  max-width: 92%;
+  max-width: 98%;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: unset;
   text-align: center;
   writing-mode: horizontal-tb !important;
   transform: none !important;
@@ -615,8 +707,9 @@
   left: 50%;
   top: 50%;
   z-index: 0;
-  width: 100cqh;
-  height: 100cqw;
+  /* Vertical TableButton: length along row, thickness across color col. */
+  width: min(100cqh, calc(100cqw * 227 / 92));
+  height: min(100cqw, calc(100cqh * 92 / 227));
   max-width: none;
   max-height: none;
   transform: translate(-50%, -50%) rotate(-90deg);
@@ -660,10 +753,10 @@
   background-image: none !important;
   padding: 0 !important;
   --field-pad: 0px;
-  --field-in-t: calc(14 / 1410);
-  --field-in-r: calc(12 / 346);
-  --field-in-b: calc(14 / 1410);
-  --field-in-l: calc(12 / 346);
+  --field-in-t: calc(27 / 1410);
+  --field-in-r: calc(27 / 346);
+  --field-in-b: calc(28 / 1410);
+  --field-in-l: calc(28 / 346);
   overflow: visible;
   clip-path: inset(0 round calc(8px * var(--hud-scale)));
   --chip-size: var(--portrait-board-chip);
@@ -957,8 +1050,7 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  justify-content: stretch;
-  /* Same mid-gap as Hats / Glasses so outer edges line up. */
+  justify-content: center;
   gap: var(--accessory-gap);
   width: 100%;
   height: 100%;
@@ -968,12 +1060,9 @@
 }
 
 /*
- * Portrait combo rails:
- *   [COMBO PAYS x500] [slim green vertical shell]
- *   [CRAZY… PAYS x5k] [slim maroon vertical shell]
- * Captions stay horizontal to the left of the rotated landscape PNG shells.
- * Unequal flex (COMBO 2 / CRAZY 3) — kill landscape width%/flex:0 so
- * outer edges still match Hats/Glasses.
+ * Portrait combo rails — keep ComboBar / CrazyComboBar aspect (496×94 /
+ * 856×94). Flex shares the rail by those lengths; ::after uses contain so
+ * the PNG is never stretched. Text scales with cqmin on the caption.
  */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combos > .combo-bar,
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combos > .crazy-combo-bar,
@@ -987,22 +1076,22 @@
   max-width: none;
   min-width: 0;
   min-height: 0;
-  height: 0; /* equal-flex base; grow ratios below */
+  height: 0;
   max-height: 100%;
-  column-gap: calc(2px * var(--hud-scale));
+  column-gap: clamp(6px, 1.8vw, 12px);
   overflow: visible;
   position: relative;
 }
 
-/* COMBO shorter, CRAZY COMBO longer — still share hats top/bottom. */
+/* Share rail by asset length (not arbitrary 2:3 stretch). */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combos > .combo-bar,
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar {
-  flex: 2 1 0;
+  flex: 496 1 0;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combos > .crazy-combo-bar,
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar {
-  flex: 3 1 0;
+  flex: 856 1 0;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__caption,
@@ -1018,24 +1107,29 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* Fill the rail height, then center title + pays in the middle of the bar. */
   justify-content: center;
   gap: clamp(2px, 0.5vh, 4px);
   writing-mode: horizontal-tb;
   transform: none !important;
   text-align: center;
   margin: 0 !important;
-  padding: 0 2px;
+  padding: 0 clamp(2px, 0.8vw, 4px) 0 0;
   width: auto;
   max-width: 100%;
+  height: 100%;
+  min-height: 0;
   font-size: inherit;
   letter-spacing: 0.01em;
   line-height: 1.05;
   white-space: normal;
-  align-self: center;
+  align-self: stretch;
   justify-self: stretch;
+  box-sizing: border-box;
+  container-type: size;
 }
 
-/* COMBO / CRAZY COMBO — large title */
+/* COMBO / CRAZY COMBO — titles scale with viewport width */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__caption-title,
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__caption-title,
 .race-overlay[data-orientation='portrait'] .combo-bar__caption-title,
@@ -1043,7 +1137,7 @@
 .settlement-overlay[data-orientation='portrait'] .combo-bar__caption-title,
 .settlement-overlay[data-orientation='portrait'] .crazy-combo-bar__caption-title {
   display: block;
-  font-size: clamp(9px, 3vw, 13px);
+  font-size: clamp(9px, 2.8vw, 16px);
   font-weight: 800;
   letter-spacing: 0.04em;
   line-height: 1.05;
@@ -1070,7 +1164,7 @@
   white-space: normal;
   max-width: 100%;
   width: 100%;
-  font-size: clamp(7px, 2.4vw, 11px);
+  font-size: clamp(8px, 2.4vw, 14px);
   letter-spacing: 0.02em;
   line-height: 1.05;
   overflow-wrap: normal;
@@ -1103,7 +1197,7 @@
 .race-overlay[data-orientation='portrait'] .combo-bar__caption-pays-label,
 .settlement-overlay[data-orientation='portrait'] .combo-bar__caption-pays-label {
   display: block;
-  font-size: clamp(6px, 1.8vw, 8px);
+  font-size: clamp(6px, 1.9vw, 11px);
   font-weight: 700;
   font-style: normal;
   letter-spacing: 0.06em;
@@ -1118,7 +1212,7 @@
 .race-overlay[data-orientation='portrait'] .crazy-combo-bar__caption-pays-label,
 .settlement-overlay[data-orientation='portrait'] .crazy-combo-bar__caption-pays-label {
   display: block;
-  font-size: clamp(6px, 1.8vw, 8px);
+  font-size: clamp(6px, 1.9vw, 11px);
   font-weight: 700;
   font-style: normal;
   letter-spacing: 0.06em;
@@ -1133,7 +1227,7 @@
 .race-overlay[data-orientation='portrait'] .combo-bar__caption-pays-value,
 .settlement-overlay[data-orientation='portrait'] .combo-bar__caption-pays-value {
   display: block;
-  font-size: clamp(12px, 3.8vw, 18px);
+  font-size: clamp(11px, 3.4vw, 20px);
   font-weight: 800;
   font-style: normal;
   letter-spacing: 0;
@@ -1148,7 +1242,7 @@
 .race-overlay[data-orientation='portrait'] .crazy-combo-bar__caption-pays-value,
 .settlement-overlay[data-orientation='portrait'] .crazy-combo-bar__caption-pays-value {
   display: block;
-  font-size: clamp(12px, 3.8vw, 18px);
+  font-size: clamp(11px, 3.4vw, 20px);
   font-weight: 800;
   font-style: normal;
   letter-spacing: 0;
@@ -1226,9 +1320,12 @@
   left: 50%;
   top: 50%;
   z-index: 0;
-  /* Fit shell column — do not overscale (breaks rail alignment). */
-  width: calc(100cqh - 2px);
-  height: calc(100cqw - 2px);
+  /*
+   * Rotated ComboBar 496×94: thickness = shell column (cqw), length along rail.
+   * Prefer fill thickness; shrink uniformly if the slot is shorter than natural.
+   */
+  height: min(calc(100cqw - 2px), calc((100cqh - 2px) * 94 / 496));
+  width: min(calc(100cqh - 2px), calc((100cqw - 2px) * 496 / 94));
   max-width: none;
   max-height: none;
   transform: translate(-50%, -50%) rotate(-90deg);
@@ -1240,13 +1337,21 @@
   pointer-events: none;
 }
 
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__shell::after {
+  height: min(calc(100cqw - 2px), calc((100cqh - 2px) * 94 / 856));
+  width: min(calc(100cqh - 2px), calc((100cqw - 2px) * 856 / 94));
+}
+
 /*
  * ComboBar_Active is 592×190 vs solid 496×94 — scale glow pad on rotated ::after.
- * Landscape ::before stays off; ::after carries the art.
  */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar.is-active .combo-bar__shell::after {
-  width: calc((100cqh - 2px) * 592 / 496);
-  height: calc((100cqw - 2px) * 190 / 94);
+  height: calc(
+    min(calc(100cqw - 2px), calc((100cqh - 2px) * 94 / 496)) * 190 / 94
+  );
+  width: calc(
+    min(calc(100cqh - 2px), calc((100cqw - 2px) * 496 / 94)) * 592 / 496
+  );
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar.is-active .combo-bar__shell::before {
@@ -1289,7 +1394,7 @@
   max-height: 100%;
   margin: 0;
   padding: 0 !important;
-  font-size: clamp(8px, 2.3vw, 11px);
+  font-size: clamp(7px, 2.1vw, 12px);
   font-weight: 800;
   writing-mode: horizontal-tb !important;
   white-space: normal !important;
@@ -1364,7 +1469,7 @@
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__slot-label {
-  font-size: clamp(8px, 2.2vw, calc(10px * var(--hud-font-scale)));
+  font-size: clamp(9px, 2.5vw, 13px);
   font-weight: 800;
   writing-mode: horizontal-tb;
   line-height: 1;
@@ -1377,12 +1482,21 @@
   object-fit: contain;
 }
 
-/* Active-slot glow: CrazyComboBar_ActiveSmall rotated −90°, one slot tall. */
+/*
+ * Active-slot glow: CrazyComboBar_ActiveSmall rotated −90°, one slot tall.
+ * Scale from the same inset solid as shell::after so the pink body matches
+ * the bar (not 100cqw — that overshoots the −2px shell art).
+ * ActiveSmall 381×190; solid ≈ (856/3)×94 of CrazyComboBar 856×94.
+ */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__selection {
   top: 50%;
   left: 50%;
-  width: calc(100cqh / 3 * 381 / 285);
-  height: calc(100cqw * 190 / 94);
+  width: calc(
+    min(calc(100cqh - 2px), calc((100cqw - 2px) * 856 / 94)) * 381 / 856
+  );
+  height: calc(
+    min(calc(100cqw - 2px), calc((100cqh - 2px) * 94 / 856)) * 190 / 94
+  );
   max-width: none;
   transform: translate(-50%, -50%) rotate(-90deg);
   transform-origin: center center;
@@ -1442,7 +1556,7 @@
 /* —— Footer meters (separate from table labels) —— */
 /*
  * Fig 2: BALANCE / TOTAL BET sit in the HUD meters column (right of
- * color bars), above the chip row — never under the table.
+ * color bars), above the footer track — never under the table.
  * Stacked with clear gap so Balance never covers Total Bet.
  */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-footer__balance-wrap,
@@ -1461,23 +1575,26 @@
   width: var(--portrait-meters-w);
   margin: 0;
   pointer-events: none;
+  container-type: inline-size;
+  container-name: portrait-meter;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-footer__balance-wrap {
   /* Stacked above Total Bet; sit lower so a gap clears the pink row. */
   bottom: calc(
-    100% + var(--portrait-meter-h) + clamp(10px, 2.2vh, 16px)
+    100% + (var(--portrait-meters-w) * 115 / 472) + clamp(10px, 2.2vh, 16px)
   );
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-footer__total-wrap {
-  /* Just above the chip footer — leaves air under the table. */
+  /* Just above the footer track (chips on betting; bottom edge on race). */
   bottom: calc(100% + clamp(2px, 0.5vh, 4px));
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-footer__caption {
-  font-size: clamp(8px, 2.2vw, 12px);
-  margin-bottom: calc(2px * var(--hud-scale));
+  /* Tracks meter width (phones small → tablets larger). */
+  font-size: clamp(5px, 9cqi, 12px);
+  margin-bottom: clamp(1px, 0.4cqi, 3px);
   align-self: center;
   text-align: center;
   width: 100%;
@@ -1486,10 +1603,17 @@
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-footer__meter {
   width: 100%;
-  height: var(--portrait-meter-h);
-  font-size: clamp(9px, 2.8vw, 14px);
-  padding: 0 clamp(4px, 1.5vw, 8px);
+  /* BetBalanceBar 472×115 — plate grows with --portrait-meters-w. */
+  height: auto;
+  aspect-ratio: 472 / 115;
+  /* Fit € amounts; cqi = meter column width (phones small → tablets larger). */
+  font-size: clamp(5.5px, 11cqi, 15px);
+  letter-spacing: -0.02em;
+  padding: 0 clamp(2px, 5cqi, 10px);
   box-sizing: border-box;
+  background-size: 100% 100%;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-footer__tray {
@@ -1501,7 +1625,10 @@
   width: 100%;
   min-height: 0;
   max-width: 100%;
+  height: 100%;
   box-sizing: border-box;
+  /* Don’t clip chip bottoms — horizontal fit is handled by size tokens. */
+  overflow: visible;
 }
 
 /* Fig 1: gold WINNER chip larger, same baseline; labels form a podium. */
@@ -1516,10 +1643,12 @@
   height: var(--portrait-footer-round);
   font-size: clamp(8px, 2.4vw, 14px);
   flex-shrink: 0;
+  /* Kill landscape nudge that pushed buttons past the screen edge. */
+  transform: none;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-footer__round--wide {
-  width: clamp(60px, 15vw, 110px);
+  width: var(--portrait-footer-round-wide);
   font-size: clamp(7px, 2vw, 12px);
 }
 
@@ -1534,8 +1663,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
+  /* Same column width as winner so silver/bronze aren’t crushed under gold. */
+  width: var(--portrait-footer-chip-winner);
   /* Label pad — scales with footer height, stays inside the track. */
-  padding-top: clamp(12px, 1.8vh, 18px);
+  padding-top: var(--portrait-footer-label-pad);
   box-sizing: border-box;
   flex-shrink: 0;
 }
@@ -1578,6 +1709,8 @@
   gap: clamp(2px, 0.6vw, 6px);
   align-self: center;
   flex-shrink: 0;
+  /* Kill landscape nudge that pushed ± past the tray. */
+  transform: none;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-footer__stake-btn {
@@ -1590,52 +1723,20 @@
 }
 
 /*
- * Race portrait — betting board always visible, no chip footer.
- * Table fills from under the stream to the bottom; timer sits on the
- * stream's bottom edge.
+ * Betting portrait — reserve chip tray so the board stops above the footer.
+ * Race / settlement keep --portrait-footer-h: 0 and fill to the bottom.
  */
-.race-overlay[data-orientation='portrait'] {
-  --portrait-footer-h: 0px;
+.betting-overlay[data-orientation='portrait'] {
+  --portrait-footer-h: var(--portrait-chip-tray-h);
 }
 
-.race-overlay[data-orientation='portrait'] .betting-banner {
-  top: var(--portrait-video-h, 32%);
-  bottom: auto;
-  left: 50%;
-  right: auto;
-  width: max-content;
-  max-width: calc(100% - 24px);
-  transform: translate(-50%, -100%);
-  z-index: 5;
-  padding-bottom: clamp(2px, 0.5vh, 6px);
-  box-sizing: border-box;
-}
-
-.race-overlay[data-orientation='portrait'] .betting-overlay__bottom {
-  top: calc(var(--portrait-video-h, 32%) + clamp(2px, 0.5vh, 6px));
-  bottom: 0;
-  padding-bottom: max(
-    clamp(6px, 1.2vh, 12px),
-    env(safe-area-inset-bottom, 0px)
-  );
-}
-
-.race-overlay[data-orientation='portrait'] .betting-overlay__hud {
-  /* Board only — meters footer is zero-height anchor. */
-  grid-template-rows: minmax(0, 1fr) 0;
-  align-items: stretch;
-  align-content: stretch;
-  row-gap: 0;
-}
-
-.race-overlay[data-orientation='portrait'] .doof-grid,
-.race-overlay[data-orientation='portrait'] .mid-controls-stack {
-  align-self: stretch;
-  height: 100%;
-  max-height: 100%;
-}
-
-.race-overlay[data-orientation='portrait'] .race-overlay__footer--meters-only {
+/*
+ * Race / settlement portrait — meters-only footer (zero-height track),
+ * table stretches into the footer space.
+ */
+.race-overlay[data-orientation='portrait'] .race-overlay__footer--meters-only,
+.settlement-overlay[data-orientation='portrait']
+  .settlement-overlay__footer--meters-only {
   grid-column: 1 / -1;
   grid-row: 2;
   position: relative;
@@ -1663,17 +1764,13 @@
 }
 
 /*
- * Settlement portrait — same betting table as race (meters-only footer),
- * plus TOTAL WIN banner between stream and board. No History UI.
+ * Settlement portrait — TOTAL WIN banner on the stream edge (same slot
+ * as the betting timer). No History UI.
  */
-.settlement-overlay[data-orientation='portrait'] {
-  --portrait-footer-h: 0px;
-}
-
 .settlement-overlay[data-orientation='portrait'] .settlement-win--portrait {
   position: absolute;
   left: 50%;
-  top: calc(var(--portrait-video-h, 32%) + clamp(2px, 0.5vh, 6px));
+  top: var(--portrait-video-h, 32%);
   bottom: auto;
   right: auto;
   z-index: 5;
@@ -1685,6 +1782,8 @@
   max-width: calc(100% - 24px);
   transform: translate(-50%, -100%);
   pointer-events: none;
+  padding-bottom: clamp(2px, 0.5vh, 6px);
+  box-sizing: border-box;
 }
 
 .settlement-overlay[data-orientation='portrait'] .settlement-win--portrait .settlement-win__label {
@@ -1702,46 +1801,6 @@
 
 .settlement-overlay[data-orientation='portrait'] .settlement-win--portrait .settlement-win__amount {
   font-size: clamp(16px, 5vw, 24px);
-}
-
-.settlement-overlay[data-orientation='portrait'] .betting-overlay__bottom {
-  top: calc(var(--portrait-video-h, 32%) + clamp(2px, 0.5vh, 6px));
-  bottom: 0;
-  padding-bottom: max(
-    clamp(6px, 1.2vh, 12px),
-    env(safe-area-inset-bottom, 0px)
-  );
-}
-
-.settlement-overlay[data-orientation='portrait'] .betting-overlay__hud {
-  grid-template-rows: minmax(0, 1fr) 0;
-  align-items: stretch;
-  align-content: stretch;
-  row-gap: 0;
-  width: 100%;
-  max-width: 100%;
-  gap: 0;
-}
-
-.settlement-overlay[data-orientation='portrait'] .doof-grid,
-.settlement-overlay[data-orientation='portrait'] .mid-controls-stack {
-  align-self: stretch;
-  height: 100%;
-  max-height: 100%;
-}
-
-.settlement-overlay[data-orientation='portrait']
-  .settlement-overlay__footer--meters-only {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  position: relative;
-  width: 100%;
-  min-height: 0;
-  height: 0;
-  margin: 0;
-  padding: 0;
-  overflow: visible;
-  pointer-events: none;
 }
 
 .settlement-overlay[data-orientation='portrait']

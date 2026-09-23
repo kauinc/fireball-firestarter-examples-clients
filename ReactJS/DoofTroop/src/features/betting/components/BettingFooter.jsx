@@ -87,7 +87,10 @@ export function BettingFooter({
                   disabled={disabled}
                   aria-label={CHIP_METAL_LABELS[metal]}
                   aria-pressed={selected}
-                  onClick={() => onSelectMetal?.(metal)}
+                  onClick={(event) => {
+                    // Mouse already selected on pointerdown; detail===0 is keyboard.
+                    if (event.detail === 0) onSelectMetal?.(metal)
+                  }}
                   onPointerDown={(event) => {
                     if (disabled || event.button !== 0) return
                     onSelectMetal?.(metal)

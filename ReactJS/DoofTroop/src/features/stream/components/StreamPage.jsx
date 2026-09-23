@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useState } from 'react'
 import { BettingOverlay } from '../../betting/index.js'
+import { uiAssets } from '../../betting/assets/uiAssets.js'
 import { RaceOverlay } from '../../race/index.js'
 import { SettlementOverlay } from '../../settlement/index.js'
 import { LoadingScreen, LoadingStatus } from '../../loading/index.js'
@@ -24,6 +25,8 @@ function isCancelledStatus(status) {
 
 /**
  * Applies portrait/landscape shell attrs from shared HUD viewport metrics.
+ * Always paints Background_Portrait under the HUD on mobile portrait —
+ * independent of which round overlay is mounted.
  */
 function StreamShell({ children }) {
   const { orientation, mobilePortrait, portraitVideoPx, portraitVideoFraction } =
@@ -40,6 +43,13 @@ function StreamShell({ children }) {
             : `${portraitVideoFraction * 100}%`,
       }}
     >
+      {orientation === 'portrait' ? (
+        <div
+          className="stream-shell__portrait-bg"
+          style={{ backgroundImage: `url(${uiAssets.backgroundPortrait})` }}
+          aria-hidden="true"
+        />
+      ) : null}
       {children}
     </div>
   )

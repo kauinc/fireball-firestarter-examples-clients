@@ -124,3 +124,27 @@
   transform: none;
   transform-origin: center center;
 }
+
+/*
+ * Persistent Background_Portrait under the stream strip — always on in
+ * portrait, even when no betting/race/settlement overlay is mounted.
+ */
+.stream-shell__portrait-bg {
+  display: none;
+}
+
+.stream-shell[data-orientation='portrait'] .stream-shell__portrait-bg {
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  /* Flush under the video strip — same tuck as overlay HudFade. */
+  top: calc(var(--portrait-video-h, 32%) - 2px);
+  bottom: 0;
+  z-index: 1;
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: cover;
+  pointer-events: none;
+}

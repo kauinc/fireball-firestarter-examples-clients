@@ -32,10 +32,16 @@ export const sfxMap = {
     sound: ['Coins_01', 'Coins_02', 'Coins_03', 'Coins_04', 'Coins_05'],
     volume: 0.75,
   },
-  /** Select chip denomination in the footer. */
+  /** Select chip denomination in the footer (fallback). */
   chipSelect: { sound: 'Click_03', volume: 0.55 },
+  /** Select gold metal chip. */
+  chipSelectGold: { sound: 'Pop_01', volume: 0.6 },
+  /** Select silver metal chip. */
+  chipSelectSilver: { sound: 'Pop_02', volume: 0.6 },
+  /** Select bronze metal chip. */
+  chipSelectBronze: { sound: 'Pop_03', volume: 0.6 },
   /** CLEAR all bets. */
-  betClear: { sound: 'Cartoon_Falling_02', volume: 0.7 },
+  betClear: { sound: 'Musical_Click_09', volume: 0.7 },
   /** x2 double bets. */
   betDouble: { sound: 'Item_Sell_Purchase_02', volume: 0.75 },
   /** Illegal / blocked place or pick. */
@@ -43,37 +49,37 @@ export const sfxMap = {
 
   // --- Combo / Crazy Combo ---
   /** Enter / exit COMBO pick mode. */
-  comboToggle: { sound: 'Flick_Switch_02', volume: 0.6 },
+  comboToggle: { sound: 'Flick_Switch_03', volume: 0.6 },
   /** Picked a combo attribute (color / pattern / accessory). */
-  comboPick: { sound: ['Pop_02', 'Pop_03', 'Pop_04'], volume: 0.65 },
+  comboPick: { sound: 'Flick_Switch_05', volume: 0.65 },
   /** Enter / exit Crazy Combo pick mode, or switch podium slot. */
-  crazyToggle: { sound: 'Flick_Switch_01', volume: 0.6 },
+  crazyToggle: { sound: 'Flick_Switch_03', volume: 0.6 },
   /** Assigned a doof to a Crazy Combo slot. */
-  crazyPick: { sound: 'Abstract_Pop_01', volume: 0.65 },
+  crazyPick: { sound: 'Flick_Switch_05', volume: 0.65 },
   /** All three Crazy Combo slots filled. */
-  crazyComplete: { sound: 'Special_Powerup_02', volume: 0.8 },
+  crazyComplete: { sound: 'Flick_Switch_04', volume: 0.7 },
 
   // --- Betting phase cues ---
   /** Betting overlay opens (PLACE YOUR BETS). */
-  bettingOpen: { sound: 'Special_Musical_03', volume: 0.7 },
+  bettingOpen: { sound: null, volume: 0.7 },
   /** Enter BETS CLOSING (≤10s). */
-  bettingClosing: { sound: 'Gong_01', volume: 0.65 },
+  bettingClosing: { sound: null, volume: 0.65 },
   /** BETS CLOSED. */
-  bettingClosed: { sound: 'Gong_02', volume: 0.75 },
+  bettingClosed: { sound: null, volume: 0.75 },
 
   // --- Sheets / chrome ---
   /** History or Current Bets sheet opens. */
-  sheetOpen: { sound: 'Musical_Click_01', volume: 0.55 },
+  sheetOpen: { sound: 'Back_Click_03', volume: 0.55 },
   /** Sheet closes. */
-  sheetClose: { sound: 'Back_Click_03', volume: 0.55 },
+  sheetClose: { sound: 'Back_Click_01', volume: 0.55 },
   /** Hamburger menu opens. */
-  menuOpen: { sound: 'Musical_Click_01', volume: 0.55 },
+  menuOpen: { sound: 'Back_Click_03', volume: 0.55 },
   /** Hamburger menu closes. */
-  menuClose: { sound: 'Back_Click_03', volume: 0.55 },
+  menuClose: { sound: 'Back_Click_01', volume: 0.55 },
   /** Fullscreen toggle. */
-  fullscreenToggle: { sound: 'Flick_Switch_03', volume: 0.5 },
+  fullscreenToggle: { sound: null, volume: 0.5 },
 
-  // --- Settlement ---
+  // --- Settlement (Later — keep current) ---
   /** Settlement overlay appears — player won. */
   settleWin: { sound: 'Special_Powerup_05', volume: 0.85 },
   /** Settlement overlay appears — player lost / no win. */

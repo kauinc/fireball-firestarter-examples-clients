@@ -21,7 +21,7 @@ export const TimerBarVariant = Object.freeze({
   RED: 'red',
 })
 
-/** Client-side betting window length while `rounds.status === BETTING_OPEN`. */
+/** Client-side betting window length while ROUND_CREATED / BETTING_OPEN. */
 export const BETTING_WINDOW_SECONDS = 30
 
 /** Show BETS CLOSING + yellow TimerBar when this many seconds (or fewer) remain. */

@@ -11,6 +11,12 @@ import { RoundState } from '../../../domain/round/index.js'
 /** Mock window start per round — survives remount/reconnect for the same id. */
 const openedAtByRoundId = new Map()
 
+/** Unreal may emit ROUND_CREATED before BETTING_OPEN — treat both as open betting. */
+const BETTING_OPEN_STATUSES = new Set([
+  RoundState.ROUND_CREATED,
+  RoundState.BETTING_OPEN,
+])
+
 /** Pre-race statuses that keep the red “BETS CLOSED” TimerBar over Unreal’s 3-2-1. */
 const BANNER_ONLY_STATUSES = new Set([
   RoundState.BETTING_CLOSED,
@@ -19,7 +25,7 @@ const BANNER_ONLY_STATUSES = new Set([
 
 /**
  * Overlay UI from round `status` only (no timestamp inference for visibility).
- * Full board while `status === BETTING_OPEN`; TimerBar only through TRACK_READY.
+ * Full board while ROUND_CREATED / BETTING_OPEN; TimerBar only through TRACK_READY.
  *
  * @param {{
  *   status: string | null,
@@ -29,9 +35,10 @@ const BANNER_ONLY_STATUSES = new Set([
 export function useBettingOverlayState({ status, round = null }) {
   const [now, setNow] = useState(() => Date.now())
   const roundId = round?.id != null ? String(round.id) : null
+  const isBettingOpen = BETTING_OPEN_STATUSES.has(status)
 
   useEffect(() => {
-    if (status !== RoundState.BETTING_OPEN || !roundId) return undefined
+    if (!isBettingOpen || !roundId) return undefined
 
     if (!openedAtByRoundId.has(roundId)) {
       openedAtByRoundId.set(roundId, Date.now())
@@ -43,16 +50,16 @@ export function useBettingOverlayState({ status, round = null }) {
     }
 
     return undefined
-  }, [status, roundId])
+  }, [isBettingOpen, roundId])
 
   useEffect(() => {
-    if (status !== RoundState.BETTING_OPEN) return undefined
+    if (!isBettingOpen) return undefined
     const id = setInterval(() => setNow(Date.now()), 200)
     return () => clearInterval(id)
-  }, [status, roundId])
+  }, [isBettingOpen, roundId])
 
   return useMemo(() => {
-    if (status === RoundState.BETTING_OPEN) {
+    if (isBettingOpen) {
       const openedLocalAt = roundId ? openedAtByRoundId.get(roundId) : null
       let secondsLeft = BETTING_WINDOW_SECONDS
       if (openedLocalAt != null) {
@@ -106,5 +113,5 @@ export function useBettingOverlayState({ status, round = null }) {
       canPlaceBets: false,
       disabled: true,
     }
-  }, [status, roundId, now])
+  }, [isBettingOpen, status, roundId, now])
 }

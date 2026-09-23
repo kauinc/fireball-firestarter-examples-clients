@@ -219,14 +219,21 @@ function BettingRoundSession({
     playSfx('betDouble')
   }
 
+  function playChipSelectSfx(metal = selectedMetal) {
+    if (metal === 'gold') playSfx('chipSelectGold')
+    else if (metal === 'silver') playSfx('chipSelectSilver')
+    else if (metal === 'bronze') playSfx('chipSelectBronze')
+    else playSfx('chipSelect')
+  }
+
   function handleSelectChip(value) {
     setSelectedChip(value)
-    playSfx('chipSelect')
+    playChipSelectSfx()
   }
 
   function handleSelectMetal(metal) {
     setSelectedMetal(metal)
-    playSfx('chipSelect')
+    playChipSelectSfx(metal)
   }
 
   function stepSelectedChip(delta) {
@@ -410,7 +417,7 @@ function BettingRoundSession({
 
 /**
  * Betting HUD driven by Supabase `rounds.status` (Realtime).
- * Full board while BETTING_OPEN; TimerBar through BETTING_CLOSED / TRACK_READY.
+ * Full board while ROUND_CREATED / BETTING_OPEN; TimerBar through BETTING_CLOSED / TRACK_READY.
  *
  * Mobile (compact): landscape layout matches product refs.
  * Combo controls are always visible during betting.
