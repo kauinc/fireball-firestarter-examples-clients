@@ -6,15 +6,12 @@ import { DOOF_ACCESSORIES } from '../../betting/constants/doofs.js'
 import { accessoryTarget } from '../../betting/utils/betTargets.js'
 
 /**
- * Read-only board body under the CURRENT BETS toggle (landscape)
- * or always-visible portrait race HUD (same geometry as betting).
+ * Read-only board under CURRENT BETS (landscape) or always-visible
+ * portrait race HUD — same table geometry as betting (no chip footer).
  */
 export function CurrentBetsBoard({
   bets = [],
   tableRef = null,
-  showCrazyCombos = false,
-  showComboBar = false,
-  showCrazyComboBar = false,
   comboPick = null,
   crazyComboPicks = null,
   portrait = false,
@@ -27,13 +24,18 @@ export function CurrentBetsBoard({
   const crazyComboBet = bets.find((bet) => bet.target.type === 'crazyCombo') ?? null
 
   const grid = (
-    <DoofGrid disabled bets={bets} labelBets={labelBets} portrait={portrait} />
+    <DoofGrid
+      disabled
+      bets={bets}
+      labelBets={labelBets}
+      portrait={portrait}
+      comboPick={comboPick}
+      crazyComboPicks={crazyComboPicks ?? {}}
+    />
   )
 
   const rails = (
-    <div
-      className={`mid-controls-stack${showCrazyCombos ? ' is-crazy' : ''}`}
-    >
+    <div className="mid-controls-stack is-crazy">
       <div className="mid-controls">
         <div className="mid-controls__accessories" aria-label="Accessory bets">
           {DOOF_ACCESSORIES.map((item) => {
@@ -76,19 +78,17 @@ export function CurrentBetsBoard({
         </div>
       </div>
 
-      {showCrazyCombos ? (
-        <div className="crazy-combos-row">
-          <CrazyCombos
-            readOnly
-            showComboBar={showComboBar}
-            showCrazyComboBar={showCrazyComboBar}
-            comboPick={comboPick}
-            comboBet={comboBet}
-            crazyComboBet={crazyComboBet}
-            crazyComboPicks={crazyComboPicks ?? {}}
-          />
-        </div>
-      ) : null}
+      <div className="crazy-combos-row">
+        <CrazyCombos
+          readOnly
+          showComboBar
+          showCrazyComboBar
+          comboPick={comboPick}
+          comboBet={comboBet}
+          crazyComboBet={crazyComboBet}
+          crazyComboPicks={crazyComboPicks ?? {}}
+        />
+      </div>
     </div>
   )
 
@@ -102,11 +102,10 @@ export function CurrentBetsBoard({
     )
   }
 
+  // Landscape: same sibling stack as betting / settlement (grid + rails).
   return (
-    <div className="race-bets-sheet__board betting-overlay__hud">
-      <div className="race-bets-sheet__table" ref={tableRef}>
-        {grid}
-      </div>
+    <div className="race-bets-sheet__board" ref={tableRef}>
+      {grid}
       {rails}
     </div>
   )

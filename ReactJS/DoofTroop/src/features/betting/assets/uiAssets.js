@@ -2,8 +2,11 @@ import textBar from '../../../assets/ui/TableButton.png'
 import comboBar from '../../../assets/ui/ComboBar.png'
 import comboBarActive from '../../../assets/ui/ComboBar_Active.png'
 import comboBarNoBet from '../../../assets/ui/ComboBar_NoBet.png'
+import comboBarRoundButton from '../../../assets/ui/ComboBarRound button.png'
 import crazyComboBar from '../../../assets/ui/CrazyComboBar_ActiveBackground.png'
 import crazyComboBarComplete from '../../../assets/ui/CrazyComboBar.png'
+import crazyComboBarNoBets from '../../../assets/ui/CrazyComboBarNoBets.png'
+import crazyComboBarRoundButton from '../../../assets/ui/CrazyComboBarRound button.png'
 import historyBar from '../../../assets/ui/history-bar.png'
 import historyMyBetsInactive from '../../../assets/ui/History_MyBets_Inactive.png'
 import historyMyBetsActive from '../../../assets/ui/History_MyBets_Active.png'
@@ -58,8 +61,11 @@ export const uiAssets = Object.freeze({
   comboBar,
   comboBarActive,
   comboBarNoBet,
+  comboBarRoundButton,
   crazyComboBar,
   crazyComboBarComplete,
+  crazyComboBarNoBets,
+  crazyComboBarRoundButton,
   historyBar,
   historyMyBetsInactive,
   historyMyBetsActive,

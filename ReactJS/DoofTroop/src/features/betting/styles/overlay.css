@@ -268,14 +268,11 @@
 
 /*
  * Short landscape (real iPhone with browser chrome, or Pro Max DevTools):
- * desktop mid-controls translateY pulls Hats/Combo into the board. Drop the
- * overlap nudge; keep the same desktop scale so the HUD matches DevTools.
+ * desktop mid-controls translateY pulls Hats/Combo into the board — drop
+ * that Y nudge only. Keep --board-shift-x so HISTORY / BALANCE clear the
+ * left edge (same as PC, just scaled).
  */
 @media (orientation: landscape) and (max-height: 500px) {
-  :is(.betting-overlay, .race-overlay, .settlement-overlay) {
-    --board-shift-x: 0px;
-  }
-
   :is(.betting-overlay, .race-overlay, .settlement-overlay)
     .mid-controls,
   :is(.betting-overlay, .race-overlay, .settlement-overlay)

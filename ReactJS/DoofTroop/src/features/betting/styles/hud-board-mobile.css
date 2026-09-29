@@ -2,7 +2,7 @@
  * Shared compact doof-grid board tweaks for betting / race / settlement.
  */
 
-/* ========== Compact board (betting · race · settlement) ========== */
+/* ========== Compact board (betting ï¿½ race ï¿½ settlement) ========== */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait']) {
   --history-w: calc(140px * var(--hud-scale));
   --history-sheet-w: calc(128px * var(--hud-scale));
@@ -11,10 +11,11 @@
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
   .doof-grid {
+  --doof-odds-col: calc(72px * var(--hud-scale));
   grid-template-columns:
     calc(84px * var(--hud-scale))
     minmax(0, 1fr)
-    calc(48px * var(--hud-scale));
+    var(--doof-odds-col);
   grid-template-rows: calc(42px * var(--hud-scale)) auto;
   width: 100%;
   max-width: 100%;
@@ -41,7 +42,7 @@
   grid-template-columns:
     calc(84px * var(--hud-scale))
     minmax(0, 1fr)
-    calc(48px * var(--hud-scale));
+    calc(72px * var(--hud-scale));
   column-gap: calc(2px * var(--hud-scale));
   transform: none;
   box-sizing: border-box;
@@ -79,6 +80,34 @@
     calc(42px * var(--hud-scale))
   );
   --chip-stack-spread: calc(var(--chip-size) * 0.5);
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
+  .doof-grid__side-rail {
+  position: relative;
+  justify-content: center;
+  gap: 0;
+  padding-left: 0;
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
+  .doof-grid__clear-bets {
+  /* Lift to the Pink / colors row so it no longer sits on MAX/MIN. */
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, calc(-50% - 21px * var(--hud-scale)));
+  width: calc(70px * var(--hud-scale));
+  height: calc(70px * var(--hud-scale));
+  padding: calc(7px * var(--hud-scale));
+  font-size: calc(11px * var(--hud-font-scale));
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])
+  .doof-grid__odds {
+  justify-content: center;
+  gap: calc(10px * var(--hud-scale));
+  width: 100%;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait'])

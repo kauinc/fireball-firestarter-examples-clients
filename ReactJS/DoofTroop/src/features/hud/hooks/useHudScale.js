@@ -3,30 +3,21 @@ import { useSyncExternalStore } from 'react'
 /**
  * Shared HUD viewport metrics for betting, race, and settlement overlays.
  *
- * DevTools / desktop (tall enough landscape): same as git — desktop layout when
- * width ≥ 900, scale from layout size.
- *
- * Real iPhone Safari: browser chrome shortens the visible box. We then:
- * - read #root / visualViewport (after optional pin)
- * - switch to compact when short, so Hats/Combo don't stack into the board
- * DevTools keeps vv ≈ layout, so it stays on the desktop path.
- *
+ * Landscape (phones, tablets, notebooks, PC): same desktop board layout,
+ * uniformly scaled to the viewport — never a separate “compact packing”.
  * Portrait: video strip on top; HUD scale fits the board pane below it.
  */
 export const HUD_DESIGN = Object.freeze({
   width: 1200,
   height: 640,
+  /** Vertical span of the desktop betting board (grid + rails + footer). */
   desktopContentHeight: 400,
   desktopWidthFraction: 0.96,
-  desktopMaxHeightFraction: 0.72,
-  landscapeWidth: 900,
-  landscapeHeight: 420,
-  compactBreakpoint: 900,
   /**
-   * Below this height use compact packing. DevTools Pro Max landscape is ~440
-   * → stays desktop. Real Safari with chrome is often ≤380 → compact.
+   * How much of the viewport height the board may use when scaling.
+   * Higher = larger HUD on short phone landscapes (≈430–440 CSS px).
    */
-  compactMaxHeight: 400,
+  desktopMaxHeightFraction: 0.9,
   minScale: 0.35,
   pad: 8,
   /**
@@ -42,7 +33,7 @@ export const HUD_DESIGN = Object.freeze({
   /** Design height of board + combo rails + footer in the lower pane. */
   portraitBoardDesignHeight: 520,
   /** Narrow portrait viewports get the mobile video zoom. */
-  mobilePortraitMaxWidth: 900,
+  mobilePortraitMaxWidth: 700,
 })
 
 const SERVER_VIEWPORT = Object.freeze({
@@ -73,11 +64,14 @@ function roundScale(value) {
   return Math.round(value * 1000) / 1000
 }
 
-function fitLandscapeScale(width, height) {
-  return Math.min(
-    width / HUD_DESIGN.landscapeWidth,
-    height / HUD_DESIGN.landscapeHeight,
-  )
+/** Desktop board layout scaled into the landscape viewport (phones + PC). */
+function fitDesktopLandscapeScale(width, height) {
+  const byWidth =
+    (width * HUD_DESIGN.desktopWidthFraction) / HUD_DESIGN.width
+  const byHeight =
+    (height * HUD_DESIGN.desktopMaxHeightFraction) /
+    HUD_DESIGN.desktopContentHeight
+  return Math.min(byWidth, byHeight)
 }
 
 function fitPortraitScale(boardWidth, boardHeight) {
@@ -164,28 +158,15 @@ function computeHudViewport() {
     }
   }
 
-  // Short visible height (real phone chrome) → compact. DevTools ~440 stays desktop.
-  const compact =
-    width < HUD_DESIGN.compactBreakpoint ||
-    height < HUD_DESIGN.compactMaxHeight
-
-  let fitted
-  if (!compact) {
-    const byWidth =
-      (width * HUD_DESIGN.desktopWidthFraction) / HUD_DESIGN.width
-    const byMaxHeight =
-      (height * HUD_DESIGN.desktopMaxHeightFraction) /
-      HUD_DESIGN.desktopContentHeight
-    fitted = Math.min(byWidth, byMaxHeight)
-  } else {
-    fitted = fitLandscapeScale(width, height)
-  }
-
+  // Landscape: always the desktop board, uniformly scaled (betting / race /
+  // settlement). Compact packing is portrait-only — phone landscape must not
+  // rearrange chrome or it looks broken next to PC.
+  const fitted = fitDesktopLandscapeScale(width, height)
   const scale = roundScale(Math.max(fitted, HUD_DESIGN.minScale))
 
   return {
     scale,
-    compact,
+    compact: false,
     orientation,
     mobilePortrait: false,
     portraitVideoFraction: HUD_DESIGN.portraitVideoMinFraction,

@@ -8,10 +8,14 @@
   width: auto;
   max-width: 100%;
   min-width: 0;
+  overflow: visible;
+}
+
+.crazy-combo-bar__rail {
+  display: contents;
 }
 
 .crazy-combo-bar__caption {
-  position: relative;
   z-index: 2;
   width: 100%;
   margin: 0 0 calc(4px * var(--hud-scale) - var(--crazy-combo-caption-overlap, calc(2px * var(--hud-scale))));
@@ -29,8 +33,20 @@
   -webkit-text-stroke: calc(1px * var(--hud-scale)) #000;
   paint-order: stroke fill;
   color: var(--crazy-red, #f03d7c);
+}
+
+.crazy-combo-bar__caption-title {
+  display: inline-block;
   transform: rotate(var(--crazy-combo-caption-tilt, -3deg));
   transform-origin: center bottom;
+}
+
+.crazy-combo-bar__caption-crazy {
+  color: var(--crazy-red, #f03d7c);
+}
+
+.crazy-combo-bar__caption-combo {
+  color: var(--crazy-yellow, #ffd400);
 }
 
 .crazy-combo-bar__track {
@@ -42,6 +58,31 @@
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
+}
+
+/*
+ * PAYS + PICK sit outside the bar width so the shell keeps its old size.
+ * Side is as tall as the button and vertically centered on the shell.
+ */
+.crazy-combo-bar__side {
+  position: absolute;
+  z-index: 4;
+  left: calc(100% + var(--combo-action-gap, calc(6px * var(--hud-scale))));
+  right: auto;
+  bottom: calc(
+    (var(--accessory-bar-h, calc(42px * var(--hud-scale))) -
+      var(--combo-action-size, calc(80px * var(--hud-scale)))) / 2
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  min-width: var(--combo-action-size, calc(80px * var(--hud-scale)));
+  height: var(--combo-action-size, calc(80px * var(--hud-scale)));
+  box-sizing: border-box;
+  overflow: visible;
+  pointer-events: none;
 }
 
 .crazy-combo-bar__shell {
@@ -85,7 +126,15 @@
   color: var(--crazy-red, #f03d7c);
 }
 
-.crazy-combo-bar.is-pick-active .crazy-combo-bar__caption {
+.crazy-combo-bar.is-complete .crazy-combo-bar__caption-crazy {
+  color: var(--crazy-red, #f03d7c);
+}
+
+.crazy-combo-bar.is-complete .crazy-combo-bar__caption-combo {
+  color: var(--crazy-yellow, #ffd400);
+}
+
+.crazy-combo-bar.is-pick-active .crazy-combo-bar__caption-title {
   filter: drop-shadow(0 0 8px rgba(240, 61, 124, 0.55));
 }
 
@@ -216,16 +265,59 @@
   z-index: 3;
 }
 
+/* PICK / CLEAR — under PAYS, right of the shell */
+.crazy-combo-bar__action {
+  position: relative;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--combo-action-size, calc(40px * var(--hud-scale)));
+  height: var(--combo-action-size, calc(40px * var(--hud-scale)));
+  margin: 0;
+  padding: calc(4px * var(--hud-scale));
+  border: 0;
+  background-color: transparent;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  color: #fff;
+  font-family: 'Helvetica Neue Cyr', 'Segoe UI', sans-serif;
+  font-size: calc(11px * var(--hud-font-scale));
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  pointer-events: auto;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.crazy-combo-bar__action:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.crazy-combo-bar__action:focus,
+.crazy-combo-bar__action:focus-visible {
+  outline: none;
+}
+
 .crazy-combo-bar__pays {
   position: absolute;
-  left: calc(100% + var(--combo-pays-gap, calc(10px * var(--hud-scale))));
-  top: 50%;
-  transform: translateY(-50%);
-  width: var(--combo-bar-pays-w, calc(56px * var(--hud-scale)));
+  left: 50%;
+  bottom: calc(50% + var(--combo-action-size, calc(40px * var(--hud-scale))) / 2 + calc(2px * var(--hud-scale)));
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: max-content;
+  min-width: var(--combo-action-size, calc(40px * var(--hud-scale)));
+  max-width: none;
   margin: 0;
   line-height: 1;
   gap: 0;
@@ -233,10 +325,31 @@
   font-family: 'Helvetica Neue Cyr', 'Segoe UI', sans-serif;
   text-align: center;
   z-index: 1;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+/* Race / settlement: no PICK — drop PAYS back to shell mid-line */
+.crazy-combo-bar.is-readonly .crazy-combo-bar__pays {
+  bottom: 50%;
+  transform: translate(-50%, 50%);
+  min-width: var(--combo-bar-pays-w, calc(64px * var(--hud-scale)));
+}
+
+.crazy-combo-bar.is-readonly .crazy-combo-bar__pays-label {
+  font-size: calc(8px * var(--hud-font-scale));
+}
+
+.crazy-combo-bar.is-readonly .crazy-combo-bar__pays-value {
+  font-size: calc(15px * var(--hud-font-scale));
+}
+
+.crazy-combo-bar.is-readonly .crazy-combo-bar__side {
+  min-width: var(--combo-bar-pays-w, calc(64px * var(--hud-scale)));
 }
 
 .crazy-combo-bar__pays-label {
-  font-size: calc(8px * var(--hud-font-scale));
+  font-size: calc(7px * var(--hud-font-scale));
   font-weight: 800;
   letter-spacing: 0.08em;
   line-height: 1;
@@ -245,17 +358,20 @@
 }
 
 .crazy-combo-bar__pays-value {
-  font-size: calc(22px * var(--hud-font-scale));
+  font-size: calc(12px * var(--hud-font-scale));
   font-weight: 800;
-  letter-spacing: 0;
+  letter-spacing: -0.02em;
   line-height: 0.95;
   color: var(--crazy-red, #f03d7c);
   text-shadow: 0 0 6px rgba(240, 61, 124, 0.45);
   -webkit-text-stroke: calc(0.5px * var(--hud-scale)) #000;
   paint-order: stroke fill;
+  max-width: none;
+  white-space: nowrap;
+  overflow: visible;
 }
 
-/* Portrait stacks title + pays in the caption; hide on landscape. */
+/* Portrait stacks title + pays in the caption; unused after rail refactor. */
 .crazy-combo-bar__caption-pays {
   display: none;
 }

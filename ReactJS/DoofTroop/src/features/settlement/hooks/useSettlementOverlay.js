@@ -21,12 +21,16 @@ const CLEARS_SETTLEMENT = new Set([
  *   status: string | null,
  *   round?: Record<string, unknown> | null,
  *   bets?: ReadonlyArray<object>,
+ *   comboPick?: { kind: string, key: string } | null,
+ *   crazyComboPicks?: Record<string, { color: string, pattern: string } | null>,
  * }} args
  */
 export function useSettlementOverlayState({
   status,
   round = null,
   bets = [],
+  comboPick = null,
+  crazyComboPicks = null,
 }) {
   const roundId = round?.id != null ? String(round.id) : null
   const isResults = status === RoundState.RESULTS_SENT && Boolean(roundId)
@@ -89,8 +93,12 @@ export function useSettlementOverlayState({
 
   const settlement = useMemo(() => {
     if (!activeRoundId) return null
-    return mockSettlementForRound(activeRoundId, { bets })
-  }, [activeRoundId, bets])
+    return mockSettlementForRound(activeRoundId, {
+      bets,
+      comboPick,
+      crazyComboPicks,
+    })
+  }, [activeRoundId, bets, comboPick, crazyComboPicks])
 
   return {
     isSettlementUiVisible,

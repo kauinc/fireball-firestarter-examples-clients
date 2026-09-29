@@ -9,10 +9,10 @@ function formatChipFace(value) {
 
 /**
  * Bottom chrome:
- * Desktop — Balance · Clear · Undo · chips · ± · Repeat · x2 · Total Bet · menu
+ * Desktop — Balance · Repeat Last · chips · ± · x2 · Total Bet · menu
  * Compact — same row, scaled; Balance | Total Bet at ends
  *
- * All three metals share the same stake; +/- steps CHIP_VALUES.
+ * Clear Bets lives on the board (DoofGrid). All three metals share stake; +/- steps CHIP_VALUES.
  */
 export function BettingFooter({
   disabled = false,
@@ -20,13 +20,10 @@ export function BettingFooter({
   selectedMetal = 'gold',
   onSelectMetal,
   onChipDragStart,
-  onClear,
-  onUndo,
   onRepeat,
   onDouble,
   onIncreaseChip,
   onDecreaseChip,
-  canUndo = false,
   canRepeat = false,
   canDouble = false,
   balance = 5100,
@@ -48,22 +45,14 @@ export function BettingFooter({
       <div className="betting-footer__tray">
         <button
           type="button"
-          className="betting-footer__round"
+          className="betting-footer__round betting-footer__round--wide"
           style={{ backgroundImage: `url(${uiAssets.roundButton})` }}
-          disabled={disabled || !onClear || totalBet <= 0}
-          onClick={onClear}
+          disabled={disabled || !onRepeat || !canRepeat}
+          onClick={onRepeat}
         >
-          CLEAR
-        </button>
-
-        <button
-          type="button"
-          className="betting-footer__round"
-          style={{ backgroundImage: `url(${uiAssets.roundButton})` }}
-          disabled={disabled || !onUndo || !canUndo}
-          onClick={onUndo}
-        >
-          UNDO
+          REPEAT
+          <br />
+          LAST
         </button>
 
         <div className="betting-footer__chips" role="group" aria-label="Chips">
@@ -125,18 +114,6 @@ export function BettingFooter({
             </button>
           </div>
         </div>
-
-        <button
-          type="button"
-          className="betting-footer__round betting-footer__round--wide"
-          style={{ backgroundImage: `url(${uiAssets.roundButton})` }}
-          disabled={disabled || !onRepeat || !canRepeat}
-          onClick={onRepeat}
-        >
-          REPEAT
-          <br />
-          LAST
-        </button>
 
         <button
           type="button"

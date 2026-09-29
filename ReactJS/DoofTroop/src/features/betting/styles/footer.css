@@ -20,7 +20,7 @@
   box-sizing: border-box;
 }
 
-/* Tray children join the desktop row (CLEAR · UNDO · chips · REPEAT · x2) */
+/* Tray children join the desktop row (REPEAT LAST · chips · x2) */
 .betting-footer__tray {
   display: contents;
 }
@@ -67,6 +67,10 @@
 
 .betting-footer__round {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   width: calc(80px * var(--hud-scale));
   height: calc(80px * var(--hud-scale));
   border: 0;
@@ -76,18 +80,21 @@
   background-position: center;
   color: var(--bet-text);
   font: inherit;
-  font-size: calc(11px * var(--hud-font-scale));
+  font-size: calc(80px * var(--hud-scale) * 0.15);
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   line-height: 1.05;
+  text-align: center;
   cursor: pointer;
-  padding: 0;
+  padding: calc(80px * var(--hud-scale) * 0.14);
+  overflow: hidden;
   transform: translateY(calc(5px * var(--hud-scale)));
 }
 
 .betting-footer__round--wide {
-  font-size: calc(10px * var(--hud-font-scale));
-  letter-spacing: 0.01em;
+  font-size: calc(80px * var(--hud-scale) * 0.12);
+  padding: calc(80px * var(--hud-scale) * 0.12);
+  letter-spacing: 0;
 }
 
 .betting-footer__chips {
@@ -123,6 +130,9 @@
 
 .betting-footer__chip {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: calc(82px * var(--hud-scale));
   height: calc(82px * var(--hud-scale));
   border: 0;
@@ -132,7 +142,7 @@
   touch-action: none;
   color: #fff;
   font: inherit;
-  font-size: calc(15px * var(--hud-font-scale));
+  font-size: calc(82px * var(--hud-scale) * 0.26);
   font-weight: 800;
   line-height: 1;
 }
@@ -140,7 +150,7 @@
 .betting-footer__chip-slot--winner .betting-footer__chip {
   width: calc(98px * var(--hud-scale));
   height: calc(98px * var(--hud-scale));
-  font-size: calc(17px * var(--hud-font-scale));
+  font-size: calc(98px * var(--hud-scale) * 0.26);
 }
 
 .betting-footer__chip img {

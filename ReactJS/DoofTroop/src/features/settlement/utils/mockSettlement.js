@@ -7,9 +7,16 @@ import { resolveBetOutcomes } from './resolveBetOutcomes.js'
  * Podium lineup is seeded by roundId; chip win/lose follows bet vs winners.
  *
  * @param {string | null | undefined} roundId
- * @param {{ bets?: ReadonlyArray<object> }} [options]
+ * @param {{
+ *   bets?: ReadonlyArray<object>,
+ *   comboPick?: { kind: string, key: string } | null,
+ *   crazyComboPicks?: Record<string, { color: string, pattern: string } | null>,
+ * }} [options]
  */
-export function mockSettlementForRound(roundId, { bets = [] } = {}) {
+export function mockSettlementForRound(
+  roundId,
+  { bets = [], comboPick = null, crazyComboPicks = null } = {},
+) {
   const seed = hashSeed(String(roundId ?? 'demo'))
   const winners = POSITION_OPTIONS.map((place, index) => {
     const color = DOOF_COLORS[(seed + index * 3) % DOOF_COLORS.length]
@@ -23,7 +30,10 @@ export function mockSettlementForRound(roundId, { bets = [] } = {}) {
     }
   })
 
-  const outcomes = resolveBetOutcomes(bets, winners)
+  const outcomes = resolveBetOutcomes(bets, winners, {
+    comboPick,
+    crazyComboPicks,
+  })
 
   return Object.freeze({
     didWin: outcomes.didWin,

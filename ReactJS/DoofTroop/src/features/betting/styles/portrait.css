@@ -17,9 +17,9 @@
   /* Background_Portrait sits under the stream (no mid-video overlap). */
   --portrait-stream-overlap: 0px;
   --portrait-board-gap: 0px;
-  /* Balance / Total Bet column — phones narrow, tablets grow. */
-  --portrait-meters-w: clamp(70px, 17vw, 180px);
-  --portrait-rail-w: clamp(84px, 22vw, 190px);
+  /* Balance / Total Bet / Clear Bets column — phones grow with Clear. */
+  --portrait-meters-w: clamp(76px, 18vw, 180px);
+  --portrait-rail-w: clamp(80px, 20vw, 160px);
   --portrait-accessory-w: clamp(28px, 7vw, 60px);
   /* Clear gap between COMBO rails and Hats/Glasses. */
   --portrait-combo-accessories-gap: clamp(8px, 2vw, 18px);
@@ -32,7 +32,8 @@
    */
   --portrait-field-chrome-l: calc(28 / 346);
   --portrait-field-chrome-r: calc(27 / 346);
-  --portrait-combo-shell-thick: clamp(40px, 10vw, 88px);
+  /* Shell thickness ≈ design ref (pill, not a fat stub). */
+  --portrait-combo-shell-thick: clamp(32px, 7.5vw, 52px);
   --portrait-accessory-shell-thick: clamp(26px, 6.5vw, 52px);
   --portrait-accessory-icon: clamp(18px, 5.5vw, 36px);
   /* Kill landscape fixed Hats/Glasses height so portrait flex can split the field. */
@@ -42,8 +43,11 @@
   --field-in-t: calc(27 / 1410);
   --field-in-b: calc(28 / 1410);
   --portrait-pattern-gap: clamp(1px, 0.4vw, 3px);
-  /* Chip tray — room for winner chip + label + a few px so bottoms aren’t clipped. */
-  --portrait-chip-tray-h: clamp(84px, 12svh, 132px);
+  /*
+   * Footer / chip tray — fewer tray buttons (no Clear/Undo) so grow rounds + chips.
+   * Leave 4px slack under chips so overflow parents don’t shave the bottom curve.
+   */
+  --portrait-chip-tray-h: clamp(96px, 13.5svh, 148px);
   --portrait-footer-label-pad: clamp(12px, 1.8svh, 18px);
   /*
    * Default 0 → board fills to the bottom (race / settlement).
@@ -58,23 +62,18 @@
   /* Doof sprites — scale with cell. */
   --portrait-doof-h: clamp(16px, 6.5vw, 40px);
   --portrait-doof-w: clamp(16px, 6.8vw, 42px);
-  /*
-   * Footer controls — leave 4px slack under the chip so overflow parents
-   * don’t shave the bottom curve. Narrow phones squeeze below.
-   */
   --portrait-footer-chip-winner: min(
-    clamp(56px, 13.5vw, 100px),
+    clamp(64px, 15vw, 112px),
     calc(var(--portrait-chip-tray-h) - var(--portrait-footer-label-pad) - 4px)
   );
   --portrait-footer-chip: min(
-    clamp(46px, 11vw, 84px),
+    clamp(52px, 12.5vw, 92px),
     calc(var(--portrait-footer-chip-winner) * 0.82)
   );
   --portrait-footer-round: min(
-    clamp(48px, 11.5vw, 88px),
+    clamp(56px, 13.5vw, 100px),
     calc(var(--portrait-chip-tray-h) - 8px)
   );
-  --portrait-footer-round-wide: clamp(60px, 15vw, 110px);
   --portrait-meter-h: clamp(17px, 4.2vw, 44px);
   /* Board + pattern/color bar bet chips (match combo/hats scale; no % of thin bars). */
   --portrait-board-chip: clamp(32px, 9vw, 56px);
@@ -84,26 +83,45 @@
 }
 
 /*
- * Very narrow portrait (Galaxy A55-class ~360px): shrink tray so CLEAR…x2
- * fit without clipping. Larger phones keep the tokens above.
+ * Narrow / mid portrait phones (Pixel 5 393px, A55 ~360px, Pro Max 430px):
+ * still roomy — only Clear/Undo left the tray, so don’t crush rounds/chips.
  */
-@media (max-width: 380px) {
+@media (max-width: 430px) {
   :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] {
-    --portrait-chip-tray-h: clamp(74px, 11svh, 100px);
+    --portrait-chip-tray-h: clamp(88px, 12svh, 120px);
     --portrait-footer-label-pad: clamp(10px, 1.4svh, 14px);
     --portrait-footer-chip-winner: min(
-      clamp(42px, 11.5vw, 56px),
+      clamp(52px, 14vw, 72px),
       calc(var(--portrait-chip-tray-h) - var(--portrait-footer-label-pad) - 4px)
     );
     --portrait-footer-chip: min(
-      clamp(34px, 9.5vw, 46px),
+      clamp(42px, 11.5vw, 58px),
       calc(var(--portrait-footer-chip-winner) * 0.82)
     );
     --portrait-footer-round: min(
-      clamp(36px, 10vw, 48px),
+      clamp(48px, 13vw, 68px),
       calc(var(--portrait-chip-tray-h) - 8px)
     );
-    --portrait-footer-round-wide: clamp(48px, 13vw, 64px);
+  }
+}
+
+/* Extra-narrow: squeeze a bit more so the row never overflows. */
+@media (max-width: 360px) {
+  :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] {
+    --portrait-chip-tray-h: clamp(80px, 11svh, 104px);
+    --portrait-footer-label-pad: clamp(9px, 1.3svh, 12px);
+    --portrait-footer-chip-winner: min(
+      clamp(44px, 12.5vw, 58px),
+      calc(var(--portrait-chip-tray-h) - var(--portrait-footer-label-pad) - 4px)
+    );
+    --portrait-footer-chip: min(
+      clamp(36px, 10.5vw, 48px),
+      calc(var(--portrait-footer-chip-winner) * 0.82)
+    );
+    --portrait-footer-round: min(
+      clamp(42px, 12vw, 56px),
+      calc(var(--portrait-chip-tray-h) - 8px)
+    );
   }
 }
 
@@ -189,9 +207,10 @@
   padding-top: 0;
   padding-left: max(4px, env(safe-area-inset-left, 0px));
   padding-right: max(4px, env(safe-area-inset-right, 0px));
+  /* Keep chip bottoms clear of the bezel / home indicator. */
   padding-bottom: max(
-    clamp(8px, 1.4svh, 14px),
-    calc(env(safe-area-inset-bottom, 0px) + 4px)
+    clamp(10px, 1.8svh, 18px),
+    calc(env(safe-area-inset-bottom, 0px) + 8px)
   );
   box-sizing: border-box;
   overflow: hidden;
@@ -338,6 +357,7 @@
   position: relative;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   align-self: stretch;
   align-items: flex-end;
   justify-content: center;
@@ -389,9 +409,38 @@
   grid-auto-rows: unset;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .doof-grid[data-portrait='true'] .doof-grid__spacer,
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .doof-grid[data-portrait='true'] .doof-grid__spacer {
+  display: none !important;
+}
+
+/*
+ * CLEAR BETS — top-right of the board (рис 1), in the meters column beside Red.
+ * Side-rail unwraps so odds + clear can park independently.
+ */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .doof-grid[data-portrait='true'] .doof-grid__odds-spacer {
   display: none !important;
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .doof-grid[data-portrait='true'] .doof-grid__side-rail {
+  display: contents;
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .doof-grid[data-portrait='true'] .doof-grid__clear-bets {
+  position: absolute;
+  left: calc(100% + clamp(2px, 0.8vw, 6px) + var(--portrait-meters-w) / 2);
+  right: auto;
+  top: calc(100% / 7);
+  bottom: auto;
+  z-index: 8;
+  margin: 0;
+  transform: translate(-50%, -15%);
+  pointer-events: auto;
+  /* Fill most of the meters column — was tiny next to Red. */
+  width: min(var(--portrait-meters-w), clamp(84px, 20vw, 128px));
+  height: min(var(--portrait-meters-w), clamp(84px, 20vw, 128px));
+  padding: clamp(10px, 2.4vw, 16px);
+  font-size: clamp(12px, 3.2vw, 16px);
+  line-height: 1.05;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .doof-grid[data-portrait='true'] .doof-grid__rail {
@@ -1060,9 +1109,8 @@
 }
 
 /*
- * Portrait combo rails — keep ComboBar / CrazyComboBar aspect (496×94 /
- * 856×94). Flex shares the rail by those lengths; ::after uses contain so
- * the PNG is never stretched. Text scales with cqmin on the caption.
+ * Portrait combo rails — flex shares by asset lengths (496 / 856).
+ * Shell ::after fills the column (thickness from --portrait-combo-shell-thick).
  */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combos > .combo-bar,
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combos > .crazy-combo-bar,
@@ -1078,7 +1126,7 @@
   min-height: 0;
   height: 0;
   max-height: 100%;
-  column-gap: clamp(6px, 1.8vw, 12px);
+  column-gap: clamp(4px, 1.2vw, 8px);
   overflow: visible;
   position: relative;
 }
@@ -1094,42 +1142,115 @@
   flex: 856 1 0;
 }
 
+/* Left column: title → PICK → PAYS (fig 2) */
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__rail,
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2px, 0.5vh, 4px);
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0 clamp(1px, 0.4vw, 3px);
+  box-sizing: border-box;
+  container-type: inline-size;
+  container-name: combo-caption;
+  overflow: visible;
+}
+
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__caption,
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__caption,
 .race-overlay[data-orientation='portrait'] .combo-bar__caption,
 .race-overlay[data-orientation='portrait'] .crazy-combo-bar__caption,
 .settlement-overlay[data-orientation='portrait'] .combo-bar__caption,
 .settlement-overlay[data-orientation='portrait'] .crazy-combo-bar__caption {
-  grid-column: 1;
-  grid-row: 1;
+  grid-column: auto;
+  grid-row: auto;
   position: relative;
   z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* Fill the rail height, then center title + pays in the middle of the bar. */
-  justify-content: center;
-  gap: clamp(2px, 0.5vh, 4px);
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  min-height: 0;
+  margin: 0 !important;
+  padding: 0;
   writing-mode: horizontal-tb;
   transform: none !important;
   text-align: center;
-  margin: 0 !important;
-  padding: 0 clamp(2px, 0.8vw, 4px) 0 0;
-  width: auto;
-  max-width: 100%;
-  height: 100%;
-  min-height: 0;
   font-size: inherit;
   letter-spacing: 0.01em;
   line-height: 1.05;
   white-space: normal;
-  align-self: stretch;
-  justify-self: stretch;
   box-sizing: border-box;
-  container-type: size;
+  overflow: visible;
 }
 
-/* COMBO / CRAZY COMBO — titles scale with viewport width */
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__side,
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__side {
+  grid-column: auto;
+  grid-row: auto;
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2px, 0.5vh, 4px);
+  margin: 0;
+  min-width: 0;
+  width: 100%;
+  height: auto;
+  pointer-events: auto;
+}
+
+/* Portrait fig 2: PICK then PAYS under the title */
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__action,
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__action {
+  order: 1;
+  position: relative;
+  z-index: 3;
+  flex: 0 0 auto;
+  width: clamp(52px, 40cqw, 80px);
+  height: clamp(52px, 40cqw, 80px);
+  margin: 0;
+  padding: clamp(2px, 0.4cqw, 4px);
+  font-size: clamp(7px, 11cqw, 13px);
+  letter-spacing: 0.02em;
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__pays,
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__pays {
+  order: 2;
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Race / settlement portrait: no PICK — keep PAYS under the title */
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar.is-readonly .combo-bar__pays,
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar.is-readonly .crazy-combo-bar__pays {
+  order: 1;
+  bottom: auto;
+  transform: none;
+}
+
+/* COMBO / CRAZY COMBO — titles scale with caption column width */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__caption-title,
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__caption-title,
 .race-overlay[data-orientation='portrait'] .combo-bar__caption-title,
@@ -1137,11 +1258,13 @@
 .settlement-overlay[data-orientation='portrait'] .combo-bar__caption-title,
 .settlement-overlay[data-orientation='portrait'] .crazy-combo-bar__caption-title {
   display: block;
-  font-size: clamp(9px, 2.8vw, 16px);
+  max-width: 100%;
+  font-size: clamp(7px, 18cqw, 14px);
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   line-height: 1.05;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
 /* CRAZY COMBO title — italic + tilt (portrait only) */
@@ -1149,8 +1272,6 @@
 .race-overlay[data-orientation='portrait'] .crazy-combo-bar__caption,
 .settlement-overlay[data-orientation='portrait'] .crazy-combo-bar__caption {
   font-style: normal;
-  container-type: inline-size;
-  container-name: crazy-caption;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__caption-title,
@@ -1164,43 +1285,46 @@
   white-space: normal;
   max-width: 100%;
   width: 100%;
-  font-size: clamp(8px, 2.4vw, 14px);
-  letter-spacing: 0.02em;
+  font-size: clamp(6px, 15cqw, 13px);
+  letter-spacing: 0.01em;
   line-height: 1.05;
-  overflow-wrap: normal;
+  overflow-wrap: anywhere;
   word-break: normal;
 }
 
 /* Wide enough caption column → keep CRAZY COMBO on one line. */
-@container crazy-caption (min-width: 4.75rem) {
+@container combo-caption (min-width: 4.75rem) {
   .crazy-combo-bar__caption-title {
     white-space: nowrap;
+    overflow-wrap: normal;
   }
 }
 
-/* pays (small) + x… (large) under the title */
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__caption-pays,
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__caption-pays,
-.race-overlay[data-orientation='portrait'] .combo-bar__caption-pays,
-.race-overlay[data-orientation='portrait'] .crazy-combo-bar__caption-pays,
-.settlement-overlay[data-orientation='portrait'] .combo-bar__caption-pays,
-.settlement-overlay[data-orientation='portrait'] .crazy-combo-bar__caption-pays {
+/* pays (small) + x… (large) under PICK */
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__pays,
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__pays,
+.race-overlay[data-orientation='portrait'] .combo-bar__pays,
+.race-overlay[data-orientation='portrait'] .crazy-combo-bar__pays,
+.settlement-overlay[data-orientation='portrait'] .combo-bar__pays,
+.settlement-overlay[data-orientation='portrait'] .crazy-combo-bar__pays {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0;
   line-height: 1;
+  max-width: 100%;
+  min-width: 0;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__caption-pays-label,
-.race-overlay[data-orientation='portrait'] .combo-bar__caption-pays-label,
-.settlement-overlay[data-orientation='portrait'] .combo-bar__caption-pays-label {
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__pays-label,
+.race-overlay[data-orientation='portrait'] .combo-bar__pays-label,
+.settlement-overlay[data-orientation='portrait'] .combo-bar__pays-label {
   display: block;
-  font-size: clamp(6px, 1.9vw, 11px);
+  font-size: clamp(5px, 12cqw, 10px);
   font-weight: 700;
   font-style: normal;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   line-height: 1;
   text-transform: lowercase;
   color: var(--combo-green, #3dff6a);
@@ -1208,14 +1332,14 @@
   -webkit-text-stroke: 0;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__caption-pays-label,
-.race-overlay[data-orientation='portrait'] .crazy-combo-bar__caption-pays-label,
-.settlement-overlay[data-orientation='portrait'] .crazy-combo-bar__caption-pays-label {
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__pays-label,
+.race-overlay[data-orientation='portrait'] .crazy-combo-bar__pays-label,
+.settlement-overlay[data-orientation='portrait'] .crazy-combo-bar__pays-label {
   display: block;
-  font-size: clamp(6px, 1.9vw, 11px);
+  font-size: clamp(5px, 12cqw, 10px);
   font-weight: 700;
   font-style: normal;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   line-height: 1;
   text-transform: lowercase;
   color: var(--crazy-red, #f03d7c);
@@ -1223,34 +1347,42 @@
   -webkit-text-stroke: 0;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__caption-pays-value,
-.race-overlay[data-orientation='portrait'] .combo-bar__caption-pays-value,
-.settlement-overlay[data-orientation='portrait'] .combo-bar__caption-pays-value {
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__pays-value,
+.race-overlay[data-orientation='portrait'] .combo-bar__pays-value,
+.settlement-overlay[data-orientation='portrait'] .combo-bar__pays-value {
   display: block;
-  font-size: clamp(11px, 3.4vw, 20px);
+  max-width: 100%;
+  box-sizing: border-box;
+  font-size: clamp(7px, 26cqw, 16px);
   font-weight: 800;
   font-style: normal;
-  letter-spacing: 0;
+  letter-spacing: -0.02em;
   line-height: 0.95;
   color: var(--combo-green, #3dff6a);
   text-shadow: 0 0 6px rgba(61, 255, 106, 0.45);
-  -webkit-text-stroke: calc(0.5px * var(--hud-scale)) #000;
+  -webkit-text-stroke: calc(0.4px * var(--hud-scale)) #000;
   paint-order: stroke fill;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__caption-pays-value,
-.race-overlay[data-orientation='portrait'] .crazy-combo-bar__caption-pays-value,
-.settlement-overlay[data-orientation='portrait'] .crazy-combo-bar__caption-pays-value {
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__pays-value,
+.race-overlay[data-orientation='portrait'] .crazy-combo-bar__pays-value,
+.settlement-overlay[data-orientation='portrait'] .crazy-combo-bar__pays-value {
   display: block;
-  font-size: clamp(11px, 3.4vw, 20px);
+  max-width: 100%;
+  box-sizing: border-box;
+  font-size: clamp(7px, 26cqw, 16px);
   font-weight: 800;
   font-style: normal;
-  letter-spacing: 0;
+  letter-spacing: -0.02em;
   line-height: 0.95;
   color: var(--crazy-red, #f03d7c);
   text-shadow: 0 0 6px rgba(240, 61, 124, 0.45);
-  -webkit-text-stroke: calc(0.5px * var(--hud-scale)) #000;
+  -webkit-text-stroke: calc(0.4px * var(--hud-scale)) #000;
   paint-order: stroke fill;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__caption::after,
@@ -1280,16 +1412,10 @@
   container-type: size;
 }
 
-/* PAYS folded into caption — hide landscape absolute pays column */
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__pays,
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__pays {
-  display: none;
-}
-
 /*
  * Portrait combo shells — landscape PNGs rotated −90° via ::after:
  *   COMBO: NoBet → Active (click) → Combo (pick) → NoBet (clear)
- *   CRAZY: ActiveBackground → ActiveSmall (per slot) → CrazyComboBar (complete)
+ *   CRAZY: NoBets → ActiveBackground+ActiveSmall (picking) → CrazyComboBar (complete)
  * Shell stays overflow:visible so chrome + upright labels are not clipped.
  */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__shell,
@@ -1321,11 +1447,12 @@
   top: 50%;
   z-index: 0;
   /*
-   * Rotated ComboBar 496×94: thickness = shell column (cqw), length along rail.
-   * Prefer fill thickness; shrink uniformly if the slot is shorter than natural.
+   * Fill the shell slot (same as Hats/Glasses). Thickness comes from
+   * --portrait-combo-shell-thick; length follows the rail so tall race /
+   * settlement rails are not left with clipped mid-pill stubs.
    */
-  height: min(calc(100cqw - 2px), calc((100cqh - 2px) * 94 / 496));
-  width: min(calc(100cqh - 2px), calc((100cqw - 2px) * 496 / 94));
+  height: calc(100cqw - 2px);
+  width: calc(100cqh - 2px);
   max-width: none;
   max-height: none;
   transform: translate(-50%, -50%) rotate(-90deg);
@@ -1337,21 +1464,12 @@
   pointer-events: none;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__shell::after {
-  height: min(calc(100cqw - 2px), calc((100cqh - 2px) * 94 / 856));
-  width: min(calc(100cqh - 2px), calc((100cqw - 2px) * 856 / 94));
-}
-
 /*
  * ComboBar_Active is 592×190 vs solid 496×94 — scale glow pad on rotated ::after.
  */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar.is-active .combo-bar__shell::after {
-  height: calc(
-    min(calc(100cqw - 2px), calc((100cqh - 2px) * 94 / 496)) * 190 / 94
-  );
-  width: calc(
-    min(calc(100cqh - 2px), calc((100cqw - 2px) * 496 / 94)) * 592 / 496
-  );
+  height: calc((100cqw - 2px) * 190 / 94);
+  width: calc((100cqh - 2px) * 592 / 496);
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar.is-active .combo-bar__shell::before {
@@ -1373,7 +1491,7 @@
   max-width: 100%;
   min-width: 0;
   padding: calc(8px * var(--hud-scale)) calc(2px * var(--hud-scale))
-    calc(30px * var(--hud-scale));
+    clamp(8px, 10cqh, calc(30px * var(--hud-scale)));
   box-sizing: border-box;
   transform: none;
   overflow: visible;
@@ -1448,7 +1566,7 @@
   justify-content: space-evenly;
   width: 100%;
   height: 100%;
-  padding: calc(6px * var(--hud-scale)) 0 calc(30px * var(--hud-scale));
+  padding: calc(6px * var(--hud-scale)) 0 clamp(8px, 10cqh, calc(30px * var(--hud-scale)));
   gap: calc(4px * var(--hud-scale));
   transform: none;
   box-sizing: border-box;
@@ -1484,19 +1602,14 @@
 
 /*
  * Active-slot glow: CrazyComboBar_ActiveSmall rotated −90°, one slot tall.
- * Scale from the same inset solid as shell::after so the pink body matches
- * the bar (not 100cqw — that overshoots the −2px shell art).
- * ActiveSmall 381×190; solid ≈ (856/3)×94 of CrazyComboBar 856×94.
+ * Match filled shell::after inset (−2px). ActiveSmall 381×190; solid ≈
+ * (856/3)×94 of CrazyComboBar 856×94.
  */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .crazy-combo-bar__selection {
   top: 50%;
   left: 50%;
-  width: calc(
-    min(calc(100cqh - 2px), calc((100cqw - 2px) * 856 / 94)) * 381 / 856
-  );
-  height: calc(
-    min(calc(100cqw - 2px), calc((100cqh - 2px) * 94 / 856)) * 190 / 94
-  );
+  width: calc((100cqh - 2px) * 381 / 856);
+  height: calc((100cqw - 2px) * 190 / 94);
   max-width: none;
   transform: translate(-50%, -50%) rotate(-90deg);
   transform-origin: center center;
@@ -1621,14 +1734,14 @@
   flex-wrap: nowrap;
   align-items: flex-end;
   justify-content: center;
-  gap: clamp(2px, 0.8vw, 6px);
+  gap: clamp(4px, 1.2vw, 10px);
   width: 100%;
+  min-width: 0;
   min-height: 0;
   max-width: 100%;
   height: 100%;
   box-sizing: border-box;
-  /* Don’t clip chip bottoms — horizontal fit is handled by size tokens. */
-  overflow: visible;
+  overflow: hidden;
 }
 
 /* Fig 1: gold WINNER chip larger, same baseline; labels form a podium. */
@@ -1639,22 +1752,40 @@
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-footer__round {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: var(--portrait-footer-round);
   height: var(--portrait-footer-round);
-  font-size: clamp(8px, 2.4vw, 14px);
+  /* Usable face ≈ 70% of the round art — keep labels inside the circle. */
+  box-sizing: border-box;
+  padding: calc(var(--portrait-footer-round) * 0.16);
+  font-size: calc(var(--portrait-footer-round) * 0.15);
+  letter-spacing: 0;
+  line-height: 1;
+  text-align: center;
+  overflow: hidden;
   flex-shrink: 0;
   /* Kill landscape nudge that pushed buttons past the screen edge. */
   transform: none;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-footer__round--wide {
-  width: var(--portrait-footer-round-wide);
-  font-size: clamp(7px, 2vw, 12px);
+  /* Same circle as x2 — only tighten type for two-line REPEAT LAST. */
+  padding: calc(var(--portrait-footer-round) * 0.12);
+  font-size: calc(var(--portrait-footer-round) * 0.12);
+  line-height: 1.05;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-footer__chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: var(--portrait-footer-chip);
   height: var(--portrait-footer-chip);
+  /* Face value scales with chip diameter (~28% → padding inside rim). */
+  font-size: calc(var(--portrait-footer-chip) * 0.26);
+  line-height: 1;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-footer__chip-slot {
@@ -1691,7 +1822,7 @@
   .betting-footer__chip {
   width: var(--portrait-footer-chip-winner);
   height: var(--portrait-footer-chip-winner);
-  font-size: clamp(11px, 3vw, 18px);
+  font-size: calc(var(--portrait-footer-chip-winner) * 0.26);
   transform: none;
 }
 
@@ -1714,8 +1845,8 @@
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-footer__stake-btn {
-  width: clamp(22px, 5.5vw, 36px);
-  height: clamp(22px, 5.5vw, 36px);
+  width: clamp(26px, 6.5vw, 42px);
+  height: clamp(26px, 6.5vw, 42px);
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .betting-overlay__menu-top {
@@ -1723,8 +1854,8 @@
 }
 
 /*
- * Betting portrait — reserve chip tray so the board stops above the footer.
- * Race / settlement keep --portrait-footer-h: 0 and fill to the bottom.
+ * Betting portrait — reserve chip tray so the board / combo rails stop
+ * above the footer (settlement has no tray → footer-h stays 0).
  */
 .betting-overlay[data-orientation='portrait'] {
   --portrait-footer-h: var(--portrait-chip-tray-h);

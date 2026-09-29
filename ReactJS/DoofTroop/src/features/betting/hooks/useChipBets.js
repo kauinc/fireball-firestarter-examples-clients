@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { publishRoundBets } from '../state/roundBetsStore.js'
+import { positionsForMetal, positionsForChips } from '../constants/positions.js'
 import { betTargetKey } from '../utils/betTargets.js'
 import {
   mergeMetalChips,
@@ -41,11 +42,13 @@ function mergeChipsForTarget(target, chips) {
  * Combo / Crazy Combo bars merge every metal into one stake.
  * Remount the consumer with `key={roundId}` to clear bets for a new round.
  *
+ * Metal selects paytable scope: gold=WINNER/1st, silver=TOP 2, bronze=TOP 3.
+ *
  * UNDO — pops the last board mutation (place / clear / repeat / x2).
  * REPEAT LAST — re-applies the most recent chip placement (same target/metal/amount).
  */
 export function useChipBets(
-  selectedPositions,
+  _selectedPositions,
   roundId = null,
   crazyCombo = false,
   comboPick = null,
@@ -80,36 +83,34 @@ export function useChipBets(
     setCanUndo(true)
   }, [])
 
-  const buildPlacedBets = useCallback(
-    (prev, amount, target, metal) => {
-      const key = betTargetKey(target)
-      const positions = [...selectedPositions]
-      const stakeMetal = isComboBarTarget(target) ? 'gold' : metal
-      const addition = [{ metal: stakeMetal, value: amount }]
-      const existing = prev.find((bet) => bet.key === key)
-      if (existing) {
-        return prev.map((bet) => {
-          if (bet.key !== key) return bet
-          return {
-            ...bet,
-            chips: mergeChipsForTarget(target, [...bet.chips, ...addition]),
-            positions,
-          }
-        })
-      }
-      return [
-        ...prev,
-        {
-          id: nextBetId(),
-          key,
-          chips: mergeChipsForTarget(target, addition),
-          target: cloneTarget(target),
-          positions,
-        },
-      ]
-    },
-    [selectedPositions],
-  )
+  const buildPlacedBets = useCallback((prev, amount, target, metal) => {
+    const key = betTargetKey(target)
+    const stakeMetal = isComboBarTarget(target) ? 'gold' : metal
+    const addition = [{ metal: stakeMetal, value: amount }]
+    const existing = prev.find((bet) => bet.key === key)
+    if (existing) {
+      return prev.map((bet) => {
+        if (bet.key !== key) return bet
+        const chips = mergeChipsForTarget(target, [...bet.chips, ...addition])
+        return {
+          ...bet,
+          chips,
+          positions: [...positionsForChips(chips)],
+        }
+      })
+    }
+    const chips = mergeChipsForTarget(target, addition)
+    return [
+      ...prev,
+      {
+        id: nextBetId(),
+        key,
+        chips,
+        target: cloneTarget(target),
+        positions: [...positionsForMetal(stakeMetal)],
+      },
+    ]
+  }, [])
 
   const placeBet = useCallback(
     (amount, target, metal = 'gold') => {
@@ -135,6 +136,19 @@ export function useChipBets(
     applyBets([])
     return true
   }, [applyBets, pushUndo])
+
+  const clearBetsByTargetType = useCallback(
+    (type) => {
+      if (!type) return false
+      const prev = betsRef.current
+      const next = prev.filter((bet) => bet.target?.type !== type)
+      if (next.length === prev.length) return false
+      pushUndo(prev)
+      applyBets(next)
+      return true
+    },
+    [applyBets, pushUndo],
+  )
 
   const undoBets = useCallback(() => {
     const previous = undoStackRef.current.pop()
@@ -182,6 +196,7 @@ export function useChipBets(
     canRepeat,
     placeBet,
     clearBets,
+    clearBetsByTargetType,
     undoBets,
     repeatLastBets,
     doubleBets,

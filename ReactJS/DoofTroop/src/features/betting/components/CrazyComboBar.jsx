@@ -10,9 +10,12 @@ const crazyComboDropTarget = crazyComboTarget()
 
 /**
  * CRAZY COMBO bar assets (three shell states):
- * - no bet: CrazyComboBar_ActiveBackground
- * - selected/complete: CrazyComboBar
+ * - no bet: CrazyComboBarNoBets (tinted idle, like ComboBar_NoBet)
  * - active/picking: ActiveBackground + CrazyComboBar_ActiveSmall shifted per slot (×3)
+ * - selected/complete: CrazyComboBar
+ *
+ * PICK / CLEAR round button opens or resets the crazy combo selection.
+ * The shell itself is bet-only (when complete).
  */
 export function CrazyComboBar({
   paysMultiplier = 'x5000',
@@ -20,6 +23,7 @@ export function CrazyComboBar({
   activeSlot = null,
   pickActive = false,
   onBarClick,
+  onClear,
   disabled = false,
   readOnly = false,
   crazyComboBet = null,
@@ -28,7 +32,8 @@ export function CrazyComboBar({
 }) {
   const complete = isCrazyComboComplete(picks)
   const dropEnabled = !readOnly && complete && !pickActive && !disabled
-  const pickEnabled = !readOnly && !dropEnabled && !disabled
+  const slotSwitchEnabled = !readOnly && pickActive && !disabled
+  const actionLabel = complete ? 'CLEAR' : 'PICK'
 
   const shellClass = [
     'crazy-combo-bar__shell',
@@ -41,7 +46,9 @@ export function CrazyComboBar({
   const shellBg =
     complete && !pickActive
       ? uiAssets.crazyComboBarComplete
-      : uiAssets.crazyComboBar
+      : pickActive
+        ? uiAssets.crazyComboBar
+        : uiAssets.crazyComboBarNoBets
 
   const shellStyle = {
     backgroundImage: `url(${shellBg})`,
@@ -60,8 +67,15 @@ export function CrazyComboBar({
   }
 
   function handleSlotClick(slot) {
-    if (!pickEnabled) return
+    if (!slotSwitchEnabled) return
     onBarClick?.(slot)
+  }
+
+  function handleActionClick(event) {
+    event.stopPropagation()
+    if (disabled) return
+    if (complete) onClear?.()
+    else onBarClick?.()
   }
 
   const slots = (
@@ -74,7 +88,7 @@ export function CrazyComboBar({
           'crazy-combo-bar__slot',
           isActive ? ' is-active' : '',
           pick ? ' has-pick' : '',
-          pickEnabled ? ' crazy-combo-bar__slot--interactive' : '',
+          slotSwitchEnabled ? ' crazy-combo-bar__slot--interactive' : '',
         ]
           .filter(Boolean)
           .join(' ')
@@ -95,7 +109,7 @@ export function CrazyComboBar({
           </>
         )
 
-        return pickEnabled ? (
+        return slotSwitchEnabled ? (
           <button
             key={slot}
             type="button"
@@ -118,18 +132,44 @@ export function CrazyComboBar({
     </div>
   )
 
+  const actionButton = !readOnly ? (
+    <button
+      type="button"
+      className={`crazy-combo-bar__action${complete ? ' is-clear' : ' is-pick'}${pickActive ? ' is-active' : ''}`}
+      style={{ backgroundImage: `url(${uiAssets.crazyComboBarRoundButton})` }}
+      disabled={disabled}
+      aria-pressed={pickActive}
+      aria-label={complete ? 'Clear crazy combo selection' : 'Pick crazy combo'}
+      onClick={handleActionClick}
+    >
+      {actionLabel}
+    </button>
+  ) : null
+
+  const paysBlock = (
+    <div className="crazy-combo-bar__pays">
+      <span className="crazy-combo-bar__pays-label">PAYS</span>
+      <span className="crazy-combo-bar__pays-value">{paysMultiplier}</span>
+    </div>
+  )
+
   return (
     <article
-      className={`crazy-combo-bar${pickActive ? ' is-pick-active' : ''}${complete ? ' is-complete' : ''}`}
+      className={`crazy-combo-bar${pickActive ? ' is-pick-active' : ''}${complete ? ' is-complete' : ''}${readOnly ? ' is-readonly' : ''}`}
       aria-label="Crazy Combo"
     >
-      <h3 className="crazy-combo-bar__caption">
-        <span className="crazy-combo-bar__caption-title">CRAZY COMBO</span>
-        <span className="crazy-combo-bar__caption-pays">
-          <span className="crazy-combo-bar__caption-pays-label">pays</span>
-          <span className="crazy-combo-bar__caption-pays-value">{paysMultiplier}</span>
-        </span>
-      </h3>
+      <div className="crazy-combo-bar__rail">
+        <h3 className="crazy-combo-bar__caption">
+          <span className="crazy-combo-bar__caption-title">
+            <span className="crazy-combo-bar__caption-crazy">CRAZY</span>{' '}
+            <span className="crazy-combo-bar__caption-combo">COMBO</span>
+          </span>
+        </h3>
+        <div className="crazy-combo-bar__side">
+          {paysBlock}
+          {actionButton}
+        </div>
+      </div>
       <div className="crazy-combo-bar__track">
         <div
           className={shellClass}
@@ -161,10 +201,6 @@ export function CrazyComboBar({
               <ChipStack chips={crazyComboBet.chips} skin="crazyCombo" />
             </span>
           ) : null}
-        </div>
-        <div className="crazy-combo-bar__pays">
-          <span className="crazy-combo-bar__pays-label">PAYS</span>
-          <span className="crazy-combo-bar__pays-value">{paysMultiplier}</span>
         </div>
       </div>
     </article>

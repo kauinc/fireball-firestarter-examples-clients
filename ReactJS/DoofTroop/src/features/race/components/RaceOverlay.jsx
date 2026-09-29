@@ -38,13 +38,14 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
   } = useHudViewportContext()
   const isPortrait = orientation === 'portrait'
   const { round, status } = useCurrentRound()
-  const { isRaceUiVisible, raceKey, raceStartedAt } = useRaceOverlayState({
+  const { isRaceUiVisible, raceKey, raceStartedAt, updatedAt } = useRaceOverlayState({
     status,
     round,
   })
   const { label: elapsedLabel } = useRaceElapsed({
     active: isRaceUiVisible,
     raceStartedAt,
+    updatedAt,
     raceKey,
   })
   const potentialWin = useMockPotentialWin({ active: isRaceUiVisible })
@@ -85,9 +86,15 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
   )
   const viewportMode = compact ? '1' : '0'
 
-  const showCrazyCombos = true
-  const showComboBar = true
-  const showCrazyComboBar = true
+  const board = (
+    <CurrentBetsBoard
+      bets={visibleBets}
+      tableRef={isPortrait ? null : betsTableRef}
+      comboPick={visibleComboPick}
+      crazyComboPicks={visibleCrazyComboPicks}
+      portrait={isPortrait}
+    />
+  )
 
   function toggleCurrentBets() {
     if (isPortrait) return
@@ -195,7 +202,6 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
     betsOpen,
     isPortrait,
     visibleBets.length,
-    showCrazyCombos,
     viewportScale,
     viewportMode,
   ])
@@ -203,19 +209,6 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
   if (!isRaceUiVisible) {
     return null
   }
-
-  const board = (
-    <CurrentBetsBoard
-      bets={visibleBets}
-      tableRef={isPortrait ? null : betsTableRef}
-      showCrazyCombos={showCrazyCombos}
-      showComboBar={showComboBar}
-      showCrazyComboBar={showCrazyComboBar}
-      comboPick={visibleComboPick}
-      crazyComboPicks={visibleCrazyComboPicks}
-      portrait={isPortrait}
-    />
-  )
 
   if (isPortrait) {
     return (

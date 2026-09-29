@@ -149,4 +149,5 @@
 .betting-overlay[data-compact='true']:not([data-orientation='portrait']) .betting-footer__chip {
   width: calc(48px * var(--hud-scale));
   height: calc(48px * var(--hud-scale));
+  font-size: calc(48px * var(--hud-scale) * 0.26);
 }

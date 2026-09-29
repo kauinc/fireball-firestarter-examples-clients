@@ -41,7 +41,12 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
   } = useHudViewportContext()
   const isPortrait = orientation === 'portrait'
   const { round, status } = useCurrentRound()
-  const { roundId: betsRoundId, bets } = usePublishedRoundBets()
+  const {
+    roundId: betsRoundId,
+    bets,
+    comboPick: publishedComboPick,
+    crazyComboPicks: publishedCrazyComboPicks,
+  } = usePublishedRoundBets()
   const boardRef = useRef(null)
   const overlayRef = useRef(null)
   const winBarRef = useRef(null)
@@ -61,6 +66,8 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
       status,
       round,
       bets: visibleBets,
+      comboPick: publishedComboPick,
+      crazyComboPicks: publishedCrazyComboPicks,
     })
 
   const settleByBetId = useMemo(() => {

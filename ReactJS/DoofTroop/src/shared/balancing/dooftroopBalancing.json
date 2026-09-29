@@ -1,0 +1,20 @@
+{
+  "rtp": 0.95,
+  "standard": {
+    "accessory": { "top3": 1.06, "top2": 1.24, "first": 1.9 },
+    "pattern": { "top3": 1.3, "top2": 1.67, "first": 2.85 },
+    "split4": { "top3": 1.72, "top2": 2.34, "first": 4.28 },
+    "color": { "top3": 2.15, "top2": 3.03, "first": 5.7 },
+    "split2": { "top3": 3.03, "top2": 4.4, "first": 8.55 },
+    "doof": { "top3": 5.7, "top2": 8.55, "first": 17.1 }
+  },
+  "special": {
+    "hatsCombo": 9.23,
+    "glassesCombo": 9.23,
+    "solidCombo": 38.76,
+    "dotsCombo": 38.76,
+    "stripesCombo": 38.76,
+    "colorCombo": 775.19,
+    "crazyCombo": 4651.16
+  }
+}
