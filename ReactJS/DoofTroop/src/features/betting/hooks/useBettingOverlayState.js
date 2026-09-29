@@ -7,8 +7,9 @@ import {
   timerBarVariantFor,
 } from '../constants/bettingPhase.js'
 import { RoundState } from '../../../domain/round/index.js'
+import { resolveWallClockMs } from '../../../shared/supabase/roundTimestamps.js'
 
-/** Mock window start per round — survives remount/reconnect for the same id. */
+/** Fallback when server open time is unusable — survives remount for the same id. */
 const openedAtByRoundId = new Map()
 
 /** Unreal may emit ROUND_CREATED before BETTING_OPEN — treat both as open betting. */
@@ -24,7 +25,34 @@ const BANNER_ONLY_STATUSES = new Set([
 ])
 
 /**
- * Overlay UI from round `status` only (no timestamp inference for visibility).
+ * Prefer server `created_at` (betting open), corrected for Unreal clock skew
+ * via `updated_at`. Fall back locally if the stamp is unusable.
+ *
+ * @param {unknown} createdAt
+ * @param {unknown} updatedAt
+ * @param {string | null} roundId
+ * @param {number} nowMs
+ */
+function resolveBettingOpenedAtMs(createdAt, updatedAt, roundId, nowMs) {
+  const wallOpen = resolveWallClockMs(createdAt, updatedAt, nowMs)
+  if (wallOpen != null) {
+    const elapsedSec = (nowMs - wallOpen) / 1000
+    if (elapsedSec <= BETTING_WINDOW_SECONDS) {
+      return wallOpen
+    }
+  }
+
+  if (roundId && openedAtByRoundId.has(roundId)) {
+    return openedAtByRoundId.get(roundId)
+  }
+  if (roundId) {
+    openedAtByRoundId.set(roundId, nowMs)
+  }
+  return nowMs
+}
+
+/**
+ * Overlay UI from round `status` + `created_at` for the betting countdown.
  * Full board while ROUND_CREATED / BETTING_OPEN; TimerBar only through TRACK_READY.
  *
  * @param {{
@@ -36,21 +64,20 @@ export function useBettingOverlayState({ status, round = null }) {
   const [now, setNow] = useState(() => Date.now())
   const roundId = round?.id != null ? String(round.id) : null
   const isBettingOpen = BETTING_OPEN_STATUSES.has(status)
+  const createdAt = round?.created_at ?? null
+  const updatedAt = round?.updated_at ?? null
 
   useEffect(() => {
     if (!isBettingOpen || !roundId) return undefined
 
-    if (!openedAtByRoundId.has(roundId)) {
-      openedAtByRoundId.set(roundId, Date.now())
-    }
+    resolveBettingOpenedAtMs(createdAt, updatedAt, roundId, Date.now())
 
-    // Drop old keys so the map does not grow forever across rounds.
     for (const key of openedAtByRoundId.keys()) {
       if (key !== roundId) openedAtByRoundId.delete(key)
     }
 
     return undefined
-  }, [isBettingOpen, roundId])
+  }, [isBettingOpen, roundId, createdAt, updatedAt])
 
   useEffect(() => {
     if (!isBettingOpen) return undefined
@@ -60,12 +87,14 @@ export function useBettingOverlayState({ status, round = null }) {
 
   return useMemo(() => {
     if (isBettingOpen) {
-      const openedLocalAt = roundId ? openedAtByRoundId.get(roundId) : null
-      let secondsLeft = BETTING_WINDOW_SECONDS
-      if (openedLocalAt != null) {
-        const elapsed = Math.floor((now - openedLocalAt) / 1000)
-        secondsLeft = Math.max(0, BETTING_WINDOW_SECONDS - elapsed)
-      }
+      const openedAt = resolveBettingOpenedAtMs(
+        createdAt,
+        updatedAt,
+        roundId,
+        now,
+      )
+      const elapsed = Math.floor((now - openedAt) / 1000)
+      const secondsLeft = Math.max(0, BETTING_WINDOW_SECONDS - elapsed)
 
       const phase =
         secondsLeft <= 0
@@ -113,5 +142,5 @@ export function useBettingOverlayState({ status, round = null }) {
       canPlaceBets: false,
       disabled: true,
     }
-  }, [isBettingOpen, status, roundId, now])
+  }, [isBettingOpen, status, roundId, createdAt, updatedAt, now])
 }

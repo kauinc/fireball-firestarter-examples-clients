@@ -11,7 +11,6 @@ import { uiAssets } from '../assets/uiAssets.js'
 import {
   canPlaceBetTarget,
   emptyCrazyComboPicks,
-  isCrazyComboComplete,
   isCrazyComboDoofTaken,
   nextCrazyComboSlot,
   requiresComboPickBeforeBet,
@@ -98,21 +97,16 @@ function BettingRoundSession({
         playSfx('crazyToggle')
         return
       }
-      setCrazyComboPickActive(false)
-      setCrazyComboActiveSlot(null)
-      playSfx('crazyToggle')
+      // PICK while already picking (no slot) cancels pick mode.
+      if (!requestedSlot) {
+        setCrazyComboPickActive(false)
+        setCrazyComboActiveSlot(null)
+        playSfx('crazyToggle')
+      }
       return
     }
 
-    const resumePicks = isCrazyComboComplete(crazyComboPicks)
-      ? emptyCrazyComboPicks()
-      : crazyComboPicks
-
-    if (resumePicks !== crazyComboPicks) {
-      setCrazyComboPicks(resumePicks)
-    }
-
-    const slot = requestedSlot ?? nextCrazyComboSlot(resumePicks) ?? '1st'
+    const slot = requestedSlot ?? nextCrazyComboSlot(crazyComboPicks) ?? '1st'
     setCrazyComboActiveSlot(slot)
     setCrazyComboPickActive(true)
     playSfx('crazyToggle')
@@ -143,22 +137,13 @@ function BettingRoundSession({
     playSfx('crazyComplete')
   }
 
-  function resetComboSelections() {
-    setComboActive(false)
-    setComboPick(null)
-    setCrazyComboPickActive(false)
-    setCrazyComboActiveSlot(null)
-    setCrazyComboPicks(emptyCrazyComboPicks())
-  }
-
   const {
     bets,
     totalBet,
-    canUndo,
     canRepeat,
     placeBet,
     clearBets,
-    undoBets,
+    clearBetsByTargetType,
     repeatLastBets,
     doubleBets,
   } = useChipBets(
@@ -168,6 +153,21 @@ function BettingRoundSession({
     comboPick,
     crazyComboPicks,
   )
+
+  function handleComboClear() {
+    setComboActive(false)
+    setComboPick(null)
+    clearBetsByTargetType('combo')
+    playSfx('betClear')
+  }
+
+  function handleCrazyComboClear() {
+    setCrazyComboPickActive(false)
+    setCrazyComboActiveSlot(null)
+    setCrazyComboPicks(emptyCrazyComboPicks())
+    clearBetsByTargetType('crazyCombo')
+    playSfx('betClear')
+  }
 
   function tryPlaceBet(amount, target, metal = selectedMetal) {
     if (
@@ -190,16 +190,8 @@ function BettingRoundSession({
   })
 
   function handleClear() {
-    resetComboSelections()
+    // CLEAR BETS clears chip stacks only — combo / crazy combo picks stay.
     clearBets()
-    playSfx('betClear')
-  }
-
-  function handleUndo() {
-    if (!undoBets()) {
-      playSfx('betReject')
-      return
-    }
     playSfx('betClear')
   }
 
@@ -335,6 +327,7 @@ function BettingRoundSession({
                 labelBets={labelBets}
                 onPlaceBet={handlePlaceBet}
                 comboActive={comboActive}
+                comboPick={comboPick}
                 crazyComboPickActive={crazyComboPickActive}
                 crazyComboActiveSlot={crazyComboActiveSlot}
                 crazyComboPicks={crazyComboPicks}
@@ -346,6 +339,8 @@ function BettingRoundSession({
                 portrait={isPortrait}
                 balance={null}
                 totalBet={null}
+                onClear={handleClear}
+                canClear={totalBet > 0}
               />
 
               {showAdvancedChrome ? (
@@ -360,6 +355,7 @@ function BettingRoundSession({
                   comboActive={comboActive}
                   onComboBarPick={handleComboBarPick}
                   onComboToggle={handleComboToggle}
+                  onComboClear={handleComboClear}
                   comboPick={comboPick}
                   comboBet={comboBet}
                   crazyComboBet={crazyComboBet}
@@ -368,6 +364,7 @@ function BettingRoundSession({
                   crazyComboActiveSlot={crazyComboActiveSlot}
                   crazyComboPicks={crazyComboPicks}
                   onCrazyComboBarClick={handleCrazyComboBarClick}
+                  onCrazyComboClear={handleCrazyComboClear}
                   comboPickRequired={comboPickRequired}
                 />
               ) : null}
@@ -378,13 +375,10 @@ function BettingRoundSession({
                 selectedMetal={selectedMetal}
                 onSelectMetal={handleSelectMetal}
                 onChipDragStart={startDrag}
-                onClear={handleClear}
-                onUndo={handleUndo}
                 onRepeat={handleRepeat}
                 onDouble={handleDouble}
                 onIncreaseChip={() => stepSelectedChip(1)}
                 onDecreaseChip={() => stepSelectedChip(-1)}
-                canUndo={canUndo}
                 canRepeat={canRepeat}
                 canDouble={totalBet > 0}
                 balance={displayBalance}

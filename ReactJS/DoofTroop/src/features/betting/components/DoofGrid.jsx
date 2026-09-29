@@ -14,6 +14,10 @@ import {
   resolveFieldTarget,
 } from '../utils/betTargets.js'
 import { getComboBarState, comboPickBarBackground } from '../utils/comboBars.js'
+import {
+  formatMultiplier,
+  payoutRangeForBets,
+} from '../../../shared/balancing/index.js'
 import { isCrazyComboDoofTaken } from '../constants/combo.js'
 import { formatMoney } from '../utils/formatMoney.js'
 
@@ -145,6 +149,7 @@ export function DoofGrid({
   hideSettledChips = false,
   comboActive = false,
   onComboBarPick,
+  comboPick = null,
   crazyComboPickActive = false,
   crazyComboActiveSlot = null,
   crazyComboPicks = {},
@@ -154,6 +159,8 @@ export function DoofGrid({
   portrait = false,
   balance = null,
   totalBet = null,
+  onClear = null,
+  canClear = false,
 }) {
   const playableRef = useRef(null)
   const fieldSrc = crazyComboPickActive ? uiAssets.ccBoard : uiAssets.betField
@@ -161,6 +168,8 @@ export function DoofGrid({
   const fieldBets = bets.filter(
     (bet) => bet.target.type === 'doof' || bet.target.type === 'split',
   )
+
+  const { min: oddsMin, max: oddsMax } = payoutRangeForBets(bets, { comboPick })
 
   function settleClass(betId) {
     const outcome = settleByBetId?.[betId]
@@ -241,6 +250,7 @@ export function DoofGrid({
     >
       <div className="doof-grid__spacer" aria-hidden="true" />
 
+      {/* Reserves colors-row col 3; CLEAR BETS lives in the side rail with MAX/MIN. */}
       <div className="doof-grid__odds-spacer" aria-hidden="true" />
 
       <div className="doof-grid__patterns">
@@ -356,15 +366,34 @@ export function DoofGrid({
           })}
         </div>
 
-        <div className="doof-grid__odds">
-          <div className="doof-grid__odds-item">
-            <span className="doof-grid__odds-label">MAX</span>
-            <span className="doof-grid__odds-value">x1.5</span>
+        <div className="doof-grid__side-rail">
+          <div className="doof-grid__odds">
+            <div className="doof-grid__odds-item">
+              <span className="doof-grid__odds-label">MAX</span>
+              <span className="doof-grid__odds-value">
+                {formatMultiplier(oddsMax)}
+              </span>
+            </div>
+            <div className="doof-grid__odds-item">
+              <span className="doof-grid__odds-label">MIN</span>
+              <span className="doof-grid__odds-value">
+                {formatMultiplier(oddsMin)}
+              </span>
+            </div>
           </div>
-          <div className="doof-grid__odds-item">
-            <span className="doof-grid__odds-label">MIN</span>
-            <span className="doof-grid__odds-value">x15.5</span>
-          </div>
+          {onClear ? (
+            <button
+              type="button"
+              className="doof-grid__clear-bets"
+              style={{ backgroundImage: `url(${uiAssets.roundButton})` }}
+              disabled={disabled || !canClear}
+              onClick={onClear}
+            >
+              CLEAR
+              <br />
+              BETS
+            </button>
+          ) : null}
         </div>
 
         {showSideMeters ? (

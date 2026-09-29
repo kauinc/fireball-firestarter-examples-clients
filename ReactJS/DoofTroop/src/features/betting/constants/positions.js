@@ -1,3 +1,10 @@
+import {
+  positionsForMetal,
+  scopeForMetal,
+} from '../../../shared/balancing/index.js'
+
+export { positionsForMetal, scopeForMetal }
+
 /** UI labels for Crazy Combo slots (internal keys stay 1st / 2nd / 3rd). */
 export const POSITION_LABELS = Object.freeze({
   '1st': '1st',
@@ -18,6 +25,19 @@ export const POSITION_THUMB_LEFT = Object.freeze({
   '2nd': 'calc(65.333% + 4px * var(--hud-scale))',
   '3rd': '96%',
 })
+
+/**
+ * Union of podium places covered by every metal face on a bet.
+ * @param {ReadonlyArray<{ metal?: string }> | null | undefined} chips
+ */
+export function positionsForChips(chips) {
+  const set = new Set()
+  for (const chip of chips ?? []) {
+    for (const place of positionsForMetal(chip?.metal)) set.add(place)
+  }
+  if (set.size === 0) return positionsForMetal('gold')
+  return ['1st', '2nd', '3rd'].filter((place) => set.has(place))
+}
 
 /**
  * @param {string[]} selectedPositions

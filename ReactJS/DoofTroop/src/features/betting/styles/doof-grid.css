@@ -1,17 +1,21 @@
 /* —— Doof board —— */
 .doof-grid {
+  /* Odds text + CLEAR BETS sit side-by-side; button stays at the rail’s right edge. */
+  --doof-clear-size: calc(96px * var(--hud-scale));
+  --doof-odds-col: calc(var(--doof-clear-size) + 64px * var(--hud-scale));
   display: grid;
   grid-template-columns:
     calc(98px * var(--hud-scale))
     minmax(0, calc(590px * var(--hud-scale)))
-    calc(68px * var(--hud-scale));
+    var(--doof-odds-col);
   grid-template-rows: calc(36px * var(--hud-scale)) auto;
   column-gap: calc(4px * var(--hud-scale));
   row-gap: 0;
   align-items: stretch;
-  width: calc(764px * var(--hud-scale));
+  width: calc(696px * var(--hud-scale) + var(--doof-odds-col));
   transform: translateX(var(--board-shift-x, 0px));
   overflow: visible;
+  position: relative;
 }
 
 .doof-grid__spacer {
@@ -38,6 +42,63 @@
 .doof-grid__odds-spacer {
   grid-column: 3;
   grid-row: 1;
+  overflow: visible;
+}
+
+/*
+ * Side rail: MAX/MIN flush to the table (left), CLEAR BETS pinned right.
+ * Odds values grow rightward into the gap — never onto the field.
+ */
+.doof-grid__side-rail {
+  grid-column: 3;
+  grid-row: 2;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(6px * var(--hud-scale));
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0;
+  overflow: visible;
+}
+
+.doof-grid__clear-bets {
+  position: relative;
+  z-index: 8;
+  flex: 0 0 auto;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--doof-clear-size);
+  height: var(--doof-clear-size);
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-right: 0;
+  padding: calc(10px * var(--hud-scale));
+  border: 0;
+  background-color: transparent;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  color: var(--bet-text, #fff);
+  font: inherit;
+  font-size: calc(13px * var(--hud-font-scale, var(--hud-scale)));
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  transform: translateX(calc(12px * var(--hud-scale)));
+}
+
+.doof-grid__clear-bets:disabled {
+  cursor: default;
+  opacity: 0.78;
 }
 
 .doof-grid__patterns {
@@ -424,22 +485,26 @@
 }
 
 .doof-grid__odds {
-  grid-column: 3;
-  grid-row: 2;
+  flex: 0 1 auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  /* Flush to the table; digits grow toward CLEAR BETS. */
   align-items: flex-start;
-  gap: calc(14px * var(--hud-scale));
-  padding-bottom: calc(9px * var(--hud-scale));
+  align-self: center;
+  gap: calc(8px * var(--hud-scale));
+  padding: 0;
+  margin: 0;
   color: var(--bet-text);
   white-space: nowrap;
+  pointer-events: none;
 }
 
 .doof-grid__odds-item {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   line-height: 1;
 }
 
@@ -448,7 +513,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   color: rgba(255, 255, 255, 0.92);
-  text-align: center;
+  text-align: left;
 }
 
 .doof-grid__odds-value {
@@ -457,6 +522,7 @@
   font-weight: 800;
   letter-spacing: 0.01em;
   color: #fff;
+  text-align: left;
 }
 
 .doof-grid[data-disabled='true'] .doof-grid__field {
@@ -484,6 +550,11 @@
   pointer-events: none;
 }
 
+.doof-grid.is-combo-active .doof-grid__clear-bets {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .doof-grid.is-combo-active .doof-grid__label-chip {
   pointer-events: none;
 }
@@ -493,6 +564,11 @@
 .doof-grid.is-crazy-combo-active .doof-grid__odds {
   opacity: 0.5;
   pointer-events: none;
+}
+
+.doof-grid.is-crazy-combo-active .doof-grid__clear-bets {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .doof-grid.is-crazy-combo-active .doof-grid__label-chip,

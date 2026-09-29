@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { RoundState } from '../../../domain/round/index.js'
+import { resolveWallClockMs } from '../../../shared/supabase/roundTimestamps.js'
 
 /**
  * Race HUD visibility from `rounds.status`.
@@ -15,37 +16,28 @@ export function useRaceOverlayState({ status, round = null }) {
     isRaceUiVisible: isRace,
     raceKey,
     raceStartedAt: round?.race_started_at ?? null,
+    updatedAt: round?.updated_at ?? null,
   }
 }
 
 /**
- * Resolve a usable race start ms.
- * Prefer server `race_started_at` only when it is in the past (or near-now);
- * otherwise start locally so the clock always ticks.
- *
- * @param {string | null | undefined} raceStartedAt
- * @param {number} fallbackMs
- */
-function resolveStartedAtMs(raceStartedAt, fallbackMs) {
-  if (!raceStartedAt) return fallbackMs
-  const parsed = Date.parse(raceStartedAt)
-  if (!Number.isFinite(parsed)) return fallbackMs
-  // Future / wildly skewed clocks would freeze the display at 00:00.
-  if (parsed > fallbackMs + 1500) return fallbackMs
-  return parsed
-}
-
-/**
  * Elapsed race clock as MM:SS.
- * Same tick pattern as betting overlay (`queueMicrotask` + interval).
+ * Uses Supabase `race_started_at`, corrected against `updated_at` when Unreal’s
+ * clock is ahead of wall time (otherwise reload always showed 00:00).
  *
  * @param {{
  *   active: boolean,
  *   raceStartedAt?: string | null,
+ *   updatedAt?: string | null,
  *   raceKey?: string,
  * }} args
  */
-export function useRaceElapsed({ active, raceStartedAt = null, raceKey = '' }) {
+export function useRaceElapsed({
+  active,
+  raceStartedAt = null,
+  updatedAt = null,
+  raceKey = '',
+}) {
   const [now, setNow] = useState(null)
   const [startedAt, setStartedAt] = useState(null)
 
@@ -57,15 +49,25 @@ export function useRaceElapsed({ active, raceStartedAt = null, raceKey = '' }) {
       })
       return undefined
     }
-    // Capture start once per race open; ignore later race_started_at churn.
+
     queueMicrotask(() => {
       const openMs = Date.now()
-      setStartedAt(resolveStartedAtMs(raceStartedAt, openMs))
+      const wallStart = resolveWallClockMs(raceStartedAt, updatedAt, openMs)
       setNow(openMs)
+      setStartedAt((prev) => wallStart ?? prev ?? openMs)
+
+      if (import.meta.env.DEV) {
+        console.debug('[race-timer]', {
+          raceStartedAt,
+          updatedAt,
+          wallStart: wallStart != null ? new Date(wallStart).toISOString() : null,
+          elapsedSec:
+            wallStart != null ? Math.floor((openMs - wallStart) / 1000) : null,
+        })
+      }
     })
     return undefined
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- raceStartedAt read on open only
-  }, [active, raceKey])
+  }, [active, raceKey, raceStartedAt, updatedAt])
 
   useEffect(() => {
     if (!active) return undefined

@@ -75,7 +75,7 @@
 .race-overlay__mid-spacer {
   display: block;
   width: calc(220px * var(--hud-scale));
-  height: calc(52px * var(--hud-scale));
+  height: calc(220px * var(--hud-scale) * 123 / 556);
 }
 
 .race-overlay__current-bets {
@@ -84,8 +84,9 @@
   flex: 0 0 auto;
   display: grid;
   place-items: center;
+  /* Same History_MyBets art — preserve 556×123 aspect (no horizontal stretch). */
   width: calc(220px * var(--hud-scale));
-  height: calc(52px * var(--hud-scale));
+  height: calc(220px * var(--hud-scale) * 123 / 556);
   padding: calc(10px * var(--hud-scale)) calc(12px * var(--hud-scale)) 0;
   border: 0;
   border-radius: 0;

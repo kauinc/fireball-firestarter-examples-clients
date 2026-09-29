@@ -27,21 +27,24 @@
   /* Same Hats/Glasses art size on accessory bars, Combo, and Crazy Combo. */
   --hats-glasses-icon-h: calc(0.95 * var(--hats-glasses-h));
   --accessory-bar-h: calc(36px * var(--hud-scale));
-  --combo-bar-pays-w: calc(54px * var(--hud-scale));
-  --combo-pays-gap: calc(10px * var(--hud-scale));
+  --combo-bar-pays-w: calc(88px * var(--hud-scale));
+  --combo-pays-gap: calc(8px * var(--hud-scale));
+  --combo-action-size: calc(80px * var(--hud-scale));
+  --combo-action-gap: calc(8px * var(--hud-scale));
   --combo-bar-extra-w: 0px;
   --combo-row-h: calc(56px * var(--hud-scale));
   --crazy-combo-caption-tilt: -3deg;
   --crazy-combo-caption-overlap: calc(6px * var(--hud-scale));
   --combo-green: #3dff6a;
   --crazy-red: #f03d7c;
+  --crazy-yellow: #ffd400;
 
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 0;
-  width: calc(764px * var(--hud-scale));
-  max-width: calc(764px * var(--hud-scale));
+  width: calc(856px * var(--hud-scale));
+  max-width: calc(856px * var(--hud-scale));
   min-width: 0;
   transform: translateX(var(--board-shift-x, 0px));
   padding-left: 0;

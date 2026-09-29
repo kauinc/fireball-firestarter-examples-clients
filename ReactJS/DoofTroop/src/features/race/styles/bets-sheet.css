@@ -34,7 +34,12 @@
   box-sizing: border-box;
 }
 
+/*
+ * Same geometry as `.betting-overlay__hud` / `.settlement-board`:
+ * DoofGrid + mid-controls-stack as centered column siblings.
+ */
 .race-bets-sheet__board {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -42,34 +47,9 @@
   width: 100%;
 }
 
-.race-bets-sheet__table {
-  /* Shrink-wrap the doof grid so board `align-items: center` matches
-     mid-controls-stack (full-width left-align was shifting Hats right). */
-  position: relative;
-  width: fit-content;
-  max-width: 100%;
-}
-
 .race-bets-sheet__board .mid-controls__accessory {
   cursor: default;
   pointer-events: none;
-}
-
-.race-bets-sheet__board .mid-controls-stack {
-  width: calc(764px * var(--hud-scale));
-  max-width: 100%;
-  flex-shrink: 0;
-}
-
-.race-overlay[data-compact='true'] .race-bets-sheet__board .mid-controls-stack {
-  width: 100%;
-  max-width: 100%;
-  transform: none;
-}
-
-.race-overlay[data-compact='true'] .race-bets-sheet__panel {
-  width: 100%;
-  max-width: 100%;
 }
 
 .race-bets-sheet__board .crazy-combos-row {
@@ -80,3 +60,7 @@
   filter: none;
 }
 
+.race-overlay[data-compact='true'] .race-bets-sheet__panel {
+  width: 100%;
+  max-width: 100%;
+}

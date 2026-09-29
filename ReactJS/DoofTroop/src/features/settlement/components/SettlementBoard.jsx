@@ -61,6 +61,7 @@ export function SettlementBoard({
       settleByBetId={settleByBetId}
       hideSettledChips={hideSettledChips}
       portrait={portrait}
+      comboPick={publishedComboPick}
     />
   )
 

@@ -78,12 +78,15 @@ function ensureStarted() {
         return
       }
       if (import.meta.env.DEV) {
-        console.debug(
-          '[rounds] realtime',
+        console.debug('[rounds] realtime', {
           eventType,
-          next.status,
-          next.round_number,
-        )
+          status: next.status,
+          round_number: next.round_number,
+          created_at: next.created_at ?? null,
+          updated_at: next.updated_at ?? null,
+          race_started_at: next.race_started_at ?? null,
+          betting_closed_at: next.betting_closed_at ?? null,
+        })
       }
       applyRound(next)
     },

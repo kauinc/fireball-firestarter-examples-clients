@@ -21,6 +21,7 @@ export function MidControls({
   comboActive = false,
   onComboBarPick,
   onComboToggle,
+  onComboClear,
   comboPick = null,
   comboBet = null,
   crazyComboBet = null,
@@ -29,6 +30,7 @@ export function MidControls({
   crazyComboActiveSlot = null,
   crazyComboPicks = {},
   onCrazyComboBarClick,
+  onCrazyComboClear,
   comboPickRequired = false,
 }) {
   return (
@@ -106,6 +108,7 @@ export function MidControls({
         <CrazyCombos
           comboActive={comboActive}
           onComboToggle={onComboToggle}
+          onComboClear={onComboClear}
           comboDisabled={disabled}
           comboPick={comboPick}
           comboBet={comboBet}
@@ -115,6 +118,7 @@ export function MidControls({
           crazyComboActiveSlot={crazyComboActiveSlot}
           crazyComboPicks={crazyComboPicks}
           onCrazyComboBarClick={onCrazyComboBarClick}
+          onCrazyComboClear={onCrazyComboClear}
           crazyComboDisabled={disabled || comboActive}
           comboPickRequired={comboPickRequired}
         />

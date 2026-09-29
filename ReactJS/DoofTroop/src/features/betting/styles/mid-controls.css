@@ -6,7 +6,7 @@
   grid-template-columns:
     calc(98px * var(--hud-scale))
     minmax(0, calc(590px * var(--hud-scale)))
-    calc(68px * var(--hud-scale));
+    calc(160px * var(--hud-scale));
   column-gap: calc(4px * var(--hud-scale));
   align-items: end;
   width: 100%;
@@ -21,7 +21,8 @@
 
 /* HISTORY control + expandable sheet (button flies up; table anchors at old spot) */
 .mid-controls__history-slot {
-  --history-btn-h: calc(55px * var(--hud-scale));
+  /* History_MyBets_* art is 556×123 — keep native aspect so the plate is not stretched. */
+  --history-btn-h: calc(var(--history-w) * 123 / 556);
   --history-sheet-w: calc(152px * var(--hud-scale));
   --history-sheet-h: calc(192px * var(--hud-scale));
   --history-open-gap: 0px;
