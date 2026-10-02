@@ -38,6 +38,7 @@ export function mockSettlementForRound(
   return Object.freeze({
     didWin: outcomes.didWin,
     totalWin: outcomes.totalWin,
+    winCount: outcomes.winCount,
     winners: Object.freeze(winners),
     outcomes,
   })

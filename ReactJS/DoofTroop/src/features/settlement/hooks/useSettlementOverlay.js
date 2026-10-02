@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { RoundState } from '../../../domain/round/index.js'
 import { mockSettlementForRound } from '../utils/mockSettlement.js'
 
-/** Keep RESULTS UI visible long enough for chip + history animations. */
-export const SETTLEMENT_MIN_VISIBLE_MS = 4500
+/** Keep RESULTS UI visible long enough for chip + count-up + history animations. */
+export const SETTLEMENT_MIN_VISIBLE_MS = 9000
 
 /** Next lifecycle stages that must clear settlement immediately. */
 const CLEARS_SETTLEMENT = new Set([

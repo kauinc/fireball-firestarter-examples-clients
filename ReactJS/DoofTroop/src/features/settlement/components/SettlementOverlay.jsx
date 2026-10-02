@@ -13,7 +13,10 @@ import {
   historyRowFromWinners,
 } from '../../betting/state/historyStore.js'
 import { useSettlementOverlayState } from '../hooks/useSettlementOverlay.js'
-import { useChipSettleAnimation } from '../hooks/useChipSettleAnimation.js'
+import {
+  useChipSettleAnimation,
+  WIN_BET_SFX_STAGGER_MS,
+} from '../hooks/useChipSettleAnimation.js'
 import { useHistoryInsertAnimation } from '../hooks/useHistoryInsertAnimation.js'
 import { sumBetTotal } from '../../betting/utils/betTotals.js'
 import { DEFAULT_BALANCE } from '../../betting/constants/defaults.js'
@@ -103,22 +106,41 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
   }, [isSettlementUiVisible, settlement, settlementRoundId])
 
   const settlePhaseRef = useRef('')
+  const winBetSfxTimersRef = useRef([])
   useEffect(() => {
     if (!isSettlementUiVisible || !settlement) return
     if (settlePhaseRef.current === phase) return
     const prev = settlePhaseRef.current
     settlePhaseRef.current = phase
 
+    for (const id of winBetSfxTimersRef.current) window.clearTimeout(id)
+    winBetSfxTimersRef.current = []
+
+    if (phase === 'highlight' && prev !== 'highlight') {
+      const winCount =
+        settlement.winCount ?? settlement.outcomes?.winCount ?? 0
+      for (let i = 0; i < winCount; i += 1) {
+        const timerId = window.setTimeout(() => {
+          playSfx('settleWinBet')
+        }, i * WIN_BET_SFX_STAGGER_MS)
+        winBetSfxTimersRef.current.push(timerId)
+      }
+    }
     if (phase === 'fly' && prev !== 'fly') {
-      const hasWinFlight = flights.some((f) => f.outcome === 'win')
       const hasLoseFlight = flights.some((f) => f.outcome === 'lose')
-      if (hasWinFlight) playSfx('settleChipFly')
       if (hasLoseFlight) playSfx('settleChipFall')
     }
     if (phase === 'count' && prev !== 'count') {
       playSfx('settleCountUp')
     }
   }, [phase, flights, isSettlementUiVisible, settlement])
+
+  useEffect(() => {
+    return () => {
+      for (const id of winBetSfxTimersRef.current) window.clearTimeout(id)
+      winBetSfxTimersRef.current = []
+    }
+  }, [])
 
   const ensureHistoryOpen = useCallback(() => {
     setHistoryOpen(true)
