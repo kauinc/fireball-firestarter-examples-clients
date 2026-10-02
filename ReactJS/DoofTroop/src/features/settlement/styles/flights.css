@@ -1,6 +1,6 @@
 ﻿
 /* —— Chip settle: highlight / hide sources —— */
-.settlement-overlay .is-settle-win .chip-stack {
+.settlement-overlay[data-settle-phase='highlight'] .is-settle-win .chip-stack {
   position: relative;
   z-index: 4;
   animation: settle-chip-pulse 800ms ease-in-out;
@@ -8,7 +8,9 @@
     drop-shadow(0 0 14px rgba(255, 220, 80, 0.55));
 }
 
-.settlement-overlay .is-settle-win .chip-stack::after {
+.settlement-overlay[data-settle-phase='highlight']
+  .is-settle-win
+  .chip-stack::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -27,7 +29,7 @@
   animation: settle-chip-spark 800ms ease-out;
 }
 
-.settlement-overlay .is-settle-lose .chip-stack {
+.settlement-overlay[data-settle-phase='highlight'] .is-settle-lose .chip-stack {
   animation: settle-chip-dim 800ms ease-in-out forwards;
 }
 

@@ -4,10 +4,12 @@ import { uiAssets } from '../../betting/assets/uiAssets.js'
 const HIGHLIGHT_MS = 900
 const FLY_MS = 1400
 const STAGGER_MS = 120
+/** Gap between per-bet cash-register dings during highlight. */
+export const WIN_BET_SFX_STAGGER_MS = 160
 /** Start counting shortly after the first win chip is mid-flight. */
 const COUNT_START_OFFSET_MS = Math.round(FLY_MS * 0.4)
-/** TOTAL WIN count-up — keep in sync with `settleCountUp` SFX (~Bar_Filling). */
-const COUNT_MS = 3200
+/** TOTAL WIN count-up — keep in sync with `settleCountUp` SFX (~slot coin payout). */
+const COUNT_MS = 5200
 
 /**
  * Roulette-style chip settle: highlight → fly → smooth TOTAL WIN count-up.
@@ -102,6 +104,15 @@ export function useChipSettleAnimation({
       if (runKeyRef.current !== key) return
       setPhase('highlight')
 
+      const winCount = countWinningBets(outcomesRef.current)
+      // Hold highlight long enough for every cash-register ding to start.
+      const highlightMs = Math.max(
+        HIGHLIGHT_MS,
+        winCount > 0
+          ? (winCount - 1) * WIN_BET_SFX_STAGGER_MS + 400
+          : HIGHLIGHT_MS,
+      )
+
       const flyId = window.setTimeout(() => {
         if (runKeyRef.current !== key) return
         const nextFlights = buildFlights({
@@ -152,7 +163,7 @@ export function useChipSettleAnimation({
           ) + 120,
         )
         timersRef.current.push(doneId)
-      }, HIGHLIGHT_MS)
+      }, highlightMs)
       timersRef.current.push(flyId)
     }, 80)
     timersRef.current.push(startId)
@@ -210,6 +221,19 @@ function animateCountUp({
   }
 
   rafRef.current = window.requestAnimationFrame(tick)
+}
+
+/**
+ * @param {{ byId?: Record<string, { won?: boolean }> } | null} outcomes
+ */
+function countWinningBets(outcomes) {
+  const byId = outcomes?.byId
+  if (!byId) return 0
+  let n = 0
+  for (const row of Object.values(byId)) {
+    if (row?.won) n += 1
+  }
+  return n
 }
 
 function buildFlights({ bets, outcomes, boardEl, winBarEl }) {
