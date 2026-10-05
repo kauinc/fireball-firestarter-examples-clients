@@ -183,7 +183,8 @@ export function payoutRangeForBets(bets, meta = {}) {
 }
 
 /**
- * Display form for UI labels (`x1.06`, `x775.19`, `x4651.16`).
+ * Display form for UI labels (`x1.06`, `x775.19`, `x4651.16`) — two decimals.
+ * Matches payout math precision so the label agrees with the credited win.
  * @param {number} n
  */
 export function formatMultiplier(n) {

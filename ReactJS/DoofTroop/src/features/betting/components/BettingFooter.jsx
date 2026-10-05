@@ -1,4 +1,5 @@
 import { CHIP_METALS, CHIP_METAL_LABELS } from '../constants/doofs.js'
+import { DEFAULT_BALANCE } from '../constants/defaults.js'
 import { uiAssets } from '../assets/uiAssets.js'
 import { formatMoney } from '../utils/formatMoney.js'
 import { HudMenuChrome } from '../../hud/index.js'
@@ -26,7 +27,7 @@ export function BettingFooter({
   onDecreaseChip,
   canRepeat = false,
   canDouble = false,
-  balance = 5100,
+  balance = DEFAULT_BALANCE,
   totalBet = 0,
   hideMenu = false,
 }) {

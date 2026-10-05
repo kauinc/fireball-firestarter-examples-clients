@@ -6,13 +6,13 @@ import { getBetTotal } from '../../betting/utils/chipMath.js'
 import { useHudViewportContext } from '../../hud/index.js'
 import { useCurrentRound } from '../../betting/hooks/useCurrentRound.js'
 import { usePublishedRoundBets } from '../../betting/state/roundBetsStore.js'
+import { useBalance } from '../../betting/state/balanceStore.js'
 import {
   useMockPotentialWin,
   useRaceElapsed,
   useRaceOverlayState,
 } from '../hooks/useRaceOverlay.js'
 import { CurrentBetsBoard } from './CurrentBetsSheet.jsx'
-import { DEFAULT_BALANCE } from '../../betting/constants/defaults.js'
 import {
   HudFade,
   HudMenuChrome,
@@ -29,7 +29,7 @@ import '../styles/race.css'
  * - Landscape compact: Balance | CURRENT BETS | Potential Win (+ sheet board).
  * - Portrait: same board as betting (read-only), no chip footer; timer on stream edge.
  */
-export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
+export function RaceOverlay() {
   const {
     scale: viewportScale,
     compact,
@@ -37,6 +37,7 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
     portraitVideoPx,
   } = useHudViewportContext()
   const isPortrait = orientation === 'portrait'
+  const balance = useBalance()
   const { round, status } = useCurrentRound()
   const { isRaceUiVisible, raceKey, raceStartedAt, updatedAt } = useRaceOverlayState({
     status,
@@ -75,7 +76,10 @@ export function RaceOverlay({ balance = DEFAULT_BALANCE }) {
   })
 
   const roundMatches = round?.id != null && String(round.id) === String(betsRoundId ?? '')
-  const visibleBets = roundMatches ? bets : []
+  const visibleBets = useMemo(
+    () => (roundMatches ? bets : []),
+    [roundMatches, bets],
+  )
   const visibleComboPick = roundMatches ? publishedComboPick : null
 
   const visibleCrazyComboPicks = roundMatches ? publishedCrazyComboPicks : null

@@ -12,9 +12,14 @@ export const DOOF_PATTERNS = Object.freeze(['Stripes', 'Solid', 'Dots'])
 export const DOOF_ACCESSORIES = Object.freeze(['Hats', 'Glasses'])
 
 /** Allowed stake steps for +/- . */
-export const CHIP_VALUES = Object.freeze([0.2, 1, 2, 5, 10, 25, 50, 100])
+export const CHIP_VALUES = Object.freeze([
+  0.2, 0.4, 0.6, 0.8, 1, 2, 5, 10, 20, 50,
+])
 
 export const DEFAULT_CHIP_VALUE = 0.2
+
+/** Cap stake on a single bet target (temporary until table limits land). */
+export const MAX_BET_PER_TARGET = 100
 
 /** Visual chip metals in the footer tray (left → right). */
 export const CHIP_METALS = Object.freeze(['silver', 'gold', 'bronze'])
