@@ -13,6 +13,8 @@ const COUNT_MS = 5200
 
 /**
  * Roulette-style chip settle: highlight → fly → smooth TOTAL WIN count-up.
+ * Winning chips fly to TOTAL WIN (visual); they are re-seeded on the next
+ * betting overlay via carry-forward. Losing chips fall off.
  *
  * @param {{
  *   enabled: boolean,

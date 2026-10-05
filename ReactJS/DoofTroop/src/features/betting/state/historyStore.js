@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
-import { POSITION_OPTIONS } from '../constants/doofs.js'
-import { pickRandomDoofUrls } from '../assets/doofImages.js'
+import { winnersFromPlacements } from '../../settlement/utils/settlementFromRound.js'
+import { fetchRecentResultRounds } from '../../../shared/supabase/rounds.js'
 
 /** Max visible race rows in the History panel. */
 export const HISTORY_MAX_ROWS = 10
@@ -12,8 +12,8 @@ export const HISTORY_MAX_ROWS = 10
  * }} HistoryRow
  */
 
-/** @type {HistoryRow[]} newest first */
-let rows = seedInitialRows()
+/** @type {HistoryRow[]} newest first — empty until Supabase hydrate (or settlement insert). */
+let rows = []
 
 /** @type {{ phase: 'idle' | 'inserting', insertingId: string | null, exitingId: string | null }} */
 let anim = Object.freeze({
@@ -27,31 +27,63 @@ let snapshot = Object.freeze({ rows, anim })
 
 const listeners = new Set()
 
+let hydrateStarted = false
+
 function emit() {
   snapshot = Object.freeze({ rows, anim })
   for (const listener of listeners) listener()
 }
 
-function seedInitialRows() {
-  const urls = pickRandomDoofUrls(HISTORY_MAX_ROWS * POSITION_OPTIONS.length)
-  const seeded = []
-  for (let i = 0; i < HISTORY_MAX_ROWS; i += 1) {
-    const places = {}
-    POSITION_OPTIONS.forEach((pos, col) => {
-      places[pos] = urls[i * POSITION_OPTIONS.length + col] ?? null
-    })
-    seeded.push(
-      Object.freeze({
-        id: `seed-${i}`,
-        places: Object.freeze(places),
-      }),
-    )
-  }
-  return seeded
-}
-
 function getSnapshot() {
   return snapshot
+}
+
+/**
+ * Replace empty history with real finished rounds (newest first).
+ * @param {ReadonlyArray<Record<string, unknown>>} rounds
+ */
+export function hydrateHistoryFromRounds(rounds) {
+  if (anim.phase === 'inserting') return
+
+  const next = []
+  for (const round of rounds ?? []) {
+    if (next.length >= HISTORY_MAX_ROWS) break
+    const winners = winnersFromPlacements(round?.placements)
+    if (!winners) continue
+    next.push(
+      Object.freeze(
+        historyRowFromWinners(String(round.id ?? round.round_number), winners),
+      ),
+    )
+  }
+
+  if (next.length === 0) return
+
+  // Keep any newer settlement-inserted rows that aren't in the fetch yet.
+  const fetchedIds = new Set(next.map((r) => r.id))
+  const newerLocal = rows.filter((r) => !fetchedIds.has(r.id))
+  rows = [...newerLocal, ...next]
+    .slice(0, HISTORY_MAX_ROWS)
+    .map((r) =>
+      Object.freeze({ id: r.id, places: Object.freeze({ ...r.places }) }),
+    )
+  emit()
+}
+
+async function hydrateFromSupabase() {
+  const { data, error } = await fetchRecentResultRounds(HISTORY_MAX_ROWS)
+  if (error) {
+    console.error('[history] fetch failed', error.message)
+    return
+  }
+  hydrateHistoryFromRounds(data)
+}
+
+/** Kick off one-shot history load from finished Supabase rounds. */
+export function ensureHistoryHydrated() {
+  if (hydrateStarted) return
+  hydrateStarted = true
+  hydrateFromSupabase()
 }
 
 /**
@@ -118,6 +150,7 @@ export function cancelHistoryInsert(insertingId) {
 
 export function subscribeHistory(listener) {
   listeners.add(listener)
+  ensureHistoryHydrated()
   return () => listeners.delete(listener)
 }
 

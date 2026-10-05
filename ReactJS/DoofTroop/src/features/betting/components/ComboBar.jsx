@@ -122,7 +122,7 @@ export function ComboBar({
           <span className="combo-bar__caption-title">COMBO</span>
         </h3>
         <div className="combo-bar__side">
-          {paysBlock}
+          {hasPick ? paysBlock : null}
           {actionButton}
         </div>
       </div>

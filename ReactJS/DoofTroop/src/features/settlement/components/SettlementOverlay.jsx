@@ -7,6 +7,9 @@ import { formatMoney } from '../../betting/utils/formatMoney.js'
 import { useCurrentRound } from '../../betting/hooks/useCurrentRound.js'
 import { useHudViewportContext } from '../../hud/index.js'
 import { usePublishedRoundBets } from '../../betting/state/roundBetsStore.js'
+import { setCarryForwardBets } from '../../betting/state/carryForwardBetsStore.js'
+import { creditWinOnce, useBalance } from '../../betting/state/balanceStore.js'
+import { emptyCrazyComboPicks } from '../../betting/constants/combo.js'
 import {
   beginHistoryInsert,
   finishHistoryInsert,
@@ -19,7 +22,6 @@ import {
 } from '../hooks/useChipSettleAnimation.js'
 import { useHistoryInsertAnimation } from '../hooks/useHistoryInsertAnimation.js'
 import { sumBetTotal } from '../../betting/utils/betTotals.js'
-import { DEFAULT_BALANCE } from '../../betting/constants/defaults.js'
 import {
   HudFade,
   HudMenuChrome,
@@ -35,7 +37,7 @@ import '../styles/settlement.css'
  * Game settlement HUD — RESULTS_SENT.
  * Chips resolve roulette-style; podium icons fly into HISTORY (landscape only).
  */
-export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
+export function SettlementOverlay() {
   const {
     scale: viewportScale,
     compact,
@@ -43,6 +45,7 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
     portraitVideoPx,
   } = useHudViewportContext()
   const isPortrait = orientation === 'portrait'
+  const balance = useBalance()
   const { round, status } = useCurrentRound()
   const {
     roundId: betsRoundId,
@@ -104,6 +107,39 @@ export function SettlementOverlay({ balance = DEFAULT_BALANCE }) {
     settleStingKeyRef.current = key
     playSfx(settlement.didWin ? 'settleWin' : 'settleLose')
   }, [isSettlementUiVisible, settlement, settlementRoundId])
+
+  // Credit payout once when settlement resolves (stake already deducted at place).
+  useEffect(() => {
+    if (!isSettlementUiVisible || !settlement || !settlementRoundId) return
+    if (!(settlement.totalWin > 0)) return
+    creditWinOnce(settlementRoundId, settlement.totalWin)
+  }, [isSettlementUiVisible, settlement, settlementRoundId])
+
+  // Keep winning chips for the next betting board (same spots / stacks).
+  useEffect(() => {
+    if (!isSettlementUiVisible || !settlement || !settlementRoundId) return
+    const byId = settlement.outcomes?.byId ?? {}
+    const winningBets = visibleBets.filter((bet) => byId[bet.id]?.won)
+    const hasComboWin = winningBets.some((bet) => bet.target?.type === 'combo')
+    const hasCrazyWin = winningBets.some(
+      (bet) => bet.target?.type === 'crazyCombo',
+    )
+    setCarryForwardBets({
+      fromRoundId: settlementRoundId,
+      bets: winningBets,
+      comboPick: hasComboWin ? publishedComboPick : null,
+      crazyComboPicks: hasCrazyWin
+        ? publishedCrazyComboPicks
+        : emptyCrazyComboPicks(),
+    })
+  }, [
+    isSettlementUiVisible,
+    settlement,
+    settlementRoundId,
+    visibleBets,
+    publishedComboPick,
+    publishedCrazyComboPicks,
+  ])
 
   const settlePhaseRef = useRef('')
   const winBetSfxTimersRef = useRef([])

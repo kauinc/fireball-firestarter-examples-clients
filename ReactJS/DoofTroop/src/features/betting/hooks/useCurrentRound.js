@@ -4,6 +4,7 @@ import {
   shouldApplyRound,
   subscribeToRounds,
 } from '../../../shared/supabase/rounds.js'
+import { ensureHistoryHydrated } from '../state/historyStore.js'
 
 /**
  * Shared round snapshot for all overlays (one fetch + one Realtime subscription).
@@ -70,6 +71,7 @@ function ensureStarted() {
   started = true
 
   loadLatest()
+  ensureHistoryHydrated()
 
   const { unsubscribe } = subscribeToRounds(
     ({ eventType, new: next }) => {
@@ -82,6 +84,8 @@ function ensureStarted() {
           eventType,
           status: next.status,
           round_number: next.round_number,
+          placements: next.placements ?? null,
+          winner_doof_index: next.winner_doof_index ?? null,
           created_at: next.created_at ?? null,
           updated_at: next.updated_at ?? null,
           race_started_at: next.race_started_at ?? null,

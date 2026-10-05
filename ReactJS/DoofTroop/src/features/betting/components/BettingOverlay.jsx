@@ -7,6 +7,9 @@ import { useCurrentRound } from '../hooks/useCurrentRound.js'
 import { useBettingOverlayState } from '../hooks/useBettingOverlayState.js'
 import { useChipBets } from '../hooks/useChipBets.js'
 import { useChipDrag } from '../hooks/useChipDrag.js'
+import { useBalance } from '../state/balanceStore.js'
+import { getCarryForwardBets } from '../state/carryForwardBetsStore.js'
+import { getLastRoundBets } from '../state/lastRoundBetsStore.js'
 import { uiAssets } from '../assets/uiAssets.js'
 import {
   canPlaceBetTarget,
@@ -16,10 +19,7 @@ import {
   requiresComboPickBeforeBet,
 } from '../constants/combo.js'
 import { BettingPhase } from '../constants/bettingPhase.js'
-import {
-  CHIP_VALUES,
-  DEFAULT_CHIP_VALUE,
-} from '../constants/doofs.js'
+import { CHIP_VALUES, DEFAULT_CHIP_VALUE } from '../constants/doofs.js'
 import {
   HudFade,
   HudMenuChrome,
@@ -52,19 +52,28 @@ function BettingRoundSession({
   boardHidden = false,
   historyOpen,
   onHistoryOpenChange,
+  selectedChip,
+  onSelectedChipChange,
 }) {
   const isPortrait = orientation === 'portrait'
-  const displayBalance = 5100
+  const balance = useBalance()
   const boardRef = useRef(null)
   const overlayRef = useRef(null)
   const [accessory, setAccessory] = useState(null)
-  const [selectedChip, setSelectedChip] = useState(DEFAULT_CHIP_VALUE)
   const [selectedMetal, setSelectedMetal] = useState('gold')
   const [comboActive, setComboActive] = useState(false)
-  const [comboPick, setComboPick] = useState(null)
+  const [comboPick, setComboPick] = useState(() => {
+    const carry = getCarryForwardBets(sessionKey)
+    return carry?.comboPick ?? null
+  })
   const [crazyComboPickActive, setCrazyComboPickActive] = useState(false)
   const [crazyComboActiveSlot, setCrazyComboActiveSlot] = useState(null)
-  const [crazyComboPicks, setCrazyComboPicks] = useState(emptyCrazyComboPicks)
+  const [crazyComboPicks, setCrazyComboPicks] = useState(() => {
+    const carry = getCarryForwardBets(sessionKey)
+    return carry?.crazyComboPicks
+      ? { ...carry.crazyComboPicks }
+      : emptyCrazyComboPicks()
+  })
 
   const crazyCombo = true
 
@@ -176,7 +185,10 @@ function BettingRoundSession({
       playSfx('betReject')
       return false
     }
-    placeBet(amount, target, metal)
+    if (!placeBet(amount, target, metal)) {
+      playSfx('betReject')
+      return false
+    }
     playSfx('chipPlace')
     return true
   }
@@ -200,6 +212,17 @@ function BettingRoundSession({
       playSfx('betReject')
       return
     }
+    // Restore combo / crazy-combo picks that belonged to last round's bets.
+    const last = getLastRoundBets()
+    setComboActive(false)
+    setCrazyComboPickActive(false)
+    setCrazyComboActiveSlot(null)
+    setComboPick(last?.comboPick ?? null)
+    setCrazyComboPicks(
+      last?.crazyComboPicks
+        ? { ...last.crazyComboPicks }
+        : emptyCrazyComboPicks(),
+    )
     playSfx('betDouble')
   }
 
@@ -219,7 +242,7 @@ function BettingRoundSession({
   }
 
   function handleSelectChip(value) {
-    setSelectedChip(value)
+    onSelectedChipChange(value)
     playChipSelectSfx()
   }
 
@@ -240,7 +263,7 @@ function BettingRoundSession({
   }
 
   // Round-scoped betting state remounts via parent `key={sessionKey}`.
-  // History preference lives in BettingOverlay and persists across rounds.
+  // History + selected chip live in BettingOverlay and persist across rounds.
 
   const showAdvancedChrome = !boardHidden
   const getFadeAnchorTop = useCallback(
@@ -381,7 +404,7 @@ function BettingRoundSession({
                 onDecreaseChip={() => stepSelectedChip(-1)}
                 canRepeat={canRepeat}
                 canDouble={totalBet > 0}
-                balance={displayBalance}
+                balance={balance}
                 totalBet={totalBet}
                 hideMenu
               />
@@ -434,6 +457,7 @@ export function BettingOverlay() {
     disabled,
   } = useBettingOverlayState({ status, round })
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [selectedChip, setSelectedChip] = useState(DEFAULT_CHIP_VALUE)
 
   // Keep bets for the whole round (race HUD reads the same placements).
   const sessionKey = round?.id ? String(round.id) : 'no-round'
@@ -457,6 +481,8 @@ export function BettingOverlay() {
       boardHidden={!isBoardVisible}
       historyOpen={historyOpen}
       onHistoryOpenChange={setHistoryOpen}
+      selectedChip={selectedChip}
+      onSelectedChipChange={setSelectedChip}
     />
   )
 }

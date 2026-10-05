@@ -166,7 +166,7 @@ export function CrazyComboBar({
           </span>
         </h3>
         <div className="crazy-combo-bar__side">
-          {paysBlock}
+          {complete ? paysBlock : null}
           {actionButton}
         </div>
       </div>

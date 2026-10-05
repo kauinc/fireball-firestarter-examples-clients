@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { emptyCrazyComboPicks } from '../constants/combo.js'
+import { setLastRoundBets } from './lastRoundBetsStore.js'
 
 /**
  * Last chip placements for the active round.
@@ -24,8 +25,24 @@ function emit() {
  * @param {{ crazyCombo?: boolean, comboPick?: { kind: string, key: string } | null, crazyComboPicks?: Record<string, { color: string, pattern: string } | null> }} [meta]
  */
 export function publishRoundBets(roundId, bets, meta = {}) {
+  const nextRoundId = roundId ?? null
+  const prevRoundId = snapshot.roundId
+  // Archive the previous round's board for Repeat Last before overwriting.
+  if (
+    prevRoundId != null &&
+    nextRoundId != null &&
+    prevRoundId !== nextRoundId
+  ) {
+    setLastRoundBets({
+      fromRoundId: prevRoundId,
+      bets: snapshot.bets,
+      comboPick: snapshot.comboPick,
+      crazyComboPicks: snapshot.crazyComboPicks,
+    })
+  }
+
   snapshot = Object.freeze({
-    roundId: roundId ?? null,
+    roundId: nextRoundId,
     bets: Object.freeze([...(bets ?? [])]),
     crazyCombo: Boolean(meta.crazyCombo),
     comboPick: meta.comboPick ?? null,

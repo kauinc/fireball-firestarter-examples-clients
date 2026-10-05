@@ -1,5 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { publishRoundBets } from '../state/roundBetsStore.js'
+import { adjustBalance } from '../state/balanceStore.js'
+import {
+  getCarryForwardBets,
+  markCarryForwardCharged,
+  wasCarryForwardCharged,
+} from '../state/carryForwardBetsStore.js'
+import {
+  getLastRoundBets,
+  hasLastRoundBets,
+  setLastRoundBets,
+} from '../state/lastRoundBetsStore.js'
+import {
+  getRoundBetsSnapshot,
+  publishRoundBets,
+} from '../state/roundBetsStore.js'
+import { MAX_BET_PER_TARGET } from '../constants/doofs.js'
 import { positionsForMetal, positionsForChips } from '../constants/positions.js'
 import { betTargetKey } from '../utils/betTargets.js'
 import {
@@ -9,6 +24,14 @@ import {
   roundMoney,
   stackTotal,
 } from '../utils/chipMath.js'
+
+function exceedsMaxBet(bets) {
+  return bets.some((bet) => stackTotal(bet.chips) > MAX_BET_PER_TARGET)
+}
+
+function betsStakeTotal(bets) {
+  return roundMoney(bets.reduce((sum, bet) => sum + stackTotal(bet.chips), 0))
+}
 
 const MAX_UNDO = 40
 
@@ -28,6 +51,40 @@ function cloneBets(bets) {
   }))
 }
 
+/**
+ * Re-seed previous settlement winners onto a fresh betting session.
+ * @param {string | null | undefined} roundId
+ */
+function seedBetsFromCarryForward(roundId) {
+  const carry = getCarryForwardBets(roundId)
+  if (!carry?.bets?.length) return []
+  return carry.bets.map((bet) => ({
+    id: nextBetId(),
+    key: bet.key,
+    chips: (bet.chips ?? []).map((chip) => ({ ...chip })),
+    positions: [...(bet.positions ?? [])],
+    target: bet.target ? { ...bet.target } : bet.target,
+  }))
+}
+
+/** Archive the published board when a new betting round mounts (before first paint). */
+function archivePublishedBoardForRepeat(roundId) {
+  const published = getRoundBetsSnapshot()
+  if (
+    published.roundId == null ||
+    roundId == null ||
+    String(published.roundId) === String(roundId)
+  ) {
+    return
+  }
+  setLastRoundBets({
+    fromRoundId: published.roundId,
+    bets: published.bets,
+    comboPick: published.comboPick,
+    crazyComboPicks: published.crazyComboPicks,
+  })
+}
+
 function cloneTarget(target) {
   return { ...target }
 }
@@ -41,11 +98,12 @@ function mergeChipsForTarget(target, chips) {
  * placing the same metal again adds to that face instead of stacking another.
  * Combo / Crazy Combo bars merge every metal into one stake.
  * Remount the consumer with `key={roundId}` to clear bets for a new round.
+ * Winning bets from the previous settlement are re-seeded onto the new board.
  *
  * Metal selects paytable scope: gold=WINNER/1st, silver=TOP 2, bronze=TOP 3.
  *
  * UNDO — pops the last board mutation (place / clear / repeat / x2).
- * REPEAT LAST — re-applies the most recent chip placement (same target/metal/amount).
+ * REPEAT LAST — clears the board, then restores the previous round's full bet set.
  */
 export function useChipBets(
   _selectedPositions,
@@ -54,18 +112,38 @@ export function useChipBets(
   comboPick = null,
   crazyComboPicks = null,
 ) {
-  const [bets, setBets] = useState([])
+  const [bets, setBets] = useState(() => {
+    // Capture previous round's board before this session publishes over it.
+    archivePublishedBoardForRepeat(roundId)
+    return seedBetsFromCarryForward(roundId)
+  })
   const [canUndo, setCanUndo] = useState(false)
-  const [canRepeat, setCanRepeat] = useState(false)
+  const canRepeat = hasLastRoundBets()
   const undoStackRef = useRef([])
-  /** @type {React.MutableRefObject<{ amount: number, target: Record<string, unknown>, metal: string } | null>} */
-  const lastPlacementRef = useRef(null)
   const betsRef = useRef(bets)
 
   const totalBet = useMemo(
     () => roundMoney(bets.reduce((sum, bet) => sum + stackTotal(bet.chips), 0)),
     [bets],
   )
+
+  // Re-stake carried winning chips once per new betting round.
+  useEffect(() => {
+    if (wasCarryForwardCharged(roundId)) return
+    const stake = betsStakeTotal(betsRef.current)
+    if (!(stake > 0)) {
+      markCarryForwardCharged(roundId)
+      return
+    }
+    if (!adjustBalance(-stake)) {
+      // Can't afford to leave them — clear the board.
+      betsRef.current = []
+      setBets([])
+      markCarryForwardCharged(roundId)
+      return
+    }
+    markCarryForwardCharged(roundId)
+  }, [roundId])
 
   useEffect(() => {
     publishRoundBets(roundId, bets, { crazyCombo, comboPick, crazyComboPicks })
@@ -75,6 +153,22 @@ export function useChipBets(
     betsRef.current = next
     setBets(next)
   }, [])
+
+  /**
+   * Apply board mutation and sync wallet: stake up → spend, stake down → refund.
+   * @returns {boolean}
+   */
+  const commitBets = useCallback(
+    (next) => {
+      const prevTotal = betsStakeTotal(betsRef.current)
+      const nextTotal = betsStakeTotal(next)
+      const delta = roundMoney(nextTotal - prevTotal)
+      if (delta !== 0 && !adjustBalance(-delta)) return false
+      applyBets(next)
+      return true
+    },
+    [applyBets],
+  )
 
   const pushUndo = useCallback((snapshot) => {
     const stack = undoStackRef.current
@@ -116,14 +210,14 @@ export function useChipBets(
     (amount, target, metal = 'gold') => {
       if (!amount || !target || !metal) return false
       const prev = betsRef.current
+      const next = buildPlacedBets(prev, amount, target, metal)
+      if (exceedsMaxBet(next)) return false
+      const prevTotal = betsStakeTotal(prev)
+      const nextTotal = betsStakeTotal(next)
+      const delta = roundMoney(nextTotal - prevTotal)
+      if (delta !== 0 && !adjustBalance(-delta)) return false
       pushUndo(prev)
-      lastPlacementRef.current = {
-        amount,
-        target: cloneTarget(target),
-        metal,
-      }
-      setCanRepeat(true)
-      applyBets(buildPlacedBets(prev, amount, target, metal))
+      applyBets(next)
       return true
     },
     [applyBets, buildPlacedBets, pushUndo],
@@ -133,9 +227,9 @@ export function useChipBets(
     const prev = betsRef.current
     if (!prev.length) return false
     pushUndo(prev)
-    applyBets([])
+    commitBets([])
     return true
-  }, [applyBets, pushUndo])
+  }, [commitBets, pushUndo])
 
   const clearBetsByTargetType = useCallback(
     (type) => {
@@ -144,10 +238,10 @@ export function useChipBets(
       const next = prev.filter((bet) => bet.target?.type !== type)
       if (next.length === prev.length) return false
       pushUndo(prev)
-      applyBets(next)
+      commitBets(next)
       return true
     },
-    [applyBets, pushUndo],
+    [commitBets, pushUndo],
   )
 
   const undoBets = useCallback(() => {
@@ -156,36 +250,54 @@ export function useChipBets(
       setCanUndo(false)
       return false
     }
-    setCanUndo(undoStackRef.current.length > 0)
-    applyBets(previous)
-    return true
-  }, [applyBets])
-
-  const repeatLastBets = useCallback(() => {
-    const last = lastPlacementRef.current
-    if (!last) {
-      setCanRepeat(false)
+    if (!commitBets(previous)) {
+      undoStackRef.current.push(previous)
       return false
     }
-    return placeBet(last.amount, last.target, last.metal)
-  }, [placeBet])
+    setCanUndo(undoStackRef.current.length > 0)
+    return true
+  }, [commitBets])
+
+  const repeatLastBets = useCallback(() => {
+    const last = getLastRoundBets()
+    if (!last?.bets?.length) return false
+
+    const prev = betsRef.current
+    const next = last.bets.map((bet) => ({
+      id: nextBetId(),
+      key: bet.key,
+      chips: (bet.chips ?? []).map((chip) => ({ ...chip })),
+      positions: [...(bet.positions ?? [])],
+      target: bet.target ? { ...bet.target } : bet.target,
+    }))
+
+    if (exceedsMaxBet(next)) return false
+    // Replace the board in one commit (refund current stake, charge last round).
+    if (!commitBets(next)) return false
+    pushUndo(prev)
+    return true
+  }, [commitBets, pushUndo])
 
   const doubleBets = useCallback(() => {
     const prev = betsRef.current
     if (!prev.length) return false
+    const next = prev.map((bet) => ({
+      ...bet,
+      chips: mergeChipsForTarget(
+        bet.target,
+        bet.chips.map((chip) => ({
+          ...chip,
+          value: roundMoney(chip.value * 2),
+        })),
+      ),
+    }))
+    if (exceedsMaxBet(next)) return false
+    const prevTotal = betsStakeTotal(prev)
+    const nextTotal = betsStakeTotal(next)
+    const delta = roundMoney(nextTotal - prevTotal)
+    if (delta !== 0 && !adjustBalance(-delta)) return false
     pushUndo(prev)
-    applyBets(
-      prev.map((bet) => ({
-        ...bet,
-        chips: mergeChipsForTarget(
-          bet.target,
-          bet.chips.map((chip) => ({
-            ...chip,
-            value: roundMoney(chip.value * 2),
-          })),
-        ),
-      })),
-    )
+    applyBets(next)
     return true
   }, [applyBets, pushUndo])
 

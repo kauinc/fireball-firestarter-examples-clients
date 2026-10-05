@@ -48,6 +48,24 @@ export async function fetchLatestRound() {
   return { data: data ?? null, error: error ?? null }
 }
 
+/**
+ * Recent finished rounds with podium placements (newest first).
+ * Used to seed the History panel from real results.
+ *
+ * @param {number} [limit=10]
+ * @returns {Promise<{ data: Record<string, unknown>[], error: Error | null }>}
+ */
+export async function fetchRecentResultRounds(limit = 10) {
+  const { data, error } = await supabase
+    .from('rounds')
+    .select(ROUND_COLUMNS)
+    .not('winner_doof_index', 'is', null)
+    .order('round_number', { ascending: false })
+    .limit(limit)
+
+  return { data: data ?? [], error: error ?? null }
+}
+
 function statusRank(status) {
   if (typeof status !== 'string') return -1
   return STATUS_RANK[status] ?? -1

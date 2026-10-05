@@ -183,12 +183,12 @@ export function payoutRangeForBets(bets, meta = {}) {
 }
 
 /**
- * Display form for UI labels (`x1.06`, `x775.19`, `x4651.16`).
+ * Display form for UI labels (`x1.1`, `x775.2`, `x4651.2`) — one decimal.
  * @param {number} n
  */
 export function formatMultiplier(n) {
   if (!Number.isFinite(n)) return 'x1'
-  const rounded = Math.round(n * 100) / 100
+  const rounded = Math.round(n * 10) / 10
   const text = Number.isInteger(rounded)
     ? String(rounded)
     : String(rounded).replace(/(\.\d*?[1-9])0+$/, '$1').replace(/\.0+$/, '')
