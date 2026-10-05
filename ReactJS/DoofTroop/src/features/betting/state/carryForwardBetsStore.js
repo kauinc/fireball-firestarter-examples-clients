@@ -1,8 +1,10 @@
 import { emptyCrazyComboPicks } from '../constants/combo.js'
+import { cloneBet } from '../utils/cloneBet.js'
 
 /**
  * Winning bets from the last settlement — re-seeded onto the next betting board.
  * Survives BettingRoundSession remount (`key={roundId}`).
+ * Consumed once when a new betting round reads them (not reusable across rounds).
  */
 
 /** @type {{
@@ -47,6 +49,7 @@ export function setCarryForwardBets(payload = {}) {
 
 /**
  * Winning bets to place on a new betting round (not the round that produced them).
+ * Consumes `pending` so the same winners are not re-seeded on later rounds.
  * @param {string | null | undefined} forRoundId
  */
 export function getCarryForwardBets(forRoundId) {
@@ -61,12 +64,28 @@ export function getCarryForwardBets(forRoundId) {
     return null
   }
 
+  const payload = pending
+  // Consume — only this betting round may seed these winners.
+  pending = null
+
   if (roundKey) {
     seededRoundId = roundKey
-    seededPayload = pending
+    seededPayload = payload
   }
 
-  return pending
+  return payload
+}
+
+/**
+ * Drop a seeded carry-forward for this round (e.g. wallet cannot cover re-stake).
+ * @param {string | null | undefined} roundId
+ */
+export function clearCarryForwardSeed(roundId) {
+  if (roundId == null) return
+  if (seededRoundId === String(roundId)) {
+    seededPayload = null
+    seededRoundId = null
+  }
 }
 
 /**
@@ -85,13 +104,4 @@ export function wasCarryForwardCharged(roundId) {
 export function markCarryForwardCharged(roundId) {
   if (roundId == null) return
   chargedRoundIds.add(String(roundId))
-}
-
-function cloneBet(bet) {
-  return {
-    ...bet,
-    chips: (bet.chips ?? []).map((chip) => ({ ...chip })),
-    positions: [...(bet.positions ?? [])],
-    target: bet.target ? { ...bet.target } : bet.target,
-  }
 }

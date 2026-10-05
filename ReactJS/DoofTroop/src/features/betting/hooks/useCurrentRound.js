@@ -4,7 +4,8 @@ import {
   shouldApplyRound,
   subscribeToRounds,
 } from '../../../shared/supabase/rounds.js'
-import { ensureHistoryHydrated } from '../state/historyStore.js'
+import { getRoundBetsSnapshot } from '../state/roundBetsStore.js'
+import { reconcileRoundWallet } from '../state/walletReconcile.js'
 
 /**
  * Shared round snapshot for all overlays (one fetch + one Realtime subscription).
@@ -47,6 +48,8 @@ function applyRound(data) {
     ready: true,
     error: null,
   })
+  // Wallet follows round lifecycle even if settlement UI never mounts.
+  reconcileRoundWallet(data, getRoundBetsSnapshot())
 }
 
 async function loadLatest() {
@@ -71,7 +74,6 @@ function ensureStarted() {
   started = true
 
   loadLatest()
-  ensureHistoryHydrated()
 
   const { unsubscribe } = subscribeToRounds(
     ({ eventType, new: next }) => {

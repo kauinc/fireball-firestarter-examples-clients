@@ -28,6 +28,8 @@ let snapshot = Object.freeze({ rows, anim })
 const listeners = new Set()
 
 let hydrateStarted = false
+/** @type {ReadonlyArray<Record<string, unknown>> | null} */
+let pendingHydrateRounds = null
 
 function emit() {
   snapshot = Object.freeze({ rows, anim })
@@ -43,7 +45,10 @@ function getSnapshot() {
  * @param {ReadonlyArray<Record<string, unknown>>} rounds
  */
 export function hydrateHistoryFromRounds(rounds) {
-  if (anim.phase === 'inserting') return
+  if (anim.phase === 'inserting') {
+    pendingHydrateRounds = rounds
+    return
+  }
 
   const next = []
   for (const round of rounds ?? []) {
@@ -67,6 +72,7 @@ export function hydrateHistoryFromRounds(rounds) {
     .map((r) =>
       Object.freeze({ id: r.id, places: Object.freeze({ ...r.places }) }),
     )
+  pendingHydrateRounds = null
   emit()
 }
 
@@ -74,6 +80,8 @@ async function hydrateFromSupabase() {
   const { data, error } = await fetchRecentResultRounds(HISTORY_MAX_ROWS)
   if (error) {
     console.error('[history] fetch failed', error.message)
+    // Allow a later subscribe / ensureHistoryHydrated call to retry.
+    hydrateStarted = false
     return
   }
   hydrateHistoryFromRounds(data)
@@ -131,6 +139,12 @@ export function finishHistoryInsert() {
     exitingId: null,
   })
   emit()
+
+  if (pendingHydrateRounds) {
+    const queued = pendingHydrateRounds
+    pendingHydrateRounds = null
+    hydrateHistoryFromRounds(queued)
+  }
 }
 
 /**
@@ -146,6 +160,12 @@ export function cancelHistoryInsert(insertingId) {
     exitingId: null,
   })
   emit()
+
+  if (pendingHydrateRounds) {
+    const queued = pendingHydrateRounds
+    pendingHydrateRounds = null
+    hydrateHistoryFromRounds(queued)
+  }
 }
 
 export function subscribeHistory(listener) {

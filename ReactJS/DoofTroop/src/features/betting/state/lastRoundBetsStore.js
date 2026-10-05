@@ -1,8 +1,11 @@
+import { useSyncExternalStore } from 'react'
 import { emptyCrazyComboPicks } from '../constants/combo.js'
+import { cloneBet } from '../utils/cloneBet.js'
 
 /**
  * Full chip board from the previous betting round — used by Repeat Last.
  * Survives BettingRoundSession remount (`key={roundId}`).
+ * Only non-empty boards overwrite the archive (empty rounds keep the prior set).
  */
 
 /** @type {{
@@ -12,6 +15,11 @@ import { emptyCrazyComboPicks } from '../constants/combo.js'
  *   crazyComboPicks: Record<string, { color: string, pattern: string } | null>,
  * } | null} */
 let lastRound = null
+const listeners = new Set()
+
+function emit() {
+  for (const listener of listeners) listener()
+}
 
 /**
  * @param {{
@@ -23,6 +31,9 @@ let lastRound = null
  */
 export function setLastRoundBets(payload = {}) {
   const bets = Array.isArray(payload.bets) ? payload.bets : []
+  // Keep the previous archive when the departing round had no chips.
+  if (bets.length === 0) return
+
   lastRound = {
     fromRoundId:
       payload.fromRoundId != null ? String(payload.fromRoundId) : null,
@@ -32,6 +43,7 @@ export function setLastRoundBets(payload = {}) {
       ...(payload.crazyComboPicks ?? emptyCrazyComboPicks()),
     }),
   }
+  emit()
 }
 
 /** @returns {typeof lastRound} */
@@ -43,11 +55,16 @@ export function hasLastRoundBets() {
   return Boolean(lastRound?.bets?.length)
 }
 
-function cloneBet(bet) {
-  return {
-    ...bet,
-    chips: (bet.chips ?? []).map((chip) => ({ ...chip })),
-    positions: [...(bet.positions ?? [])],
-    target: bet.target ? { ...bet.target } : bet.target,
-  }
+export function subscribeLastRoundBets(listener) {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
+/** Reactive: true when Repeat Last has a non-empty prior board. */
+export function useCanRepeatLastBets() {
+  return useSyncExternalStore(
+    subscribeLastRoundBets,
+    hasLastRoundBets,
+    hasLastRoundBets,
+  )
 }

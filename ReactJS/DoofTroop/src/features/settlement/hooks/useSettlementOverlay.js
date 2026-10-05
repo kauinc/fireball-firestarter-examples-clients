@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { RoundState } from '../../../domain/round/index.js'
 import {
   roundHasResults,
@@ -41,15 +41,17 @@ export function useSettlementOverlayState({
   const nextPhaseStarted = status != null && CLEARS_SETTLEMENT.has(status)
 
   const [latchedRoundId, setLatchedRoundId] = useState(null)
-  const [latchUntil, setLatchUntil] = useState(0)
   /** Frozen round row with placements — survives status leaving RESULTS_SENT. */
   const [resultsRound, setResultsRound] = useState(null)
+  const latchUntilRef = useRef(0)
 
   useEffect(() => {
+    // Arm latch once per RESULTS round — do not refresh latchUntil on every render.
     if (isResults && roundId && roundHasResults(round)) {
+      if (latchedRoundId === roundId) return undefined
       const armId = window.setTimeout(() => {
         setLatchedRoundId(roundId)
-        setLatchUntil(Date.now() + SETTLEMENT_MIN_VISIBLE_MS)
+        latchUntilRef.current = Date.now() + SETTLEMENT_MIN_VISIBLE_MS
         setResultsRound(round)
       }, 0)
       return () => window.clearTimeout(armId)
@@ -59,7 +61,7 @@ export function useSettlementOverlayState({
       if (latchedRoundId || resultsRound) {
         const clearId = window.setTimeout(() => {
           setLatchedRoundId(null)
-          setLatchUntil(0)
+          latchUntilRef.current = 0
           setResultsRound(null)
         }, 0)
         return () => window.clearTimeout(clearId)
@@ -71,17 +73,17 @@ export function useSettlementOverlayState({
     if (roundId && roundId !== latchedRoundId) {
       const clearId = window.setTimeout(() => {
         setLatchedRoundId(null)
-        setLatchUntil(0)
+        latchUntilRef.current = 0
         setResultsRound(null)
       }, 0)
       return () => window.clearTimeout(clearId)
     }
 
-    const remaining = latchUntil - Date.now()
+    const remaining = latchUntilRef.current - Date.now()
     if (remaining <= 0) {
       const clearId = window.setTimeout(() => {
         setLatchedRoundId(null)
-        setLatchUntil(0)
+        latchUntilRef.current = 0
         setResultsRound(null)
       }, 0)
       return () => window.clearTimeout(clearId)
@@ -89,7 +91,7 @@ export function useSettlementOverlayState({
 
     const id = window.setTimeout(() => {
       setLatchedRoundId(null)
-      setLatchUntil(0)
+      latchUntilRef.current = 0
       setResultsRound(null)
     }, remaining)
     return () => window.clearTimeout(id)
@@ -99,7 +101,6 @@ export function useSettlementOverlayState({
     round,
     roundId,
     latchedRoundId,
-    latchUntil,
     resultsRound,
   ])
 

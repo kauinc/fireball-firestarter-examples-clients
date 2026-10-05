@@ -10,6 +10,8 @@ import { roundMoney } from '../utils/chipMath.js'
 let balance = DEFAULT_BALANCE
 /** Settlement round ids already credited — avoid double-pay on re-render. */
 const creditedWins = new Set()
+/** Cancelled round ids already refunded. */
+const refundedStakes = new Set()
 const listeners = new Set()
 
 function emit() {
@@ -50,6 +52,31 @@ export function creditWinOnce(roundId, amount) {
   const key = String(roundId)
   if (creditedWins.has(key)) return false
   creditedWins.add(key)
+  balance = roundMoney(balance + amount)
+  emit()
+  return true
+}
+
+/**
+ * Whether a settlement win was already credited for this round.
+ * @param {string | number | null | undefined} roundId
+ */
+export function wasWinCredited(roundId) {
+  if (roundId == null) return false
+  return creditedWins.has(String(roundId))
+}
+
+/**
+ * Refund stake once when a round is cancelled (stake was deducted at place).
+ * @param {string | number | null | undefined} roundId
+ * @param {number} amount
+ * @returns {boolean}
+ */
+export function refundStakeOnce(roundId, amount) {
+  if (roundId == null || !(amount > 0)) return false
+  const key = String(roundId)
+  if (refundedStakes.has(key)) return false
+  refundedStakes.add(key)
   balance = roundMoney(balance + amount)
   emit()
   return true

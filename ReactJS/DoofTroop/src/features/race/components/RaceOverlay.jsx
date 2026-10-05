@@ -76,7 +76,10 @@ export function RaceOverlay() {
   })
 
   const roundMatches = round?.id != null && String(round.id) === String(betsRoundId ?? '')
-  const visibleBets = roundMatches ? bets : []
+  const visibleBets = useMemo(
+    () => (roundMatches ? bets : []),
+    [roundMatches, bets],
+  )
   const visibleComboPick = roundMatches ? publishedComboPick : null
 
   const visibleCrazyComboPicks = roundMatches ? publishedCrazyComboPicks : null

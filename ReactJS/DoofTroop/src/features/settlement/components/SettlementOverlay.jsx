@@ -4,11 +4,12 @@ import { SettlementFlightLayer } from './SettlementFlightLayer.jsx'
 import { SettlementPodiumLabels } from './SettlementPodiumLabels.jsx'
 import { uiAssets } from '../../betting/assets/uiAssets.js'
 import { formatMoney } from '../../betting/utils/formatMoney.js'
+import { roundMoney } from '../../betting/utils/chipMath.js'
 import { useCurrentRound } from '../../betting/hooks/useCurrentRound.js'
 import { useHudViewportContext } from '../../hud/index.js'
 import { usePublishedRoundBets } from '../../betting/state/roundBetsStore.js'
 import { setCarryForwardBets } from '../../betting/state/carryForwardBetsStore.js'
-import { creditWinOnce, useBalance } from '../../betting/state/balanceStore.js'
+import { useBalance, wasWinCredited } from '../../betting/state/balanceStore.js'
 import { emptyCrazyComboPicks } from '../../betting/constants/combo.js'
 import {
   beginHistoryInsert,
@@ -36,6 +37,8 @@ import '../styles/settlement.css'
 /**
  * Game settlement HUD — RESULTS_SENT.
  * Chips resolve roulette-style; podium icons fly into HISTORY (landscape only).
+ * Wallet credit happens in `reconcileRoundWallet` (round feed); this overlay only
+ * defers the displayed balance until the count-up finishes.
  */
 export function SettlementOverlay() {
   const {
@@ -60,10 +63,13 @@ export function SettlementOverlay() {
   const historyPanelRef = useRef(null)
   const [historyOpen, setHistoryOpen] = useState(false)
 
-  const visibleBets =
-    round?.id != null && String(round.id) === String(betsRoundId ?? '')
-      ? bets
-      : []
+  const visibleBets = useMemo(() => {
+    if (round?.id == null || String(round.id) !== String(betsRoundId ?? '')) {
+      return []
+    }
+    return bets
+  }, [round?.id, betsRoundId, bets])
+
   const totalBet = sumBetTotal(visibleBets)
   const hasBets = visibleBets.length > 0
 
@@ -108,13 +114,6 @@ export function SettlementOverlay() {
     playSfx(settlement.didWin ? 'settleWin' : 'settleLose')
   }, [isSettlementUiVisible, settlement, settlementRoundId])
 
-  // Credit payout once when settlement resolves (stake already deducted at place).
-  useEffect(() => {
-    if (!isSettlementUiVisible || !settlement || !settlementRoundId) return
-    if (!(settlement.totalWin > 0)) return
-    creditWinOnce(settlementRoundId, settlement.totalWin)
-  }, [isSettlementUiVisible, settlement, settlementRoundId])
-
   // Keep winning chips for the next betting board (same spots / stacks).
   useEffect(() => {
     if (!isSettlementUiVisible || !settlement || !settlementRoundId) return
@@ -140,6 +139,16 @@ export function SettlementOverlay() {
     publishedComboPick,
     publishedCrazyComboPicks,
   ])
+
+  // Wallet already includes the win (reconcileRoundWallet). Hold it back in the
+  // footer until the count-up / idle-no-bets moment so the bar doesn't jump early.
+  const winAnimPending =
+    Boolean(settlement?.totalWin > 0) &&
+    wasWinCredited(settlementRoundId) &&
+    (hasBets ? phase !== 'done' && phase !== 'idle' : false)
+  const displayBalance = winAnimPending
+    ? roundMoney(balance - settlement.totalWin)
+    : balance
 
   const settlePhaseRef = useRef('')
   const winBetSfxTimersRef = useRef([])
@@ -279,7 +288,7 @@ export function SettlementOverlay() {
           className="betting-footer__meter"
           style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
         >
-          {formatMoney(balance)}
+          {formatMoney(displayBalance)}
         </div>
       </div>
 

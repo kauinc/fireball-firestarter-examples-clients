@@ -62,20 +62,40 @@ function BettingRoundSession({
   const [accessory, setAccessory] = useState(null)
   const [selectedMetal, setSelectedMetal] = useState('gold')
   const [comboActive, setComboActive] = useState(false)
-  const [comboPick, setComboPick] = useState(() => {
-    const carry = getCarryForwardBets(sessionKey)
-    return carry?.comboPick ?? null
-  })
+
+  // Read carry-forward once (consumed); Strict Mode remount reuses seeded cache.
+  const [carry] = useState(() => getCarryForwardBets(sessionKey))
+
+  const [comboPick, setComboPick] = useState(() => carry?.comboPick ?? null)
   const [crazyComboPickActive, setCrazyComboPickActive] = useState(false)
   const [crazyComboActiveSlot, setCrazyComboActiveSlot] = useState(null)
-  const [crazyComboPicks, setCrazyComboPicks] = useState(() => {
-    const carry = getCarryForwardBets(sessionKey)
-    return carry?.crazyComboPicks
+  const [crazyComboPicks, setCrazyComboPicks] = useState(() =>
+    carry?.crazyComboPicks
       ? { ...carry.crazyComboPicks }
-      : emptyCrazyComboPicks()
-  })
+      : emptyCrazyComboPicks(),
+  )
 
   const crazyCombo = true
+
+  const handleCarryForwardRejected = useCallback(() => {
+    setComboPick(null)
+    setCrazyComboPicks(emptyCrazyComboPicks())
+    setComboActive(false)
+    setCrazyComboPickActive(false)
+    setCrazyComboActiveSlot(null)
+  }, [])
+
+  const handleUndoMeta = useCallback((meta) => {
+    setComboActive(false)
+    setCrazyComboPickActive(false)
+    setCrazyComboActiveSlot(null)
+    setComboPick(meta?.comboPick ?? null)
+    setCrazyComboPicks(
+      meta?.crazyComboPicks
+        ? { ...meta.crazyComboPicks }
+        : emptyCrazyComboPicks(),
+    )
+  }, [])
 
   useEffect(() => {
     if (hidden) return
@@ -161,20 +181,26 @@ function BettingRoundSession({
     crazyCombo,
     comboPick,
     crazyComboPicks,
+    {
+      onCarryForwardRejected: handleCarryForwardRejected,
+      onUndoMeta: handleUndoMeta,
+    },
   )
 
   function handleComboClear() {
     setComboActive(false)
-    setComboPick(null)
+    // Snapshot undo (incl. pick) before clearing pick state.
     clearBetsByTargetType('combo')
+    setComboPick(null)
     playSfx('betClear')
   }
 
   function handleCrazyComboClear() {
     setCrazyComboPickActive(false)
     setCrazyComboActiveSlot(null)
-    setCrazyComboPicks(emptyCrazyComboPicks())
+    // Snapshot undo (incl. picks) before clearing pick state.
     clearBetsByTargetType('crazyCombo')
+    setCrazyComboPicks(emptyCrazyComboPicks())
     playSfx('betClear')
   }
 

@@ -28,6 +28,7 @@ export function publishRoundBets(roundId, bets, meta = {}) {
   const nextRoundId = roundId ?? null
   const prevRoundId = snapshot.roundId
   // Archive the previous round's board for Repeat Last before overwriting.
+  // Empty boards are ignored inside setLastRoundBets (keeps prior archive).
   if (
     prevRoundId != null &&
     nextRoundId != null &&
@@ -46,7 +47,9 @@ export function publishRoundBets(roundId, bets, meta = {}) {
     bets: Object.freeze([...(bets ?? [])]),
     crazyCombo: Boolean(meta.crazyCombo),
     comboPick: meta.comboPick ?? null,
-    crazyComboPicks: Object.freeze({ ...(meta.crazyComboPicks ?? emptyCrazyComboPicks()) }),
+    crazyComboPicks: Object.freeze({
+      ...(meta.crazyComboPicks ?? emptyCrazyComboPicks()),
+    }),
   })
   emit()
 }
