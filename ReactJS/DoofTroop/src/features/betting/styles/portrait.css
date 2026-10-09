@@ -1544,12 +1544,18 @@
   display: none !important;
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__pick-icon,
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__pick-icon--bar,
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__pick-icon--accessory,
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__pick-icon--doof {
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__pick-icon--accessory {
   width: var(--portrait-accessory-icon);
   height: var(--portrait-accessory-icon);
+  max-height: none;
+  flex-shrink: 0;
+}
+
+/* Same as `.crazy-combo-bar__slot-doof` portrait. */
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__pick-icon--bar,
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-orientation='portrait'] .combo-bar__pick-icon--doof {
+  width: clamp(16px, 5vw, 24px);
+  height: clamp(16px, 5vw, 24px);
   max-height: none;
   flex-shrink: 0;
 }

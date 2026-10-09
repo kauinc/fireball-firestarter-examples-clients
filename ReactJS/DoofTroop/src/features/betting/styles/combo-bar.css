@@ -243,25 +243,17 @@
   object-fit: contain;
   pointer-events: none;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
-  /* Keep icon inside shell height so it doesn't shove the label down. */
-  max-height: calc(28px * var(--hud-scale));
+  max-height: none;
   width: auto;
 }
 
-.combo-bar__pick-icon--bar {
-  width: calc(28px * var(--hud-scale));
-  height: calc(28px * var(--hud-scale));
-}
-
+/* Same box as `.crazy-combo-bar__slot-doof`. */
+.combo-bar__pick-icon--bar,
+.combo-bar__pick-icon--doof,
 .combo-bar__pick-icon--accessory {
   width: auto;
   height: var(--hats-glasses-icon-h, calc(0.95 * var(--hats-glasses-h, calc(34px * var(--hud-scale)))));
   max-height: none;
-}
-
-.combo-bar__pick-icon--doof {
-  width: calc(28px * var(--hud-scale));
-  height: calc(28px * var(--hud-scale));
 }
 
 .combo-bar__chip {

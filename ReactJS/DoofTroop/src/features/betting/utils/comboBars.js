@@ -23,7 +23,8 @@ export function getComboBarIcon(kind, key) {
 
 export function getComboBarIconVariant(kind) {
   if (kind === 'accessories') return 'accessory'
-  return 'bar'
+  // Color + pattern picks are doof-face assets (red.png, solid.png, …).
+  return 'doof'
 }
 
 export function getComboBarState(comboActive) {
