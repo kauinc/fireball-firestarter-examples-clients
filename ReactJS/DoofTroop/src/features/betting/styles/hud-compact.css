@@ -139,12 +139,12 @@
   gap: calc(3px * var(--hud-scale));
 }
 
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait']) .combo-bar__pick-icon,
+/* Same as `.crazy-combo-bar__slot-doof` compact. */
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait']) .combo-bar__pick-icon--bar,
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait']) .combo-bar__pick-icon--accessory,
-:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait']) .combo-bar__pick-icon--doof {
-  width: calc(28px * var(--hud-scale));
-  height: calc(28px * var(--hud-scale));
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait']) .combo-bar__pick-icon--doof,
+:is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait']) .combo-bar__pick-icon--accessory {
+  width: calc(24px * var(--hud-scale));
+  height: calc(24px * var(--hud-scale));
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait']) .combo-bar__chip,
