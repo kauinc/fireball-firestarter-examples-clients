@@ -114,22 +114,17 @@ export function SettlementOverlay() {
     playSfx(settlement.didWin ? 'settleWin' : 'settleLose')
   }, [isSettlementUiVisible, settlement, settlementRoundId])
 
-  // Keep winning chips for the next betting board (same spots / stacks).
+  // Keep winning chips + combo / crazy-combo picks for the next betting board.
   useEffect(() => {
     if (!isSettlementUiVisible || !settlement || !settlementRoundId) return
     const byId = settlement.outcomes?.byId ?? {}
     const winningBets = visibleBets.filter((bet) => byId[bet.id]?.won)
-    const hasComboWin = winningBets.some((bet) => bet.target?.type === 'combo')
-    const hasCrazyWin = winningBets.some(
-      (bet) => bet.target?.type === 'crazyCombo',
-    )
     setCarryForwardBets({
       fromRoundId: settlementRoundId,
       bets: winningBets,
-      comboPick: hasComboWin ? publishedComboPick : null,
-      crazyComboPicks: hasCrazyWin
-        ? publishedCrazyComboPicks
-        : emptyCrazyComboPicks(),
+      // Picks persist across rounds even when those bars did not win.
+      comboPick: publishedComboPick,
+      crazyComboPicks: publishedCrazyComboPicks ?? emptyCrazyComboPicks(),
     })
   }, [
     isSettlementUiVisible,

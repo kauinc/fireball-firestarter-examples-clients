@@ -21,6 +21,17 @@ export const DEFAULT_CHIP_VALUE = 0.2
 /** Cap stake on a single bet target (temporary until table limits land). */
 export const MAX_BET_PER_TARGET = 100
 
+/** Largest chip denomination that does not exceed `maxAmount` (or null). */
+export function largestChipAtMost(maxAmount) {
+  if (!(maxAmount > 0)) return null
+  let best = null
+  for (const value of CHIP_VALUES) {
+    if (value <= maxAmount) best = value
+    else break
+  }
+  return best
+}
+
 /** Visual chip metals in the footer tray (left → right). */
 export const CHIP_METALS = Object.freeze(['silver', 'gold', 'bronze'])
 
