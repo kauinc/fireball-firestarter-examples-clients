@@ -19,7 +19,14 @@ import {
   requiresComboPickBeforeBet,
 } from '../constants/combo.js'
 import { BettingPhase } from '../constants/bettingPhase.js'
-import { CHIP_VALUES, DEFAULT_CHIP_VALUE } from '../constants/doofs.js'
+import {
+  CHIP_VALUES,
+  DEFAULT_CHIP_VALUE,
+  MAX_BET_PER_TARGET,
+  largestChipAtMost,
+} from '../constants/doofs.js'
+import { betTargetKey } from '../utils/betTargets.js'
+import { roundMoney, stackTotal } from '../utils/chipMath.js'
 import {
   HudFade,
   HudMenuChrome,
@@ -211,7 +218,31 @@ function BettingRoundSession({
       playSfx('betReject')
       return false
     }
-    if (!placeBet(amount, target, metal)) {
+
+    // If the selected chip would push past the per-target max, place the
+    // largest chip that still fits and switch the tray to that denomination.
+    let placeAmount = amount
+    const key = betTargetKey(target)
+    const existing = bets.find((bet) => bet.key === key)
+    const current = existing ? stackTotal(existing.chips) : 0
+    const remaining = roundMoney(MAX_BET_PER_TARGET - current)
+    if (!(remaining > 0)) {
+      playSfx('betReject')
+      return false
+    }
+    if (placeAmount > remaining) {
+      const clamped = largestChipAtMost(remaining)
+      if (clamped == null) {
+        playSfx('betReject')
+        return false
+      }
+      placeAmount = clamped
+      if (placeAmount !== selectedChip) {
+        onSelectedChipChange(placeAmount)
+      }
+    }
+
+    if (!placeBet(placeAmount, target, metal)) {
       playSfx('betReject')
       return false
     }

@@ -1,11 +1,20 @@
-import { emptyCrazyComboPicks } from '../constants/combo.js'
+import { emptyCrazyComboPicks, hasCrazyComboPicks } from '../constants/combo.js'
 import { cloneBet } from '../utils/cloneBet.js'
 
 /**
- * Winning bets from the last settlement — re-seeded onto the next betting board.
+ * Winning bets + combo / crazy-combo picks from the last settlement —
+ * re-seeded onto the next betting board.
  * Survives BettingRoundSession remount (`key={roundId}`).
  * Consumed once when a new betting round reads them (not reusable across rounds).
  */
+
+function hasCarryContent(payload) {
+  if (!payload) return false
+  if (payload.bets?.length) return true
+  if (payload.comboPick) return true
+  if (hasCrazyComboPicks(payload.crazyComboPicks)) return true
+  return false
+}
 
 /** @type {{
  *   fromRoundId: string | null,
@@ -59,7 +68,7 @@ export function getCarryForwardBets(forRoundId) {
     return seededPayload
   }
 
-  if (!pending?.bets?.length) return null
+  if (!hasCarryContent(pending)) return null
   if (roundKey && pending.fromRoundId != null && roundKey === pending.fromRoundId) {
     return null
   }
