@@ -53,3 +53,17 @@ Thumbs.db
 scripts/probe-*
 .tmp
 .temp
+
+
+# Unity
+[Ll]ibrary/
+[Ll]ogs/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Uu]serSettings/
+Assets/AssetStoreTools*
+*.csproj
+*.unityproj
+*.sln

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19c2091cb32c44ea6950f63bc4deac81, type: 3}
+  m_Name: SampleGame_Fireball_Settings
+  m_EditorClassIdentifier: 
+  GameMode: 1
+  Environment: 0
+  OperatorId: 964d5c31-043c-413d-b28d-8d0c2c0b1504
+  GameId: 11361519-8d22-485b-9974-e7b202d4fe3a
+  OperatorPlayerId: f5694163-b751-4101-b535-e6d269245246
+  Token: f5694163-b751-4101-b535-e6d269245246
+  Language: en
+  Currency: USD
+  Country: US
+  Gender: male
+  Extra: []
