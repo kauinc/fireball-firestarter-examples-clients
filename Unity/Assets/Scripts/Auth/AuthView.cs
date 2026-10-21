@@ -1,4 +1,5 @@
 using System;
+using Fireball.Game.Client.Tools;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,6 +11,8 @@ namespace SlotSample
         [SerializeField] private Button _authorizeButton;
         [SerializeField] private Button _playButton;
         [SerializeField] private Text _statusText;
+        [SerializeField] private Text _balanceText;
+        [SerializeField] private RectTransform _balancePanel;
 
         public event Action OnClickInitialize;
         public event Action OnClickAuthorize;
@@ -37,6 +40,12 @@ namespace SlotSample
             _initializeButton.interactable = status == AuthStatus.None;
             _authorizeButton.interactable = status == AuthStatus.Initialized;
             _playButton.interactable = status == AuthStatus.Authorized;
+            _balancePanel.gameObject.SetActive(status == AuthStatus.Authorized);
+        }
+
+        public void UpdateBalance(long amount, string currency)
+        {
+            _balanceText.text = CurrencyHelper.FormatMoney(amount, currency);
         }
     }
 }

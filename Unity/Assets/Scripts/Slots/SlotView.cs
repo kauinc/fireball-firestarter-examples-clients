@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Fireball.Game.Client.Tools;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -15,6 +16,8 @@ namespace SlotSample
         [Header("UI")] 
         [SerializeField] private Button _spinButton;
         [SerializeField] private Text _resultText;
+        [SerializeField] private Text _betText;
+        [SerializeField] private Text _balanceText;
 
         [Header("Settings")] 
         [SerializeField] private float _spinDuration = 1f;
@@ -46,6 +49,21 @@ namespace SlotSample
                                    status == SlotStatus.Win ? "You win!" :
                                    status == SlotStatus.Lose ? "Try again!" :
                                    string.Empty);
+        }
+        
+        public void UpdateBet(long amount, string currency)
+        {
+            _betText.text = CurrencyHelper.FormatMoney(amount, currency);
+        }
+        
+        public void UpdateBalance(long amount, string currency)
+        {
+            _balanceText.text = CurrencyHelper.FormatMoney(amount, currency);
+        }
+        
+        public void ShowError(string message)
+        {
+            _resultText.text = message;
         }
 
         public IEnumerator SpinAnimation(SlotSymbol[] results)
@@ -84,11 +102,6 @@ namespace SlotSample
                 }
             }
             return false;
-        }
-
-        public void ShowError(string message)
-        {
-            _resultText.text = message;
         }
     }
 }

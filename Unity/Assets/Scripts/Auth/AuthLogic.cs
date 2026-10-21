@@ -15,7 +15,9 @@ namespace SlotSample
         private readonly LogLevels _logLevel;
 
         private AuthStatus _status = AuthStatus.None;
-        private FireballSession _session = null;
+
+        public static AuthResponse Response => _response;
+        private static AuthResponse _response = null;
 
         public AuthLogic(
             IFireball fireball,
@@ -45,7 +47,6 @@ namespace SlotSample
             _fireball.Init(_settings,
                 (session) =>
                 {
-                    _session = session;
                     SetStatus(AuthStatus.Initialized, "Initialization successful!");
                 },
                 (error) => 
@@ -63,6 +64,8 @@ namespace SlotSample
                 {
                     Debug.Log($"Response: {response.ToJson()}");
                     Debug.Log($"Session: {_fireball.CurrentSession.ToJson()}");
+                    _response = response;
+                    _view.UpdateBalance(response.Balance, response.Currency);
                     SetStatus(AuthStatus.Authorized, "Authorization successful!");
                 },
                 (error) => 
@@ -80,6 +83,8 @@ namespace SlotSample
                 {
                     Debug.Log($"Response: {response.ToJson()}");
                     Debug.Log($"Session: {_fireball.CurrentSession.ToJson()}");
+                    _response = response;
+                    _view.UpdateBalance(response.Balance, response.Currency);
                     SetStatus(AuthStatus.Authorized, "Authorization successful!");
                 },
                 (error) =>
@@ -92,9 +97,10 @@ namespace SlotSample
                 return;
 
             SetStatus(AuthStatus.Playing, "Loading...");
+            
             SceneManager.LoadScene(1);
         }
-
+        
         private void SetStatus(
             AuthStatus status,
             string message = null)

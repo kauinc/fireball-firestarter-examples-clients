@@ -39,9 +39,9 @@ namespace SlotSample
 
         private void Initialize()
         {
-            if (_fireball.IsAuth)
+            if (_fireball.IsAuth && AuthLogic.Response != null)
             {
-                PrepareSlots();
+                PrepareSlots(AuthLogic.Response);
                 return;
             }
 
@@ -51,8 +51,7 @@ namespace SlotSample
                 (session) =>
                 {
                     _fireball.Authorize(new AuthRequest(_fireball.CurrentSession),
-                        (response) => 
-                            PrepareSlots(),
+                        PrepareSlots,
                         (error) => 
                             _view.ShowError($"Authorization failed:\n{error.Reason}"));
                 },
@@ -60,8 +59,10 @@ namespace SlotSample
                     _view.ShowError($"Initialization failed:\n{error}"));
         }
 
-        private void PrepareSlots()
+        private void PrepareSlots(AuthResponse response)
         {
+            _view.UpdateBet(100, response.Currency);
+            _view.UpdateBalance(response.Balance, response.Currency);
             SetStatus(SlotStatus.ReadyToPlay);
         }
 
