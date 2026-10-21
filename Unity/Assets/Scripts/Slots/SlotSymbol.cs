@@ -2,6 +2,7 @@ namespace SlotSample
 {
     public enum SlotSymbol
     {
+        None = 0,
         Cherry = 1,
         Lemon = 2,
         Orange = 3,
