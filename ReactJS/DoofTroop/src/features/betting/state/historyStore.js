@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { winnersFromPlacements } from '../../settlement/utils/settlementFromRound.js'
+import { winnersFromRound } from '../../settlement/utils/settlementFromRound.js'
 import { fetchRecentResultRounds } from '../../../shared/supabase/rounds.js'
 
 /** Max visible race rows in the History panel. */
@@ -9,7 +9,10 @@ export const HISTORY_MAX_ROWS = 10
  * @typedef {{
  *   id: string,
  *   places: Record<'1st' | '2nd' | '3rd', string | null>,
+ *   sortKey: number,
  * }} HistoryRow
+ * `sortKey` — round `created_at` ms for fetched rows, insert time for rows
+ * committed locally from settlement (always the newest).
  */
 
 /** @type {HistoryRow[]} newest first — empty until Supabase hydrate (or settlement insert). */
@@ -28,8 +31,6 @@ let snapshot = Object.freeze({ rows, anim })
 const listeners = new Set()
 
 let hydrateStarted = false
-/** @type {ReadonlyArray<Record<string, unknown>> | null} */
-let pendingHydrateRounds = null
 
 function emit() {
   snapshot = Object.freeze({ rows, anim })
@@ -40,39 +41,77 @@ function getSnapshot() {
   return snapshot
 }
 
-/**
- * Replace empty history with real finished rounds (newest first).
- * @param {ReadonlyArray<Record<string, unknown>>} rounds
- */
-export function hydrateHistoryFromRounds(rounds) {
-  if (anim.phase === 'inserting') {
-    pendingHydrateRounds = rounds
-    return
-  }
+function freezeRow(r) {
+  return Object.freeze({
+    id: r.id,
+    places: Object.freeze({ ...r.places }),
+    sortKey: r.sortKey,
+  })
+}
 
+/**
+ * @param {ReadonlyArray<Record<string, unknown>>} rounds
+ * @returns {HistoryRow[]}
+ */
+function rowsFromRounds(rounds) {
   const next = []
   for (const round of rounds ?? []) {
     if (next.length >= HISTORY_MAX_ROWS) break
-    const winners = winnersFromPlacements(round?.placements)
+    const winners = winnersFromRound(round)
     if (!winners) continue
+    const createdMs =
+      typeof round.created_at === 'string' ? Date.parse(round.created_at) : NaN
     next.push(
-      Object.freeze(
-        historyRowFromWinners(String(round.id ?? round.round_number), winners),
+      freezeRow(
+        historyRowFromWinners(
+          String(round.id),
+          winners,
+          Number.isFinite(createdMs) ? createdMs : 0,
+        ),
       ),
     )
   }
+  return next
+}
 
-  if (next.length === 0) return
+/**
+ * Replace / merge history with finished Supabase rounds (newest first).
+ * Safe during an in-progress insert: keeps the inserting (+ exiting) row(s)
+ * and fills the rest so reload mid-race does not show an empty sheet until
+ * podium doofs land.
+ *
+ * @param {ReadonlyArray<Record<string, unknown>>} rounds
+ */
+export function hydrateHistoryFromRounds(rounds) {
+  const fetched = rowsFromRounds(rounds)
+  if (fetched.length === 0 && rows.length === 0) return
 
-  // Keep any newer settlement-inserted rows that aren't in the fetch yet.
-  const fetchedIds = new Set(next.map((r) => r.id))
-  const newerLocal = rows.filter((r) => !fetchedIds.has(r.id))
-  rows = [...newerLocal, ...next]
-    .slice(0, HISTORY_MAX_ROWS)
-    .map((r) =>
-      Object.freeze({ id: r.id, places: Object.freeze({ ...r.places }) }),
-    )
-  pendingHydrateRounds = null
+  const insertingId = anim.phase === 'inserting' ? anim.insertingId : null
+  const exitingId = anim.phase === 'inserting' ? anim.exitingId : null
+  const insertingRow = insertingId
+    ? rows.find((r) => r.id === insertingId)
+    : null
+  const exitingRow = exitingId ? rows.find((r) => r.id === exitingId) : null
+
+  const fetchedIds = new Set(fetched.map((r) => r.id))
+  const localExtras = rows.filter(
+    (r) =>
+      r.id !== insertingId &&
+      r.id !== exitingId &&
+      !fetchedIds.has(r.id),
+  )
+  const fetchedRest = fetched.filter((r) => r.id !== insertingId)
+
+  const body = [...localExtras, ...fetchedRest]
+    .sort((a, b) => b.sortKey - a.sortKey)
+    .slice(0, HISTORY_MAX_ROWS - (insertingRow ? 1 : 0))
+
+  rows = [
+    ...(insertingRow ? [insertingRow] : []),
+    ...body,
+    ...(exitingRow ? [exitingRow] : []),
+  ].map(freezeRow)
+
   emit()
 }
 
@@ -104,7 +143,9 @@ export function ensureHistoryHydrated() {
  * }} result
  */
 export function beginHistoryInsert(result) {
-  if (rows[0]?.id === result.id) {
+  if (rows.some((r) => r.id === result.id)) {
+    // Refresh icons in place (e.g. corrected placements) — no new row.
+    replaceRowPlaces(result)
     return {
       insertingId: result.id,
       exitingId: anim.exitingId,
@@ -112,13 +153,7 @@ export function beginHistoryInsert(result) {
     }
   }
 
-  const next = [
-    Object.freeze({
-      id: result.id,
-      places: Object.freeze({ ...result.places }),
-    }),
-    ...rows,
-  ]
+  const next = [freezeRow(result), ...rows]
   const exiting = next.length > HISTORY_MAX_ROWS ? next[HISTORY_MAX_ROWS] : null
   rows = next.slice(0, HISTORY_MAX_ROWS + (exiting ? 1 : 0))
   anim = Object.freeze({
@@ -139,33 +174,47 @@ export function finishHistoryInsert() {
     exitingId: null,
   })
   emit()
-
-  if (pendingHydrateRounds) {
-    const queued = pendingHydrateRounds
-    pendingHydrateRounds = null
-    hydrateHistoryFromRounds(queued)
-  }
 }
 
 /**
- * Undo an in-progress insert (e.g. effect cleanup / Strict Mode remount).
- * @param {string} insertingId
+ * @param {{ id: string, places: Record<string, string | null> }} result
  */
-export function cancelHistoryInsert(insertingId) {
-  if (anim.phase !== 'inserting' || anim.insertingId !== insertingId) return
-  rows = rows.filter((r) => r.id !== insertingId).slice(0, HISTORY_MAX_ROWS)
-  anim = Object.freeze({
-    phase: 'idle',
-    insertingId: null,
-    exitingId: null,
-  })
+function replaceRowPlaces(result) {
+  const index = rows.findIndex((r) => r.id === result.id)
+  if (index < 0) return
+  const current = rows[index]
+  const samePlaces = ['1st', '2nd', '3rd'].every(
+    (place) => current.places[place] === (result.places[place] ?? null),
+  )
+  if (samePlaces) return
+  rows = rows.map((r, i) =>
+    i === index ? freezeRow({ ...r, places: result.places }) : r,
+  )
   emit()
+}
 
-  if (pendingHydrateRounds) {
-    const queued = pendingHydrateRounds
-    pendingHydrateRounds = null
-    hydrateHistoryFromRounds(queued)
+/**
+ * Commit a settled round without animation (portrait, or settlement HUD
+ * cleared before the fly-in could run). Existing rows get their icons
+ * refreshed; new rows go on top, below any in-progress insert.
+ *
+ * @param {HistoryRow} result
+ */
+export function commitHistoryRow(result) {
+  if (rows.some((r) => r.id === result.id)) {
+    replaceRowPlaces(result)
+    return
   }
+  const insertingIndex =
+    anim.phase === 'inserting'
+      ? rows.findIndex((r) => r.id === anim.insertingId)
+      : -1
+  const at = insertingIndex + 1
+  rows = [...rows.slice(0, at), freezeRow(result), ...rows.slice(at)].slice(
+    0,
+    HISTORY_MAX_ROWS + (anim.phase === 'inserting' && anim.exitingId ? 1 : 0),
+  )
+  emit()
 }
 
 export function subscribeHistory(listener) {
@@ -182,8 +231,10 @@ export function useRaceHistory() {
  * Build a history row from settlement podium winners.
  * @param {string} roundId
  * @param {ReadonlyArray<{ place: string, src?: string | null }>} winners
+ * @param {number} [sortKey] - round `created_at` ms; defaults to now (newest)
+ * @returns {HistoryRow}
  */
-export function historyRowFromWinners(roundId, winners) {
+export function historyRowFromWinners(roundId, winners, sortKey = Date.now()) {
   const places = { '1st': null, '2nd': null, '3rd': null }
   for (const w of winners ?? []) {
     if (w.place === '1st' || w.place === '2nd' || w.place === '3rd') {
@@ -193,5 +244,6 @@ export function historyRowFromWinners(roundId, winners) {
   return {
     id: `round-${roundId}`,
     places,
+    sortKey,
   }
 }

@@ -11,7 +11,5 @@ export {
   useSyncHudFadeHeight,
   getDoofColorBarsFadeAnchorTop,
 } from './hooks/useSyncHudFadeHeight.js'
-export {
-  HudViewportProvider,
-  useHudViewportContext,
-} from './HudViewportContext.jsx'
+export { HudViewportProvider } from './HudViewportContext.jsx'
+export { useHudViewportContext } from './hudViewportContextValue.js'

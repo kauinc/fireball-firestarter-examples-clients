@@ -9,11 +9,10 @@ import { useCurrentRound } from '../../betting/hooks/useCurrentRound.js'
 import { useHudViewportContext } from '../../hud/index.js'
 import { usePublishedRoundBets } from '../../betting/state/roundBetsStore.js'
 import { setCarryForwardBets } from '../../betting/state/carryForwardBetsStore.js'
-import { useBalance, wasWinCredited } from '../../betting/state/balanceStore.js'
+import { creditedWinFor, useBalance } from '../../betting/state/balanceStore.js'
 import { emptyCrazyComboPicks } from '../../betting/constants/combo.js'
 import {
-  beginHistoryInsert,
-  finishHistoryInsert,
+  commitHistoryRow,
   historyRowFromWinners,
 } from '../../betting/state/historyStore.js'
 import { useSettlementOverlayState } from '../hooks/useSettlementOverlay.js'
@@ -35,7 +34,7 @@ import '../../betting/styles/portrait.css'
 import '../styles/settlement.css'
 
 /**
- * Game settlement HUD — RESULTS_SENT.
+ * Game settlement HUD — RESULTS_RECORDED through FINISHED, until the next round.
  * Chips resolve roulette-style; podium icons fly into HISTORY (landscape only).
  * Wallet credit happens in `reconcileRoundWallet` (round feed); this overlay only
  * defers the displayed balance until the count-up finishes.
@@ -137,12 +136,11 @@ export function SettlementOverlay() {
 
   // Wallet already includes the win (reconcileRoundWallet). Hold it back in the
   // footer until the count-up / idle-no-bets moment so the bar doesn't jump early.
+  const creditedWin = creditedWinFor(settlementRoundId)
   const winAnimPending =
-    Boolean(settlement?.totalWin > 0) &&
-    wasWinCredited(settlementRoundId) &&
-    (hasBets ? phase !== 'done' && phase !== 'idle' : false)
+    creditedWin > 0 && (hasBets ? phase !== 'done' && phase !== 'idle' : false)
   const displayBalance = winAnimPending
-    ? roundMoney(balance - settlement.totalWin)
+    ? roundMoney(balance - creditedWin)
     : balance
 
   const settlePhaseRef = useRef('')
@@ -212,11 +210,8 @@ export function SettlementOverlay() {
     const key = String(settlementRoundId)
     if (silentHistoryKeyRef.current === key) return
 
-    const row = historyRowFromWinners(key, settlement.winners)
-    const began = beginHistoryInsert(row)
+    commitHistoryRow(historyRowFromWinners(key, settlement.winners))
     silentHistoryKeyRef.current = key
-    if (began.alreadyPresent && !began.exitingId) return
-    finishHistoryInsert()
   }, [
     isPortrait,
     isSettlementUiVisible,
@@ -224,6 +219,23 @@ export function SettlementOverlay() {
     settlementRoundId,
     readyForHistoryInsert,
   ])
+
+  // Every settled round lands in History, even when the HUD is cleared
+  // (next round) before the fly-in reached `readyForInsert`.
+  const lastSettledRef = useRef(null)
+  useEffect(() => {
+    if (isSettlementUiVisible && settlement && settlementRoundId) {
+      lastSettledRef.current = {
+        roundId: String(settlementRoundId),
+        winners: settlement.winners,
+      }
+      return
+    }
+    const last = lastSettledRef.current
+    if (!last) return
+    lastSettledRef.current = null
+    commitHistoryRow(historyRowFromWinners(last.roundId, last.winners))
+  }, [isSettlementUiVisible, settlement, settlementRoundId])
 
   const allFlights = useMemo(
     () => (isPortrait ? flights : [...flights, ...historyFlights]),

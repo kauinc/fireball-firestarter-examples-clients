@@ -4,7 +4,10 @@ import { DoofGrid } from './DoofGrid.jsx'
 import { MidControls } from './MidControls.jsx'
 import { BettingFooter } from './BettingFooter.jsx'
 import { useCurrentRound } from '../hooks/useCurrentRound.js'
-import { useBettingOverlayState } from '../hooks/useBettingOverlayState.js'
+import {
+  isBettingAdmissionOpen,
+  useBettingOverlayState,
+} from '../hooks/useBettingOverlayState.js'
 import { useChipBets } from '../hooks/useChipBets.js'
 import { useChipDrag } from '../hooks/useChipDrag.js'
 import { useBalance } from '../state/balanceStore.js'
@@ -19,6 +22,7 @@ import {
   requiresComboPickBeforeBet,
 } from '../constants/combo.js'
 import { BettingPhase } from '../constants/bettingPhase.js'
+import { RoundState } from '../../../domain/round/index.js'
 import {
   CHIP_VALUES,
   DEFAULT_CHIP_VALUE,
@@ -38,6 +42,17 @@ import { playSfx } from '../../../shared/audio/index.js'
 import '../styles/betting.css'
 
 const DEFAULT_SELECTED_POSITIONS = Object.freeze(['1st'])
+
+/**
+ * Carry-forward winners may only land on a round that can still take bets —
+ * never on one first seen mid-race (missed Realtime) or with no round yet.
+ * Otherwise `pending` stays queued for the next bettable round.
+ */
+function canSeedCarryForward(status, round) {
+  if (round?.id == null) return false
+  if (status === RoundState.CREATED) return true
+  return isBettingAdmissionOpen(status, round)
+}
 
 /**
  * Round-scoped betting UI — remounts on new round via `key={sessionKey}`.
@@ -71,7 +86,14 @@ function BettingRoundSession({
   const [comboActive, setComboActive] = useState(false)
 
   // Read carry-forward once (consumed); Strict Mode remount reuses seeded cache.
-  const [carry] = useState(() => getCarryForwardBets(sessionKey))
+  const [carry] = useState(() =>
+    canSeedCarryForward(status, round) ? getCarryForwardBets(sessionKey) : null,
+  )
+
+  /** Re-checked at action time — the overlay state ticks only every 200ms. */
+  function canMutateBoard() {
+    return !disabled && isBettingAdmissionOpen(status, round)
+  }
 
   const [comboPick, setComboPick] = useState(() => carry?.comboPick ?? null)
   const [crazyComboPickActive, setCrazyComboPickActive] = useState(false)
@@ -119,13 +141,14 @@ function BettingRoundSession({
   }
 
   function handleComboBarPick(kind, key) {
+    if (!canMutateBoard()) return
     setComboPick({ kind, key })
     setComboActive(false)
     playSfx('comboPick')
   }
 
   function handleCrazyComboBarClick(requestedSlot = null) {
-    if (disabled || comboActive) return
+    if (!canMutateBoard() || comboActive) return
 
     if (crazyComboPickActive) {
       if (requestedSlot && requestedSlot !== crazyComboActiveSlot) {
@@ -150,6 +173,7 @@ function BettingRoundSession({
 
   function handleCrazyComboDoofPick(color, pattern) {
     if (!crazyComboPickActive || !crazyComboActiveSlot) return
+    if (!canMutateBoard()) return
     if (isCrazyComboDoofTaken(crazyComboPicks, color, pattern)) {
       playSfx('betReject')
       return
@@ -189,12 +213,14 @@ function BettingRoundSession({
     comboPick,
     crazyComboPicks,
     {
+      carry,
       onCarryForwardRejected: handleCarryForwardRejected,
       onUndoMeta: handleUndoMeta,
     },
   )
 
   function handleComboClear() {
+    if (!canMutateBoard()) return
     setComboActive(false)
     // Snapshot undo (incl. pick) before clearing pick state.
     clearBetsByTargetType('combo')
@@ -203,6 +229,7 @@ function BettingRoundSession({
   }
 
   function handleCrazyComboClear() {
+    if (!canMutateBoard()) return
     setCrazyComboPickActive(false)
     setCrazyComboActiveSlot(null)
     // Snapshot undo (incl. picks) before clearing pick state.
@@ -213,6 +240,7 @@ function BettingRoundSession({
 
   function tryPlaceBet(amount, target, metal = selectedMetal) {
     if (
+      !canMutateBoard() ||
       !canPlaceBetTarget(target, { crazyCombo, comboPick, crazyComboPicks })
     ) {
       playSfx('betReject')
@@ -259,13 +287,14 @@ function BettingRoundSession({
   })
 
   function handleClear() {
+    if (!canMutateBoard()) return
     // CLEAR BETS clears chip stacks only — combo / crazy combo picks stay.
     clearBets()
     playSfx('betClear')
   }
 
   function handleRepeat() {
-    if (!repeatLastBets()) {
+    if (!canMutateBoard() || !repeatLastBets()) {
       playSfx('betReject')
       return
     }
@@ -284,7 +313,7 @@ function BettingRoundSession({
   }
 
   function handleDouble() {
-    if (!doubleBets()) {
+    if (!canMutateBoard() || !doubleBets()) {
       playSfx('betReject')
       return
     }
@@ -376,8 +405,7 @@ function BettingRoundSession({
       data-combo={comboActive ? 'true' : 'false'}
       data-crazy-combo-pick={crazyComboPickActive ? 'true' : 'false'}
       data-combo-pick-required={comboPickRequired ? 'true' : 'false'}
-      data-round-id={round?.id ?? undefined}
-      data-round-number={round?.round_number ?? undefined}
+      data-round-id={round?.id != null ? String(round.id) : undefined}
       data-round-status={status ?? undefined}
       style={{
         '--hud-scale': viewportScale,
@@ -491,7 +519,7 @@ function BettingRoundSession({
 
 /**
  * Betting HUD driven by Supabase `rounds.status` (Realtime).
- * Full board while ROUND_CREATED / BETTING_OPEN; TimerBar through BETTING_CLOSED / TRACK_READY.
+ * Full board while BETTING_OPEN; TimerBar through BETTING_CLOSED / COUNTDOWN.
  *
  * Mobile (compact): landscape layout matches product refs.
  * Combo controls are always visible during betting.

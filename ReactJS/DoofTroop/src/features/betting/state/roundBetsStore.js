@@ -71,15 +71,6 @@ export function hasCrazyComboBet(bets) {
   return bets?.some((bet) => bet.target?.type === 'crazyCombo') ?? false
 }
 
-/**
- * Combo / Crazy Combo bars are always shown on race CURRENT BETS + settlement.
- * Kept as a helper for call sites that previously gated on chip placement.
- * @param {{ bets?: ReadonlyArray<Record<string, unknown>> }} [_state]
- */
-export function shouldShowRaceCrazyCombos(_state) {
-  return true
-}
-
 /** @returns {{ roundId: string | null, bets: ReadonlyArray<Record<string, unknown>>, crazyCombo: boolean, comboPick: { kind: string, key: string } | null, crazyComboPicks: Record<string, { color: string, pattern: string } | null> }} */
 export function usePublishedRoundBets() {
   return useSyncExternalStore(

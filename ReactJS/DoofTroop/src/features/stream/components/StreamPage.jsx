@@ -17,10 +17,7 @@ import '../styles/stream.css'
 const StreamRoom = lazy(() => import('./StreamRoom.jsx'))
 
 function isCancelledStatus(status) {
-  return (
-    status === RoundState.ROUND_CANCELLED_OPERATOR ||
-    status === RoundState.ROUND_CANCELLED_RUNTIME
-  )
+  return status === RoundState.CANCELLED
 }
 
 /**
@@ -87,7 +84,9 @@ export function StreamPage() {
   const roundsIssue =
     roundsError ||
     (roundsReady &&
-      (realtimeStatus === 'CHANNEL_ERROR' || realtimeStatus === 'TIMED_OUT')
+      (realtimeStatus === 'CHANNEL_ERROR' ||
+        realtimeStatus === 'TIMED_OUT' ||
+        realtimeStatus === 'CLOSED')
       ? `Realtime ${realtimeStatus}`
       : null)
 

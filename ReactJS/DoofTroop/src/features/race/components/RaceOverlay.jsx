@@ -8,7 +8,7 @@ import { useCurrentRound } from '../../betting/hooks/useCurrentRound.js'
 import { usePublishedRoundBets } from '../../betting/state/roundBetsStore.js'
 import { useBalance } from '../../betting/state/balanceStore.js'
 import {
-  useMockPotentialWin,
+  usePotentialWin,
   useRaceElapsed,
   useRaceOverlayState,
 } from '../hooks/useRaceOverlay.js'
@@ -39,17 +39,17 @@ export function RaceOverlay() {
   const isPortrait = orientation === 'portrait'
   const balance = useBalance()
   const { round, status } = useCurrentRound()
-  const { isRaceUiVisible, raceKey, raceStartedAt, updatedAt } = useRaceOverlayState({
-    status,
-    round,
-  })
+  const { isRaceUiVisible, raceKey, raceElapsedMs, raceUpdatedAt } =
+    useRaceOverlayState({
+      status,
+      round,
+    })
   const { label: elapsedLabel } = useRaceElapsed({
     active: isRaceUiVisible,
-    raceStartedAt,
-    updatedAt,
+    raceElapsedMs,
+    raceUpdatedAt,
     raceKey,
   })
-  const potentialWin = useMockPotentialWin({ active: isRaceUiVisible })
   const { roundId: betsRoundId, bets, comboPick: publishedComboPick, crazyComboPicks: publishedCrazyComboPicks } =
     usePublishedRoundBets()
   const [betsOpenForKey, setBetsOpenForKey] = useState(null)
@@ -88,6 +88,13 @@ export function RaceOverlay() {
       visibleBets.reduce((sum, bet) => sum + getBetTotal(bet), 0),
     [visibleBets],
   )
+  const potentialWin = usePotentialWin({
+    active: isRaceUiVisible,
+    bets: visibleBets,
+    racePlacements: round?.race_placements ?? null,
+    comboPick: visibleComboPick,
+    crazyComboPicks: visibleCrazyComboPicks,
+  })
   const viewportMode = compact ? '1' : '0'
 
   const board = (

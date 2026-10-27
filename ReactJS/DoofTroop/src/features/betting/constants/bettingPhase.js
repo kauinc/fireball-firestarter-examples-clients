@@ -6,7 +6,7 @@ export const BettingPhase = Object.freeze({
   OPEN: 'open',
   /** BETS CLOSING — final seconds before the window closes */
   CLOSING: 'closing',
-  /** BETS CLOSED — timer at 0 / BETTING_CLOSED / TRACK_READY countdown */
+  /** BETS CLOSED — timer at 0 / BETTING_CLOSED / COUNTDOWN */
   CLOSED: 'closed',
   /** Betting UI hidden — outside the betting + pre-race window */
   HIDDEN: 'hidden',
@@ -21,7 +21,7 @@ export const TimerBarVariant = Object.freeze({
   RED: 'red',
 })
 
-/** Client-side betting window length while ROUND_CREATED / BETTING_OPEN. */
+/** Fallback client-side betting window when `betting_deadline` is missing. */
 export const BETTING_WINDOW_SECONDS = 30
 
 /** Show BETS CLOSING + yellow TimerBar when this many seconds (or fewer) remain. */

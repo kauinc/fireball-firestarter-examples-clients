@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   beginHistoryInsert,
-  cancelHistoryInsert,
   finishHistoryInsert,
   historyRowFromWinners,
 } from '../../betting/state/historyStore.js'
@@ -171,8 +170,10 @@ export function useHistoryInsertAnimation({
     return () => {
       cancelled = true
       clearTimers()
+      // Interrupted (next round started, orientation change, …): keep the
+      // row — a re-run sees it as already present and only refreshes icons.
       if (!didFinish && insertingId) {
-        cancelHistoryInsert(insertingId)
+        finishHistoryInsert()
       }
     }
   }, [enabled, roundId, winnersKey, readyForInsert])

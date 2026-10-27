@@ -7,53 +7,66 @@ import {
   timerBarVariantFor,
 } from '../constants/bettingPhase.js'
 import { RoundState } from '../../../domain/round/index.js'
-import { resolveWallClockMs } from '../../../shared/supabase/roundTimestamps.js'
+import {
+  parseTimestampMs,
+  serverNowMs,
+} from '../../../shared/supabase/roundTimestamps.js'
 
-/** Fallback when server open time is unusable — survives remount for the same id. */
+/** Fallback open time when deadline is missing — survives remount per round. */
 const openedAtByRoundId = new Map()
 
-/** Unreal may emit ROUND_CREATED before BETTING_OPEN — treat both as open betting. */
-const BETTING_OPEN_STATUSES = new Set([
-  RoundState.ROUND_CREATED,
-  RoundState.BETTING_OPEN,
-])
-
-/** Pre-race statuses that keep the red “BETS CLOSED” TimerBar over Unreal’s 3-2-1. */
-const BANNER_ONLY_STATUSES = new Set([
-  RoundState.BETTING_CLOSED,
-  RoundState.TRACK_READY,
-])
-
 /**
- * Prefer server `created_at` (betting open), corrected for Unreal clock skew
- * via `updated_at`. Fall back locally if the stamp is unusable.
+ * Seconds until `betting_deadline` using server-aligned now.
+ * Does not cap/freeze at the open→deadline window — that made a lagging
+ * client clock stick at 30s then jump to CLOSED while the bar still had time.
  *
- * @param {unknown} createdAt
- * @param {unknown} updatedAt
- * @param {string | null} roundId
- * @param {number} nowMs
+ * @param {unknown} deadline
+ * @param {number} nowMs - prefer `serverNowMs()`
+ * @returns {number | null}
  */
-function resolveBettingOpenedAtMs(createdAt, updatedAt, roundId, nowMs) {
-  const wallOpen = resolveWallClockMs(createdAt, updatedAt, nowMs)
-  if (wallOpen != null) {
-    const elapsedSec = (nowMs - wallOpen) / 1000
-    if (elapsedSec <= BETTING_WINDOW_SECONDS) {
-      return wallOpen
-    }
-  }
-
-  if (roundId && openedAtByRoundId.has(roundId)) {
-    return openedAtByRoundId.get(roundId)
-  }
-  if (roundId) {
-    openedAtByRoundId.set(roundId, nowMs)
-  }
-  return nowMs
+function secondsUntilDeadline(deadline, nowMs) {
+  const endMs = parseTimestampMs(deadline)
+  if (endMs == null) return null
+  // Round to nearest second so a slightly-lagging clock does not sit +1s
+  // via Math.ceil for almost the whole window.
+  return Math.max(0, Math.round((endMs - nowMs) / 1000))
 }
 
 /**
- * Overlay UI from round `status` + `created_at` for the betting countdown.
- * Full board while ROUND_CREATED / BETTING_OPEN; TimerBar only through TRACK_READY.
+ * Bet admission: status must be BETTING_OPEN and the server-aligned clock
+ * must not have passed `betting_deadline` (when the row carries one).
+ *
+ * @param {string | null | undefined} status
+ * @param {Record<string, unknown> | null | undefined} round
+ * @param {number} [clientNowMs]
+ */
+export function isBettingAdmissionOpen(status, round, clientNowMs = Date.now()) {
+  if (status !== RoundState.BETTING_OPEN) return false
+  const endMs = parseTimestampMs(round?.betting_deadline)
+  if (endMs == null) return true
+  return serverNowMs(clientNowMs) < endMs
+}
+
+function closedState() {
+  const phase = BettingPhase.CLOSED
+  return {
+    phase,
+    secondsLeft: 0,
+    bannerLabel: BETTING_BANNER[phase],
+    timerVariant: timerBarVariantFor(0, phase),
+    isBannerVisible: true,
+    isBoardVisible: false,
+    isBettingUiVisible: false,
+    canPlaceBets: false,
+    disabled: true,
+  }
+}
+
+/**
+ * Betting overlay:
+ * - Timer follows `betting_deadline` (real remaining time, server clock).
+ * - Bets are admitted only while BETTING_OPEN *and* before the deadline.
+ * - Deadline passed / BETTING_CLOSED / COUNTDOWN → closed banner.
  *
  * @param {{
  *   status: string | null,
@@ -63,45 +76,50 @@ function resolveBettingOpenedAtMs(createdAt, updatedAt, roundId, nowMs) {
 export function useBettingOverlayState({ status, round = null }) {
   const [now, setNow] = useState(() => Date.now())
   const roundId = round?.id != null ? String(round.id) : null
-  const isBettingOpen = BETTING_OPEN_STATUSES.has(status)
-  const createdAt = round?.created_at ?? null
-  const updatedAt = round?.updated_at ?? null
+  const bettingDeadline = round?.betting_deadline ?? null
+  const isBettingOpen = status === RoundState.BETTING_OPEN
 
   useEffect(() => {
     if (!isBettingOpen || !roundId) return undefined
 
-    resolveBettingOpenedAtMs(createdAt, updatedAt, roundId, Date.now())
-
+    if (!openedAtByRoundId.has(roundId)) {
+      openedAtByRoundId.set(roundId, Date.now())
+    }
     for (const key of openedAtByRoundId.keys()) {
       if (key !== roundId) openedAtByRoundId.delete(key)
     }
 
     return undefined
-  }, [isBettingOpen, roundId, createdAt, updatedAt])
+  }, [isBettingOpen, roundId])
 
   useEffect(() => {
     if (!isBettingOpen) return undefined
     const id = setInterval(() => setNow(Date.now()), 200)
+    queueMicrotask(() => setNow(Date.now()))
     return () => clearInterval(id)
   }, [isBettingOpen, roundId])
 
   return useMemo(() => {
     if (isBettingOpen) {
-      const openedAt = resolveBettingOpenedAtMs(
-        createdAt,
-        updatedAt,
-        roundId,
-        now,
-      )
-      const elapsed = Math.floor((now - openedAt) / 1000)
-      const secondsLeft = Math.max(0, BETTING_WINDOW_SECONDS - elapsed)
+      const deadlineMs = parseTimestampMs(bettingDeadline)
+      const alignedNow = serverNowMs(now)
+      if (deadlineMs != null && alignedNow >= deadlineMs) {
+        return closedState()
+      }
 
+      let secondsLeft = secondsUntilDeadline(bettingDeadline, alignedNow)
+      if (secondsLeft == null) {
+        const openedAt = (roundId && openedAtByRoundId.get(roundId)) || now
+        const elapsed = Math.floor((now - openedAt) / 1000)
+        secondsLeft = Math.max(0, BETTING_WINDOW_SECONDS - elapsed)
+      }
+
+      // Without a deadline the DB status stays authoritative — at 0s keep
+      // showing BETS CLOSING until BETTING_CLOSED arrives.
       const phase =
-        secondsLeft <= 0
-          ? BettingPhase.CLOSED
-          : secondsLeft <= BETTING_CLOSING_THRESHOLD_SECONDS
-            ? BettingPhase.CLOSING
-            : BettingPhase.OPEN
+        secondsLeft <= BETTING_CLOSING_THRESHOLD_SECONDS
+          ? BettingPhase.CLOSING
+          : BettingPhase.OPEN
 
       return {
         phase,
@@ -111,24 +129,16 @@ export function useBettingOverlayState({ status, round = null }) {
         isBannerVisible: true,
         isBoardVisible: true,
         isBettingUiVisible: true,
-        canPlaceBets: secondsLeft > 0,
-        disabled: secondsLeft <= 0,
+        canPlaceBets: true,
+        disabled: false,
       }
     }
 
-    if (BANNER_ONLY_STATUSES.has(status)) {
-      const phase = BettingPhase.CLOSED
-      return {
-        phase,
-        secondsLeft: 0,
-        bannerLabel: BETTING_BANNER[phase],
-        timerVariant: timerBarVariantFor(0, phase),
-        isBannerVisible: true,
-        isBoardVisible: false,
-        isBettingUiVisible: false,
-        canPlaceBets: false,
-        disabled: true,
-      }
+    if (
+      status === RoundState.BETTING_CLOSED ||
+      status === RoundState.COUNTDOWN
+    ) {
+      return closedState()
     }
 
     return {
@@ -142,5 +152,5 @@ export function useBettingOverlayState({ status, round = null }) {
       canPlaceBets: false,
       disabled: true,
     }
-  }, [isBettingOpen, status, roundId, createdAt, updatedAt, now])
+  }, [isBettingOpen, status, roundId, bettingDeadline, now])
 }

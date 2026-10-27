@@ -30,10 +30,12 @@ export function useViewerSession() {
         if (controller.signal.aborted) return
         // Ignore AbortError from a superseded reload.
         if (err?.name === 'AbortError') return
+        const message = err?.message || String(err)
+        console.error('[livekit] viewer session failed', message)
         setResult({
           status: 'error',
           session: null,
-          error: err?.message || String(err),
+          error: message,
         })
       })
 
