@@ -4,12 +4,7 @@ import {
   settlementFromRound,
 } from '../../settlement/utils/settlementFromRound.js'
 import { roundMoney, stackTotal } from '../utils/chipMath.js'
-import { creditWinOnce, refundStakeOnce } from './balanceStore.js'
-
-const CANCELLED = new Set([
-  RoundState.ROUND_CANCELLED_OPERATOR,
-  RoundState.ROUND_CANCELLED_RUNTIME,
-])
+import { refundStakeOnce, settleRoundWin } from './balanceStore.js'
 
 function betsStakeTotal(bets) {
   return roundMoney(
@@ -19,7 +14,7 @@ function betsStakeTotal(bets) {
 
 /**
  * Keep the play-money wallet in sync with round lifecycle even if settlement
- * UI never mounts (missed RESULTS_SENT) or the round is cancelled.
+ * UI never mounts (missed RESULTS_RECORDED) or the round is cancelled.
  *
  * @param {Record<string, unknown> | null | undefined} round
  * @param {{
@@ -39,20 +34,25 @@ export function reconcileRoundWallet(round, published) {
   const comboPick = sameRound ? (published.comboPick ?? null) : null
   const crazyComboPicks = sameRound ? (published.crazyComboPicks ?? null) : null
 
-  if (status && CANCELLED.has(status)) {
+  if (status === RoundState.CANCELLED) {
     const stake = betsStakeTotal(bets)
     if (stake > 0) refundStakeOnce(roundId, stake)
     return
   }
 
-  if (status === RoundState.RESULTS_SENT && roundHasResults(round)) {
+  const canSettle =
+    (status === RoundState.RESULTS_RECORDED ||
+      status === RoundState.FINISHED) &&
+    roundHasResults(round)
+
+  if (canSettle) {
     const settlement = settlementFromRound(round, {
       bets,
       comboPick,
       crazyComboPicks,
     })
-    if (settlement?.totalWin > 0) {
-      creditWinOnce(roundId, settlement.totalWin)
-    }
+    // Always record the settlement (even 0) so a later CANCELLED cannot
+    // also refund the stake.
+    if (settlement) settleRoundWin(roundId, settlement.totalWin)
   }
 }

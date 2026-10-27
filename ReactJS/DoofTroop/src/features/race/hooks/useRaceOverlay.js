@@ -1,10 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { RoundState } from '../../../domain/round/index.js'
-import { resolveWallClockMs } from '../../../shared/supabase/roundTimestamps.js'
+import { serverNowMs } from '../../../shared/supabase/roundTimestamps.js'
+import {
+  winnersFromPlacements,
+} from '../../settlement/utils/settlementFromRound.js'
+import { resolveBetOutcomes } from '../../settlement/utils/resolveBetOutcomes.js'
+
+/** Stop extrapolating when the last race progress sample is older than this. */
+const RACE_SAMPLE_STALE_MS = 4000
 
 /**
  * Race HUD visibility from `rounds.status`.
- * Prototype: RACE_RUNNING only (TRACK_READY stays clear for Unreal countdown).
+ * RACE_RUNNING only (COUNTDOWN stays clear for Unreal countdown).
  *
  * @param {{ status: string | null, round?: Record<string, unknown> | null }} args
  */
@@ -15,105 +22,103 @@ export function useRaceOverlayState({ status, round = null }) {
   return {
     isRaceUiVisible: isRace,
     raceKey,
-    raceStartedAt: round?.race_started_at ?? null,
-    updatedAt: round?.updated_at ?? null,
+    raceElapsedMs: round?.race_elapsed_ms ?? null,
+    raceUpdatedAt: round?.race_updated_at ?? null,
   }
 }
 
 /**
  * Elapsed race clock as MM:SS.
- * Uses Supabase `race_started_at`, corrected against `updated_at` when Unreal’s
- * clock is ahead of wall time (otherwise reload always showed 00:00).
+ * Bases on authoritative `race_elapsed_ms` samples and extrapolates between
+ * updates using `race_updated_at`. Freezes when samples go stale.
  *
  * @param {{
  *   active: boolean,
- *   raceStartedAt?: string | null,
- *   updatedAt?: string | null,
+ *   raceElapsedMs?: unknown,
+ *   raceUpdatedAt?: string | null,
  *   raceKey?: string,
  * }} args
  */
 export function useRaceElapsed({
   active,
-  raceStartedAt = null,
-  updatedAt = null,
+  raceElapsedMs = null,
+  raceUpdatedAt = null,
   raceKey = '',
 }) {
-  const [now, setNow] = useState(null)
-  const [startedAt, setStartedAt] = useState(null)
-
-  useEffect(() => {
-    if (!active) {
-      queueMicrotask(() => {
-        setStartedAt(null)
-        setNow(null)
-      })
-      return undefined
-    }
-
-    queueMicrotask(() => {
-      const openMs = Date.now()
-      const wallStart = resolveWallClockMs(raceStartedAt, updatedAt, openMs)
-      setNow(openMs)
-      setStartedAt((prev) => wallStart ?? prev ?? openMs)
-
-      if (import.meta.env.DEV) {
-        console.debug('[race-timer]', {
-          raceStartedAt,
-          updatedAt,
-          wallStart: wallStart != null ? new Date(wallStart).toISOString() : null,
-          elapsedSec:
-            wallStart != null ? Math.floor((openMs - wallStart) / 1000) : null,
-        })
-      }
-    })
-    return undefined
-  }, [active, raceKey, raceStartedAt, updatedAt])
+  const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
     if (!active) return undefined
     const id = setInterval(() => setNow(Date.now()), 200)
     queueMicrotask(() => setNow(Date.now()))
     return () => clearInterval(id)
-  }, [active])
+  }, [active, raceKey])
 
-  const elapsedMs =
-    active && startedAt != null && now != null
-      ? Math.max(0, now - startedAt)
-      : 0
+  const sampleMs = Number(raceElapsedMs)
+  const sampleAtMs =
+    typeof raceUpdatedAt === 'string' ? Date.parse(raceUpdatedAt) : NaN
+
+  const elapsedMs = useMemo(() => {
+    if (!active) return 0
+    if (!Number.isFinite(sampleMs) || sampleMs < 0) return 0
+    if (!Number.isFinite(sampleAtMs)) return sampleMs
+
+    // Age vs server-aligned now so client clock skew does not drift the race clock.
+    const age = Math.max(0, serverNowMs(now) - sampleAtMs)
+    if (age > RACE_SAMPLE_STALE_MS) return sampleMs
+    return sampleMs + age
+  }, [active, sampleMs, sampleAtMs, now])
+
   const totalSeconds = Math.floor(elapsedMs / 1000)
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
   const label = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 
-  return { label, totalSeconds }
+  return { label, totalSeconds, elapsedMs }
 }
 
 /**
- * Prototype potential-win flicker (random €0–1000 every few seconds).
- * @param {{ active: boolean, intervalMs?: number, maxAmount?: number }} args
+ * Potential win if the race finished with the current live leaderboard
+ * (`race_placements` → provisional 1st/2nd/3rd). Not max-odds; not final settlement.
+ *
+ * @param {ReadonlyArray<object> | null | undefined} bets
+ * @param {unknown} racePlacements
+ * @param {{
+ *   comboPick?: { kind?: string, key?: string } | null,
+ *   crazyComboPicks?: Record<string, unknown> | null,
+ * }} [meta]
+ * @returns {number}
  */
-export function useMockPotentialWin({
+export function potentialWinFromStandings(bets, racePlacements, meta = {}) {
+  if (!bets?.length) return 0
+  const winners = winnersFromPlacements(racePlacements)
+  if (!winners) return 0
+  const outcomes = resolveBetOutcomes(bets, winners, meta)
+  return outcomes.totalWin ?? 0
+}
+
+/**
+ * Live potential win from published bets × current `race_placements`.
+ * @param {{
+ *   active: boolean,
+ *   bets?: ReadonlyArray<object>,
+ *   racePlacements?: unknown,
+ *   comboPick?: { kind?: string, key?: string } | null,
+ *   crazyComboPicks?: Record<string, unknown> | null,
+ * }} args
+ */
+export function usePotentialWin({
   active,
-  intervalMs = 3000,
-  maxAmount = 1000,
+  bets = [],
+  racePlacements = null,
+  comboPick = null,
+  crazyComboPicks = null,
 }) {
-  const [amount, setAmount] = useState(0)
-
-  useEffect(() => {
-    if (!active) {
-      queueMicrotask(() => setAmount(0))
-      return undefined
-    }
-
-    function roll() {
-      const cents = Math.floor(Math.random() * (maxAmount * 100 + 1))
-      setAmount(cents / 100)
-    }
-
-    queueMicrotask(roll)
-    const id = setInterval(roll, intervalMs)
-    return () => clearInterval(id)
-  }, [active, intervalMs, maxAmount])
-
-  return amount
+  return useMemo(() => {
+    if (!active) return 0
+    return potentialWinFromStandings(bets, racePlacements, {
+      comboPick,
+      crazyComboPicks,
+    })
+  }, [active, bets, racePlacements, comboPick, crazyComboPicks])
 }

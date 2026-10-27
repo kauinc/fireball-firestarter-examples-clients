@@ -3,6 +3,7 @@ import { getDoofImageUrl } from '../../betting/assets/doofImages.js'
 import {
   doofFromIndex,
   formatFinishTimeLabel,
+  formatFinishTimeMsLabel,
 } from '../../betting/constants/doofIndex.js'
 import { resolveBetOutcomes } from './resolveBetOutcomes.js'
 
@@ -11,21 +12,42 @@ import { resolveBetOutcomes } from './resolveBetOutcomes.js'
  */
 
 /**
- * Parse Supabase `rounds.placements` into podium winners.
- * Expected shape: `[{ doof_index, finish_time }, …]` ordered 1st → 3rd.
+ * Parse Supabase round podium into winners.
+ * New contract: `placements` is ordered Doof indexes (0–17); times in
+ * `finisher_times_ms` match by array position.
+ *
+ * Also accepts legacy object rows `[{ doof_index, finish_time }, …]`.
  *
  * @param {unknown} placements
+ * @param {unknown} [finisherTimesMs]
  * @returns {PodiumWinner[] | null}
  */
-export function winnersFromPlacements(placements) {
+export function winnersFromPlacements(placements, finisherTimesMs = null) {
   if (!Array.isArray(placements) || placements.length === 0) return null
 
   /** @type {PodiumWinner[]} */
   const winners = []
   for (let i = 0; i < POSITION_OPTIONS.length; i += 1) {
     const entry = placements[i]
-    if (!entry || typeof entry !== 'object') return null
-    const doofIndex = Number(entry.doof_index)
+    let doofIndex
+    let timeLabel = null
+
+    if (typeof entry === 'number' || typeof entry === 'string') {
+      doofIndex = Number(entry)
+      const ms =
+        Array.isArray(finisherTimesMs) && finisherTimesMs[i] != null
+          ? Number(finisherTimesMs[i])
+          : NaN
+      timeLabel = Number.isFinite(ms)
+        ? formatFinishTimeMsLabel(ms)
+        : null
+    } else if (entry && typeof entry === 'object') {
+      doofIndex = Number(entry.doof_index)
+      timeLabel = formatFinishTimeLabel(entry.finish_time)
+    } else {
+      return null
+    }
+
     const doof = doofFromIndex(doofIndex)
     if (!doof) return null
     winners.push({
@@ -33,7 +55,7 @@ export function winnersFromPlacements(placements) {
       color: doof.color,
       pattern: doof.pattern,
       src: getDoofImageUrl(doof.color, doof.pattern),
-      timeLabel: formatFinishTimeLabel(entry.finish_time),
+      timeLabel,
       doofIndex,
     })
   }
@@ -41,15 +63,25 @@ export function winnersFromPlacements(placements) {
 }
 
 /**
+ * Podium winners from a full Supabase round row.
+ * @param {Record<string, unknown> | null | undefined} round
+ * @returns {PodiumWinner[] | null}
+ */
+export function winnersFromRound(round) {
+  if (!round) return null
+  return winnersFromPlacements(round.placements, round.finisher_times_ms)
+}
+
+/**
  * True when a round row has usable race results.
  * @param {Record<string, unknown> | null | undefined} round
  */
 export function roundHasResults(round) {
-  return Boolean(winnersFromPlacements(round?.placements))
+  return Boolean(winnersFromRound(round))
 }
 
 /**
- * Settlement from a Supabase round row (placements + optional winner_doof_index).
+ * Settlement from a Supabase round row (placements + finisher_times_ms).
  *
  * @param {Record<string, unknown> | null | undefined} round
  * @param {{
@@ -62,22 +94,8 @@ export function settlementFromRound(
   round,
   { bets = [], comboPick = null, crazyComboPicks = null } = {},
 ) {
-  const winners = winnersFromPlacements(round?.placements)
+  const winners = winnersFromRound(round)
   if (!winners) return null
-
-  // Prefer placements[0]; fall back to winner_doof_index if it disagrees (log only).
-  const declaredWinner = Number(round?.winner_doof_index)
-  if (
-    Number.isInteger(declaredWinner) &&
-    winners[0]?.doofIndex !== declaredWinner &&
-    import.meta.env.DEV
-  ) {
-    console.warn('[settlement] winner_doof_index mismatch', {
-      winner_doof_index: declaredWinner,
-      placements0: winners[0]?.doofIndex,
-      round_number: round?.round_number,
-    })
-  }
 
   const outcomes = resolveBetOutcomes(bets, winners, {
     comboPick,

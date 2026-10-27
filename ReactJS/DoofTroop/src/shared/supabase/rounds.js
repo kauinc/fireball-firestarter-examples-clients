@@ -1,47 +1,81 @@
-import { supabase } from './client.js'
+import { supabase, SUPABASE_NOT_CONFIGURED_MESSAGE } from './client.js'
 import { RoundState } from '../../domain/round/roundStates.js'
+import { DOOF_CHANNEL_ID } from '../config/supabase.js'
 
 const ROUND_COLUMNS = [
   'id',
-  'round_number',
+  'channel_id',
   'status',
-  'created_at',
-  'updated_at',
-  'betting_closed_at',
-  'race_started_at',
-  'finished_at',
+  'presentation_phase',
+  'track_id',
+  'track_name',
+  'level_name',
+  'weather',
+  'time_of_day',
+  'race_placements',
   'placements',
-  'winner_doof_index',
-  'race_duration',
-  'result_status',
-  'runtime_node_id',
+  'finisher_times_ms',
+  'race_elapsed_ms',
+  'race_updated_at',
+  'betting_deadline',
+  'podium_deadline',
+  'expires_at',
+  'created_at',
+  'betting_opened_at',
+  'betting_closed_at',
+  'countdown_started_at',
+  'race_started_at',
+  'results_recorded_at',
+  'podium_entered_at',
+  'finished_at',
+  'cancelled_at',
+  'cancellation_reason',
+  'recovery_required',
+  'recovery_reason',
+  'recovery_detected_at',
+  'round_version',
+  'updated_at',
+  'protocol_version',
+  'profile_version',
+  'game_rules_version',
+  'test_money_only',
 ].join(',')
 
 const REALTIME_CHANNEL_PREFIX = 'rounds_realtime'
 
-/** Later statuses win for the same round id (guards stale Realtime/REST). */
+const RESULT_STATUSES = Object.freeze([
+  RoundState.RESULTS_RECORDED,
+  RoundState.FINISHED,
+])
+
+/**
+ * Later statuses win for the same round id when `round_version` is missing
+ * (guards stale Realtime/REST).
+ */
 const STATUS_RANK = Object.freeze({
-  [RoundState.ROUND_NONE]: 0,
-  [RoundState.ROUND_CREATED]: 1,
+  [RoundState.CREATED]: 1,
   [RoundState.BETTING_OPEN]: 2,
   [RoundState.BETTING_CLOSED]: 3,
-  [RoundState.TRACK_READY]: 4,
+  [RoundState.COUNTDOWN]: 4,
   [RoundState.RACE_RUNNING]: 5,
-  [RoundState.RESULTS_SENT]: 6,
-  [RoundState.ROUND_COMPLETED]: 7,
-  [RoundState.ROUND_CANCELLED_OPERATOR]: 7,
-  [RoundState.ROUND_CANCELLED_RUNTIME]: 7,
+  [RoundState.RESULTS_RECORDED]: 6,
+  [RoundState.FINISHED]: 7,
+  [RoundState.CANCELLED]: 7,
 })
 
 /**
- * Latest round by round_number (Unreal writes here).
+ * Latest round for the configured development channel.
  * @returns {Promise<{ data: Record<string, unknown> | null, error: Error | null }>}
  */
 export async function fetchLatestRound() {
+  if (!supabase) {
+    return { data: null, error: new Error(SUPABASE_NOT_CONFIGURED_MESSAGE) }
+  }
   const { data, error } = await supabase
     .from('rounds')
     .select(ROUND_COLUMNS)
-    .order('round_number', { ascending: false })
+    .eq('channel_id', DOOF_CHANNEL_ID)
+    .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
@@ -56,11 +90,16 @@ export async function fetchLatestRound() {
  * @returns {Promise<{ data: Record<string, unknown>[], error: Error | null }>}
  */
 export async function fetchRecentResultRounds(limit = 10) {
+  if (!supabase) {
+    return { data: [], error: new Error(SUPABASE_NOT_CONFIGURED_MESSAGE) }
+  }
   const { data, error } = await supabase
     .from('rounds')
     .select(ROUND_COLUMNS)
-    .not('winner_doof_index', 'is', null)
-    .order('round_number', { ascending: false })
+    .eq('channel_id', DOOF_CHANNEL_ID)
+    .in('status', [...RESULT_STATUSES])
+    .not('placements', 'is', null)
+    .order('created_at', { ascending: false })
     .limit(limit)
 
   return { data: data ?? [], error: error ?? null }
@@ -78,11 +117,32 @@ function updatedAtMs(row) {
   return Number.isFinite(ms) ? ms : 0
 }
 
+function raceUpdatedAtMs(row) {
+  const raw = row?.race_updated_at
+  if (typeof raw !== 'string') return 0
+  const ms = Date.parse(raw)
+  return Number.isFinite(ms) ? ms : 0
+}
+
+function roundVersion(row) {
+  const v = Number(row?.round_version)
+  return Number.isFinite(v) ? v : -1
+}
+
+function createdAtMs(row) {
+  const raw = row?.created_at
+  if (typeof raw !== 'string') return 0
+  const ms = Date.parse(raw)
+  return Number.isFinite(ms) ? ms : 0
+}
+
 /**
  * Whether `next` should replace `current` as the active round snapshot.
- * - Newer round_number wins.
- * - Same id: prefer later status rank, then later updated_at.
- * - Malformed round_number: reject (do not overwrite a valid current).
+ * - Newer created_at (different id) wins.
+ * - Same id: `round_version` is authoritative when both rows carry it (the
+ *   server may legitimately move status backwards, e.g. recovery); otherwise
+ *   later status rank wins. Ties fall back to race_updated_at / updated_at so
+ *   leaderboard progress is not discarded.
  *
  * @param {Record<string, unknown> | null | undefined} next
  * @param {Record<string, unknown> | null | undefined} current
@@ -92,20 +152,31 @@ export function shouldApplyRound(next, current) {
   if (!current?.id) return true
 
   if (next.id === current.id) {
+    const nextVer = roundVersion(next)
+    const curVer = roundVersion(current)
+    if (nextVer >= 0 && curVer >= 0 && nextVer !== curVer) {
+      return nextVer > curVer
+    }
+
     const nextRank = statusRank(next.status)
     const curRank = statusRank(current.status)
     if (nextRank !== curRank) return nextRank >= curRank
+
+    const nextRace = raceUpdatedAtMs(next)
+    const curRace = raceUpdatedAtMs(current)
+    if (nextRace !== curRace) return nextRace >= curRace
+
     return updatedAtMs(next) >= updatedAtMs(current)
   }
 
-  const nextNum = Number(next.round_number)
-  const curNum = Number(current.round_number)
-  if (Number.isFinite(nextNum) && Number.isFinite(curNum)) {
-    return nextNum >= curNum
+  // Different round: prefer the newer created_at; never replace with unknown age.
+  const nextCreated = createdAtMs(next)
+  const curCreated = createdAtMs(current)
+  if (nextCreated > 0 && curCreated > 0) {
+    return nextCreated >= curCreated
   }
 
-  // Do not replace a known round with a malformed row.
-  return false
+  return nextCreated > 0
 }
 
 /** @type {{
@@ -129,7 +200,12 @@ function ensureRoundsRealtime() {
     .channel(`${REALTIME_CHANNEL_PREFIX}_${roundsRealtimeSeq}`)
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'rounds' },
+      {
+        event: '*',
+        schema: 'public',
+        table: 'rounds',
+        filter: `channel_id=eq.${DOOF_CHANNEL_ID}`,
+      },
       (payload) => {
         const event = {
           eventType: payload.eventType,
@@ -147,7 +223,7 @@ function ensureRoundsRealtime() {
 }
 
 /**
- * Realtime INSERT/UPDATE on `public.rounds` (shared channel, no poll).
+ * Realtime INSERT/UPDATE on `public.rounds` for the configured channel.
  * Safe to call from multiple hooks — listeners are multiplexed.
  *
  * @param {(payload: { eventType: string, new: Record<string, unknown> | null }) => void} onChange
@@ -155,6 +231,20 @@ function ensureRoundsRealtime() {
  * @returns {{ unsubscribe: () => void }}
  */
 export function subscribeToRounds(onChange, onStatus) {
+  if (!supabase) {
+    let active = true
+    queueMicrotask(() => {
+      if (active) {
+        onStatus?.('CHANNEL_ERROR', new Error(SUPABASE_NOT_CONFIGURED_MESSAGE))
+      }
+    })
+    return {
+      unsubscribe() {
+        active = false
+      },
+    }
+  }
+
   const shared = ensureRoundsRealtime()
   shared.onChange.add(onChange)
   if (onStatus) shared.onStatus.add(onStatus)

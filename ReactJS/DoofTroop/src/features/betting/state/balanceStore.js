@@ -8,8 +8,12 @@ import { roundMoney } from '../utils/chipMath.js'
  * Shared across betting / race / settlement overlays.
  */
 let balance = DEFAULT_BALANCE
-/** Settlement round ids already credited — avoid double-pay on re-render. */
-const creditedWins = new Set()
+/**
+ * Win amount credited per settled round id. A round is closed exactly once:
+ * either settled (this map) or refunded (`refundedStakes`) — never both.
+ * @type {Map<string, number>}
+ */
+const creditedWins = new Map()
 /** Cancelled round ids already refunded. */
 const refundedStakes = new Set()
 const listeners = new Set()
@@ -42,32 +46,40 @@ export function adjustBalance(delta) {
 }
 
 /**
- * Credit a settlement win once per round.
+ * Settle a round's win. Re-settling the same round (e.g. corrected
+ * placements) applies only the difference, so the wallet always matches the
+ * latest settlement. No-op for rounds already refunded as cancelled.
  * @param {string | number | null | undefined} roundId
- * @param {number} amount
- * @returns {boolean} true if credited
+ * @param {number} amount - total win for the round (0 when nothing won)
+ * @returns {boolean} true if the balance changed
  */
-export function creditWinOnce(roundId, amount) {
-  if (roundId == null || !(amount > 0)) return false
+export function settleRoundWin(roundId, amount) {
+  if (roundId == null) return false
   const key = String(roundId)
-  if (creditedWins.has(key)) return false
-  creditedWins.add(key)
-  balance = roundMoney(balance + amount)
+  if (refundedStakes.has(key)) return false
+  const next = amount > 0 ? roundMoney(amount) : 0
+  const prev = creditedWins.get(key) ?? 0
+  creditedWins.set(key, next)
+  const delta = roundMoney(next - prev)
+  if (delta === 0) return false
+  balance = Math.max(0, roundMoney(balance + delta))
   emit()
   return true
 }
 
 /**
- * Whether a settlement win was already credited for this round.
+ * Win amount already credited for this round (0 when none).
  * @param {string | number | null | undefined} roundId
+ * @returns {number}
  */
-export function wasWinCredited(roundId) {
-  if (roundId == null) return false
-  return creditedWins.has(String(roundId))
+export function creditedWinFor(roundId) {
+  if (roundId == null) return 0
+  return creditedWins.get(String(roundId)) ?? 0
 }
 
 /**
  * Refund stake once when a round is cancelled (stake was deducted at place).
+ * No-op for rounds that were already settled.
  * @param {string | number | null | undefined} roundId
  * @param {number} amount
  * @returns {boolean}
@@ -75,7 +87,7 @@ export function wasWinCredited(roundId) {
 export function refundStakeOnce(roundId, amount) {
   if (roundId == null || !(amount > 0)) return false
   const key = String(roundId)
-  if (refundedStakes.has(key)) return false
+  if (refundedStakes.has(key) || creditedWins.has(key)) return false
   refundedStakes.add(key)
   balance = roundMoney(balance + amount)
   emit()

@@ -1,4 +1,4 @@
-import { useHudViewportContext } from '../HudViewportContext.jsx'
+import { useHudViewportContext } from '../hudViewportContextValue.js'
 import turnPhoneIcon from '../../../assets/ui/TurnPhone.png'
 import './rotate-phone.css'
 

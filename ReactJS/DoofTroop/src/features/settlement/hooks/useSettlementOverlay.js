@@ -1,26 +1,30 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { RoundState } from '../../../domain/round/index.js'
 import {
   roundHasResults,
   settlementFromRound,
 } from '../utils/settlementFromRound.js'
 
-/** Keep RESULTS UI visible long enough for chip + count-up + history animations. */
-export const SETTLEMENT_MIN_VISIBLE_MS = 9000
-
-/** Next lifecycle stages that must clear settlement immediately. */
+/** New round / pre-results stages — hide settlement immediately. */
 const CLEARS_SETTLEMENT = new Set([
+  RoundState.CREATED,
   RoundState.BETTING_OPEN,
   RoundState.BETTING_CLOSED,
-  RoundState.TRACK_READY,
+  RoundState.COUNTDOWN,
   RoundState.RACE_RUNNING,
-  RoundState.ROUND_CREATED,
+])
+
+/** Statuses that show (or keep) the settlement HUD for the current round. */
+const SETTLEMENT_STATUSES = new Set([
+  RoundState.RESULTS_RECORDED,
+  RoundState.FINISHED,
 ])
 
 /**
- * Settlement HUD when `rounds.status === RESULTS_SENT` (latched briefly after).
- * Latch never spans into the next betting/race overlay.
- * Winners come from Supabase `rounds.placements` (snapshotted for the latch window).
+ * Settlement HUD from `RESULTS_RECORDED` through `FINISHED`, until the next
+ * round lifecycle starts (`CREATED` / betting / race). Snapshot survives the
+ * RESULTS→FINISHED transition so placements stay on screen between rounds.
+ *
  * @param {{
  *   status: string | null,
  *   round?: Record<string, unknown> | null,
@@ -37,84 +41,76 @@ export function useSettlementOverlayState({
   crazyComboPicks = null,
 }) {
   const roundId = round?.id != null ? String(round.id) : null
-  const isResults = status === RoundState.RESULTS_SENT && Boolean(roundId)
-  const nextPhaseStarted = status != null && CLEARS_SETTLEMENT.has(status)
+  const hasLiveResults = Boolean(roundId && roundHasResults(round))
+  const isSettlementStatus =
+    status != null && SETTLEMENT_STATUSES.has(status) && hasLiveResults
+  const nextRoundStarted = status != null && CLEARS_SETTLEMENT.has(status)
 
   const [latchedRoundId, setLatchedRoundId] = useState(null)
-  /** Frozen round row with placements — survives status leaving RESULTS_SENT. */
+  /** Frozen round row with placements — survives RESULTS→FINISHED. */
   const [resultsRound, setResultsRound] = useState(null)
-  const latchUntilRef = useRef(0)
 
   useEffect(() => {
-    // Arm latch once per RESULTS round — do not refresh latchUntil on every render.
-    if (isResults && roundId && roundHasResults(round)) {
-      if (latchedRoundId === roundId) return undefined
+    if (isSettlementStatus && roundId) {
+      if (latchedRoundId === roundId && resultsRound) {
+        // Refresh snapshot if live row still has results (e.g. times filled in).
+        if (roundHasResults(round) && resultsRound !== round) {
+          const id = window.setTimeout(() => setResultsRound(round), 0)
+          return () => window.clearTimeout(id)
+        }
+        return undefined
+      }
       const armId = window.setTimeout(() => {
         setLatchedRoundId(roundId)
-        latchUntilRef.current = Date.now() + SETTLEMENT_MIN_VISIBLE_MS
         setResultsRound(round)
       }, 0)
       return () => window.clearTimeout(armId)
     }
 
-    if (nextPhaseStarted || !latchedRoundId) {
-      if (latchedRoundId || resultsRound) {
-        const clearId = window.setTimeout(() => {
-          setLatchedRoundId(null)
-          latchUntilRef.current = 0
-          setResultsRound(null)
-        }, 0)
-        return () => window.clearTimeout(clearId)
-      }
-      return undefined
-    }
-
-    // Drop latch if Supabase already moved to a newer round id.
-    if (roundId && roundId !== latchedRoundId) {
+    // Next round created / betting / race — clear immediately.
+    if (nextRoundStarted) {
+      if (!latchedRoundId && !resultsRound) return undefined
       const clearId = window.setTimeout(() => {
         setLatchedRoundId(null)
-        latchUntilRef.current = 0
         setResultsRound(null)
       }, 0)
       return () => window.clearTimeout(clearId)
     }
 
-    const remaining = latchUntilRef.current - Date.now()
-    if (remaining <= 0) {
+    // Different round id without a clear status (e.g. late snapshot) — drop.
+    if (
+      latchedRoundId &&
+      roundId &&
+      roundId !== latchedRoundId &&
+      !isSettlementStatus
+    ) {
       const clearId = window.setTimeout(() => {
         setLatchedRoundId(null)
-        latchUntilRef.current = 0
         setResultsRound(null)
       }, 0)
       return () => window.clearTimeout(clearId)
     }
 
-    const id = window.setTimeout(() => {
-      setLatchedRoundId(null)
-      latchUntilRef.current = 0
-      setResultsRound(null)
-    }, remaining)
-    return () => window.clearTimeout(id)
+    return undefined
   }, [
-    isResults,
-    nextPhaseStarted,
+    isSettlementStatus,
+    nextRoundStarted,
     round,
     roundId,
     latchedRoundId,
     resultsRound,
   ])
 
-  const activeRoundId = isResults
-    ? roundId
-    : nextPhaseStarted
-      ? null
+  const activeRoundId = nextRoundStarted
+    ? null
+    : isSettlementStatus
+      ? roundId
       : latchedRoundId
 
-  // Prefer live RESULTS_SENT row; fall back to snapshot while latched.
   const sourceRound =
     activeRoundId == null
       ? null
-      : isResults &&
+      : isSettlementStatus &&
           roundHasResults(round) &&
           String(round.id) === activeRoundId
         ? round

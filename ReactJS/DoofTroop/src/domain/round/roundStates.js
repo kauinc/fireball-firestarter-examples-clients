@@ -1,17 +1,16 @@
 /**
- * Doof Troop round lifecycle as written by Unreal into Supabase `rounds.status`.
+ * Doof Troop round lifecycle as written into Supabase `rounds.status`.
  * LiveKit carries A/V only — `status` is the source of truth for overlays.
- * Do not infer overlay screens from timestamps.
+ * Do not infer overlay screens from timestamps alone.
+ * `presentation_phase` may guide presentation, but bet admission uses status + deadline.
  */
 export const RoundState = Object.freeze({
-  ROUND_NONE: 'ROUND_NONE',
-  ROUND_CREATED: 'ROUND_CREATED',
+  CREATED: 'CREATED',
   BETTING_OPEN: 'BETTING_OPEN',
   BETTING_CLOSED: 'BETTING_CLOSED',
-  TRACK_READY: 'TRACK_READY',
+  COUNTDOWN: 'COUNTDOWN',
   RACE_RUNNING: 'RACE_RUNNING',
-  RESULTS_SENT: 'RESULTS_SENT',
-  ROUND_COMPLETED: 'ROUND_COMPLETED',
-  ROUND_CANCELLED_OPERATOR: 'ROUND_CANCELLED_OPERATOR',
-  ROUND_CANCELLED_RUNTIME: 'ROUND_CANCELLED_RUNTIME',
+  RESULTS_RECORDED: 'RESULTS_RECORDED',
+  FINISHED: 'FINISHED',
+  CANCELLED: 'CANCELLED',
 })

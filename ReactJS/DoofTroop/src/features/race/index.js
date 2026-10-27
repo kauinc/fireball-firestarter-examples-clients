@@ -2,5 +2,6 @@ export { RaceOverlay } from './components/RaceOverlay.jsx'
 export {
   useRaceOverlayState,
   useRaceElapsed,
-  useMockPotentialWin,
+  usePotentialWin,
+  potentialWinFromStandings,
 } from './hooks/useRaceOverlay.js'

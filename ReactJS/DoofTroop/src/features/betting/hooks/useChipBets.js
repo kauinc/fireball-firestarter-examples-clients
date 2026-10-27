@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { adjustBalance } from '../state/balanceStore.js'
 import {
   clearCarryForwardSeed,
-  getCarryForwardBets,
   markCarryForwardCharged,
   wasCarryForwardCharged,
 } from '../state/carryForwardBetsStore.js'
@@ -43,10 +42,9 @@ function nextBetId() {
 
 /**
  * Re-seed previous settlement winners onto a fresh betting session.
- * @param {string | null | undefined} roundId
+ * @param {{ bets?: ReadonlyArray<Record<string, unknown>> } | null | undefined} carry
  */
-function seedBetsFromCarryForward(roundId) {
-  const carry = getCarryForwardBets(roundId)
+function seedBetsFromCarryForward(carry) {
   if (!carry?.bets?.length) return []
   return carry.bets.map((bet) => ({
     id: nextBetId(),
@@ -92,7 +90,8 @@ function snapshotMeta(comboPick, crazyComboPicks) {
  * @param {boolean} [crazyCombo]
  * @param {{ kind: string, key: string } | null} [comboPick]
  * @param {Record<string, { color: string, pattern: string } | null> | null} [crazyComboPicks]
- * @param {{ onCarryForwardRejected?: () => void, onUndoMeta?: (meta: { comboPick: unknown, crazyComboPicks: unknown }) => void }} [options]
+ * @param {{ carry?: { bets?: ReadonlyArray<Record<string, unknown>> } | null, onCarryForwardRejected?: () => void, onUndoMeta?: (meta: { comboPick: unknown, crazyComboPicks: unknown }) => void }} [options]
+ *   `carry` — carry-forward payload already resolved for this round (or null).
  */
 export function useChipBets(
   _selectedPositions,
@@ -102,8 +101,8 @@ export function useChipBets(
   crazyComboPicks = null,
   options = {},
 ) {
-  const { onCarryForwardRejected, onUndoMeta } = options
-  const [bets, setBets] = useState(() => seedBetsFromCarryForward(roundId))
+  const { carry = null, onCarryForwardRejected, onUndoMeta } = options
+  const [bets, setBets] = useState(() => seedBetsFromCarryForward(carry))
   const [canUndo, setCanUndo] = useState(false)
   const [carryRejected, setCarryRejected] = useState(false)
   const canRepeat = useCanRepeatLastBets()

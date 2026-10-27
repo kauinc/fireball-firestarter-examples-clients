@@ -1,3 +1,4 @@
+/** Color order matches Unreal doofIndex % 6 (Magenta is labeled Pink in UI). */
 export const DOOF_COLORS = Object.freeze([
   'Red',
   'Yellow',
@@ -7,8 +8,10 @@ export const DOOF_COLORS = Object.freeze([
   'Pink',
 ])
 
-export const DOOF_PATTERNS = Object.freeze(['Stripes', 'Solid', 'Dots'])
+/** Pattern order matches floor(doofIndex / 6): 0–5 Dots, 6–11 Solid, 12–17 Stripes. */
+export const DOOF_PATTERNS = Object.freeze(['Dots', 'Solid', 'Stripes'])
 
+/** Accessory order matches (doofIndex + patternIndex) % 2: 0 Hat, 1 Glasses. */
 export const DOOF_ACCESSORIES = Object.freeze(['Hats', 'Glasses'])
 
 /** Allowed stake steps for +/- . */
