@@ -144,6 +144,11 @@ function ensureStarted() {
           finisher_times_ms: next.finisher_times_ms ?? null,
           race_elapsed_ms: next.race_elapsed_ms ?? null,
           race_updated_at: next.race_updated_at ?? null,
+          results_recorded_at: next.results_recorded_at ?? null,
+          podium_transition_started_at:
+            next.podium_transition_started_at ?? null,
+          podium_entered_at: next.podium_entered_at ?? null,
+          finished_at: next.finished_at ?? null,
           betting_deadline: next.betting_deadline ?? null,
           created_at: next.created_at ?? null,
           updated_at: next.updated_at ?? null,

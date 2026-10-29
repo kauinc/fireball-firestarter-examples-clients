@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { RoundState } from '../../../domain/round/index.js'
+import { shouldShowRaceOverlay } from '../../../domain/round/index.js'
 import { serverNowMs } from '../../../shared/supabase/roundTimestamps.js'
 import {
   winnersFromPlacements,
@@ -10,13 +10,14 @@ import { resolveBetOutcomes } from '../../settlement/utils/resolveBetOutcomes.js
 const RACE_SAMPLE_STALE_MS = 4000
 
 /**
- * Race HUD visibility from `rounds.status`.
- * RACE_RUNNING only (COUNTDOWN stays clear for Unreal countdown).
+ * Race HUD visibility from `rounds.status` (+ podium gate).
+ * Visible during RACE_RUNNING, and while RESULTS_RECORDED until the podium
+ * presentation starts (COUNTDOWN stays clear). Never overlaps winners.
  *
  * @param {{ status: string | null, round?: Record<string, unknown> | null }} args
  */
 export function useRaceOverlayState({ status, round = null }) {
-  const isRace = status === RoundState.RACE_RUNNING
+  const isRace = shouldShowRaceOverlay(status, round)
   const raceKey = `${round?.id ?? ''}:${status ?? ''}`
 
   return {
