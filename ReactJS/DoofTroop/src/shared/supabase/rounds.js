@@ -26,6 +26,7 @@ const ROUND_COLUMNS = [
   'countdown_started_at',
   'race_started_at',
   'results_recorded_at',
+  'podium_transition_started_at',
   'podium_entered_at',
   'finished_at',
   'cancelled_at',

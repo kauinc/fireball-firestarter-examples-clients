@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { RoundState } from '../../../domain/round/index.js'
+import {
+  RoundState,
+  shouldClearSettlementLatch,
+  shouldShowWinners,
+} from '../../../domain/round/index.js'
 import {
   roundHasResults,
   settlementFromRound,
@@ -14,16 +18,12 @@ const CLEARS_SETTLEMENT = new Set([
   RoundState.RACE_RUNNING,
 ])
 
-/** Statuses that show (or keep) the settlement HUD for the current round. */
-const SETTLEMENT_STATUSES = new Set([
-  RoundState.RESULTS_RECORDED,
-  RoundState.FINISHED,
-])
-
 /**
- * Settlement HUD from `RESULTS_RECORDED` through `FINISHED`, until the next
- * round lifecycle starts (`CREATED` / betting / race). Snapshot survives the
- * RESULTS→FINISHED transition so placements stay on screen between rounds.
+ * Settlement / winner HUD when results are accepted and podium presentation
+ * has started (`podium_transition_started_at` or `podium_entered_at`).
+ * Snapshot latches only after that gate so recovery FINISHED without podium
+ * never mounts winners; clears when the next round lifecycle starts, or when
+ * the live row drops podium stamps (back to race hold).
  *
  * @param {{
  *   status: string | null,
@@ -42,16 +42,17 @@ export function useSettlementOverlayState({
 }) {
   const roundId = round?.id != null ? String(round.id) : null
   const hasLiveResults = Boolean(roundId && roundHasResults(round))
-  const isSettlementStatus =
-    status != null && SETTLEMENT_STATUSES.has(status) && hasLiveResults
+  const showWinners =
+    Boolean(roundId) && shouldShowWinners(round) && hasLiveResults
   const nextRoundStarted = status != null && CLEARS_SETTLEMENT.has(status)
+  const revokePodiumLatch = shouldClearSettlementLatch(status, round)
 
   const [latchedRoundId, setLatchedRoundId] = useState(null)
-  /** Frozen round row with placements — survives RESULTS→FINISHED. */
+  /** Frozen round row with placements — survives podium → FINISHED. */
   const [resultsRound, setResultsRound] = useState(null)
 
   useEffect(() => {
-    if (isSettlementStatus && roundId) {
+    if (showWinners && roundId) {
       if (latchedRoundId === roundId && resultsRound) {
         // Refresh snapshot if live row still has results (e.g. times filled in).
         if (roundHasResults(round) && resultsRound !== round) {
@@ -77,12 +78,23 @@ export function useSettlementOverlayState({
       return () => window.clearTimeout(clearId)
     }
 
+    // Podium stamps cleared / recovery FINISHED without podium — drop latch so
+    // race-hold and settlement cannot mount together.
+    if (revokePodiumLatch) {
+      if (!latchedRoundId && !resultsRound) return undefined
+      const clearId = window.setTimeout(() => {
+        setLatchedRoundId(null)
+        setResultsRound(null)
+      }, 0)
+      return () => window.clearTimeout(clearId)
+    }
+
     // Different round id without a clear status (e.g. late snapshot) — drop.
     if (
       latchedRoundId &&
       roundId &&
       roundId !== latchedRoundId &&
-      !isSettlementStatus
+      !showWinners
     ) {
       const clearId = window.setTimeout(() => {
         setLatchedRoundId(null)
@@ -93,24 +105,26 @@ export function useSettlementOverlayState({
 
     return undefined
   }, [
-    isSettlementStatus,
+    showWinners,
     nextRoundStarted,
+    revokePodiumLatch,
     round,
     roundId,
     latchedRoundId,
     resultsRound,
   ])
 
-  const activeRoundId = nextRoundStarted
-    ? null
-    : isSettlementStatus
-      ? roundId
-      : latchedRoundId
+  const activeRoundId =
+    nextRoundStarted || revokePodiumLatch
+      ? null
+      : showWinners
+        ? roundId
+        : latchedRoundId
 
   const sourceRound =
     activeRoundId == null
       ? null
-      : isSettlementStatus &&
+      : showWinners &&
           roundHasResults(round) &&
           String(round.id) === activeRoundId
         ? round

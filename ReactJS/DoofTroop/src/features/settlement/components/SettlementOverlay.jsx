@@ -34,7 +34,9 @@ import '../../betting/styles/portrait.css'
 import '../styles/settlement.css'
 
 /**
- * Game settlement HUD — RESULTS_RECORDED through FINISHED, until the next round.
+ * Game settlement HUD — shown once results are accepted and podium presentation
+ * has started (`podium_transition_started_at` / `podium_entered_at`), until the
+ * next round. Not triggered by FINISHED alone.
  * Chips resolve roulette-style; podium icons fly into HISTORY (landscape only).
  * Wallet credit happens in `reconcileRoundWallet` (round feed); this overlay only
  * defers the displayed balance until the count-up finishes.
