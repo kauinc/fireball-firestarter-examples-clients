@@ -19,6 +19,8 @@ namespace SlotsSample
 
         private SlotStatus _status = SlotStatus.None;
         private SlotsGameState _gameState = null;
+        
+        private readonly long[] _bets = new long[]{ 50, 100, 200, 500, 1000, 2000 };
 
         public SlotLogic(
             IFireball fireball,
@@ -34,6 +36,8 @@ namespace SlotsSample
             Initialize();
 
             _view.OnClickSpin += OnSpinClicked;
+            _view.OnClickBetDecrease += OnBetDecreaseClicked;
+            _view.OnClickBetIncrease += OnBetIncreaseClicked;
             _view.OnSpinStopped += OnSpinStopped;
         }
 
@@ -56,7 +60,7 @@ namespace SlotsSample
             _fireball.Init(_settings,
                 (session) =>
                 {
-                    _fireball.Authorize<AuthRequest, AuthResponse<SlotsGameState>>(new AuthRequest(_fireball.CurrentSession),
+                    _fireball.Authorize<AuthRequest, AuthResponse<SlotsGameState>>(new AuthRequest(session),
                         PrepareSlots,
                         (error) => 
                             _view.ShowError($"Authorization failed:\n{error.Reason}"));
@@ -69,11 +73,15 @@ namespace SlotsSample
         {
             _gameState = response.GameState;
             
+            _gameState.Currency = response.Currency;
+            _gameState.Balance = response.Balance;
+            _gameState.WinAmount = 0;
+            
             Debug.Log($"Bet = {_gameState.BetAmount} {response.Currency}");
+            Debug.Log($"Win = {_gameState.WinAmount} {response.Currency}");
             Debug.Log($"Balance = {response.Balance} {response.Currency}");
             
-            _view.UpdateBet(_gameState.BetAmount, response.Currency);
-            _view.UpdateBalance(response.Balance, response.Currency);
+            _view.UpdateBalance(_gameState);
             
             SetStatus(SlotStatus.ReadyToPlay);
         }
@@ -90,7 +98,9 @@ namespace SlotsSample
             }
             
             SetStatus(SlotStatus.Spinning);
-            
+
+            _gameState.IsSpinning = true;
+            _gameState.WinAmount = 0;
             _gameState.Balance -= _gameState.BetAmount;
             _view.UpdateBalance(_gameState);
             
@@ -102,27 +112,24 @@ namespace SlotsSample
 
         private void OnSpinResult(SpinResponse result)
         {
-            var isWin = result.WinAmount > 0;
-            
+            _gameState.IsSpinning = false;
             _gameState.Symbols = result.Symbols;
-            _gameState.Balance = result.Balance;
             _gameState.WinAmount = result.WinAmount;
+            _gameState.Balance = result.Balance;
             
             _view.StopSpin(result.Symbols);
-            SetStatus(isWin ? SlotStatus.Win : SlotStatus.Lose);
         }
 
         private void OnSpinError(ErrorResponse error)
         {
             var symbols = GetRandomLoseResult(_view.ReelsCount);
 
+            _gameState.IsSpinning = false;
             _gameState.Symbols = symbols;
             _gameState.WinAmount = 0;
             _gameState.Balance += _gameState.BetAmount;
             
             _view.StopSpin(symbols);
-            SetStatus(SlotStatus.Lose);
-
             _view.ShowError(error.Reason);
         }
         
@@ -132,9 +139,33 @@ namespace SlotsSample
             Debug.Log($"Symbols: [ {string.Join(" | ", _gameState.Symbols.Select(s => s.ToString()))} ]");
             Debug.Log($"Win = {_gameState.WinAmount} {_gameState.Currency}");
             Debug.Log($"Balance = {_gameState.Balance} {_gameState.Currency}");
+
+            var isWin = _gameState.WinAmount > 0;
             _view.UpdateBalance(_gameState);
+            SetStatus(isWin ? SlotStatus.Win : SlotStatus.Lose);
+
+            if (isWin)
+            {
+                _view.StartWin(_gameState.Symbols[0]);
+            }
+        }
+        
+        private void OnBetDecreaseClicked()
+        {
+            SetBet(Array.IndexOf(_bets, _gameState.BetAmount) - 1);
+        }
+        
+        private void OnBetIncreaseClicked()
+        {
+            SetBet(Array.IndexOf(_bets, _gameState.BetAmount) + 1);
         }
 
+        private void SetBet(int betIndex)
+        {
+            _gameState.BetAmount = _bets[Mathf.Clamp(betIndex, 0, _bets.Length - 1)];
+            _view.SetBet(_gameState.BetAmount, _gameState.Currency);
+        }
+        
         private void SetStatus(SlotStatus status)
         {
             _status = status;

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections;
 using Fireball.Game.Client.Tools;
 using UnityEngine;
@@ -14,9 +15,13 @@ namespace SlotsSample
         [SerializeField] private ReelView[] _reels;
 
         [Header("UI")] 
+        [SerializeField] private Image _loadingImage;
         [SerializeField] private Button _spinButton;
+        [SerializeField] private Button _betDecreaseButton;
+        [SerializeField] private Button _betIncreaseButton;
         [SerializeField] private Text _resultText;
         [SerializeField] private Text _betText;
+        [SerializeField] private Text _winText;
         [SerializeField] private Text _balanceText;
 
         [Header("Settings")] 
@@ -27,6 +32,8 @@ namespace SlotsSample
 
         public event Action OnClickSpin;
         public event Action OnSpinStopped;
+        public event Action OnClickBetDecrease;
+        public event Action OnClickBetIncrease;
         
         private Coroutine _spinStartCoroutine;
         private Coroutine _spinStopCoroutine;
@@ -34,18 +41,25 @@ namespace SlotsSample
         private void Awake()
         {
             _spinButton.onClick.AddListener(() => OnClickSpin?.Invoke());
+            _betDecreaseButton.onClick.AddListener(() => OnClickBetDecrease?.Invoke());
+            _betIncreaseButton.onClick.AddListener(() => OnClickBetIncrease?.Invoke());
         }
 
         private void OnDestroy()
         {
             _spinButton.onClick.RemoveAllListeners();
+            _betDecreaseButton.onClick.RemoveAllListeners();
+            _betIncreaseButton.onClick.RemoveAllListeners();
         }
 
         public void UpdateView(SlotStatus status, string message = null)
         {
+            _loadingImage.gameObject.SetActive(status == SlotStatus.Loading);
             _slots.gameObject.SetActive(status > SlotStatus.Loading);
             _spinButton.gameObject.SetActive(status > SlotStatus.Loading);
             _spinButton.interactable = status >= SlotStatus.ReadyToPlay;
+            _betDecreaseButton.interactable = status >= SlotStatus.ReadyToPlay;
+            _betIncreaseButton.interactable = status >= SlotStatus.ReadyToPlay;
             _resultText.text = message ??
                                (status == SlotStatus.Loading ? "Loading..." :
                                    status == SlotStatus.Spinning ? "Spinning..." :
@@ -57,16 +71,22 @@ namespace SlotsSample
 
         public void UpdateBalance(SlotsGameState gameState)
         {
-            UpdateBet(gameState.BetAmount, gameState.Currency);
-            UpdateBalance(gameState.Balance, gameState.Currency);
+            SetBet(gameState.BetAmount, gameState.Currency);
+            SetWin(gameState.WinAmount, gameState.Currency);
+            SetBalance(gameState.Balance, gameState.Currency);
         }
         
-        public void UpdateBet(long amount, string currency)
+        public void SetBet(long amount, string currency)
         {
             _betText.text = CurrencyHelper.FormatMoney(amount, currency);
         }
         
-        public void UpdateBalance(long amount, string currency)
+        public void SetWin(long amount, string currency)
+        {
+            _winText.text = CurrencyHelper.FormatMoney(amount, currency);
+        }
+        
+        public void SetBalance(long amount, string currency)
         {
             _balanceText.text = CurrencyHelper.FormatMoney(amount, currency);
         }
@@ -78,6 +98,8 @@ namespace SlotsSample
 
         public void StartSpin()
         {
+            StopWinAnimation();
+
             _spinStartCoroutine = StartCoroutine(SpinStartAnimation());
         }
 
@@ -129,6 +151,23 @@ namespace SlotsSample
             OnSpinStopped?.Invoke();
         }
 
+        public void StartWin(Symbol winSymbol)
+        {
+            var winReels = _reels.Where(r=>r.FinalSymbol == winSymbol).ToArray();
+            foreach (var reel in winReels)
+            {
+                reel.StartWin();
+            }
+        }
+
+        private void StopWinAnimation()
+        {
+            foreach (var reel in _reels)
+            {
+                reel.StopWin();
+            }
+        }
+        
         private bool IsSpinning()
         {
             foreach (var reel in _reels)

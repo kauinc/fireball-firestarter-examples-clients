@@ -16,6 +16,7 @@ namespace SlotsSample
 
         [Header("Symbols (Top, Center, Bottom)")] 
         [SerializeField] private Image[] _symbolImages;
+        [SerializeField] private ScalePulseAnimation _pulseAnimation;
 
         [Header("Available Sprites")] 
         [SerializeField] private Sprite[] _availableSprites;
@@ -43,6 +44,8 @@ namespace SlotsSample
         private bool _stopRequested;
         private float _speed;
 
+        public Symbol FinalSymbol => _finalSymbol;
+        public Image FinalImage => _finalImage;
         public bool IsSpinning => _phase != ReelPhase.Idle;
 
         private void Awake()
@@ -75,6 +78,16 @@ namespace SlotsSample
             _stopRequested = true;
         }
 
+        public void StartWin()
+        {
+            _pulseAnimation.StartAnimation(_finalImage.transform);
+        }
+        
+        public void StopWin()
+        {
+            _pulseAnimation.StopAnimation();
+        }
+
         private IEnumerator SpinRoutine()
         {
             // Phase 1: acceleration.
@@ -95,7 +108,10 @@ namespace SlotsSample
             // Correct tiny floating-point errors so the requested sprite finishes exactly at the center.
             MoveSymbols(-_finalImage.rectTransform.anchoredPosition.y);
 
-            Reset();
+            _phase = ReelPhase.Idle;
+            _stopRequested = false;
+            _speed = 0f;
+            _spinCoroutine = null;
         }
 
         private IEnumerator AnimateAccelerating(float duration)
@@ -218,16 +234,6 @@ namespace SlotsSample
         {
             var referenceSpeed = Mathf.Max(_speed, _maxSpeed * 0.65f);
             return Mathf.Clamp(distance / referenceSpeed * Mathf.PI * 0.5f, 0.2f, 1.0f);
-        }
-        
-        private void Reset()
-        {
-            _phase = ReelPhase.Idle;
-            _stopRequested = false;
-            _finalSymbol = Symbol.None;
-            _finalImage = null;
-            _speed = 0f;
-            _spinCoroutine = null;
         }
     }
 }
