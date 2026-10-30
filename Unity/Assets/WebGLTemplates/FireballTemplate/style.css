@@ -1,0 +1,100 @@
+html {
+    box-sizing: border-box;
+    background: #000000;
+}
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+body {
+    margin: 0;
+    padding: 0;
+    background: #000000;
+    overflow: hidden;
+}
+#unity-wrapper {
+    position: absolute;
+    width: 100%;
+    height: calc(100% + 400px);
+}
+#unity-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: initial !important;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+}
+#unity-canvas {
+    width: 100%;
+    height: 100%;
+    background: #000000;
+}
+#loading-cover {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#unity-loading-bar {
+    flex: 1 1 auto;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+#unity-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 30vh;
+    max-height: 30vh;
+}
+#unity-logo img {
+    max-width: 60%;
+}
+#unity-progress-bar-empty {
+    display: block;
+    margin: 3em;
+    width: 40vh;
+    height: 0.5vh;
+    border-radius: 10px;
+    background: #ffffff36;
+    overflow: hidden;
+}
+#unity-progress-bar-full {
+    width: 0%;
+    background: white;
+    height: 1em;
+    transform-origin: top left;
+}
+#unity-info-message {
+    color: white;
+    text-align: center;
+    font-size: 1.0em;
+    max-width: 45vh;
+    font-family: sans-serif;
+    display: none;
+}
+.light #unity-progress-bar-empty {
+    border-color: black;
+}
+.light #unity-progress-bar-full {
+    background: black;
+}

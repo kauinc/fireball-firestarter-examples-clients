@@ -44,7 +44,10 @@ namespace SlotsSample
 
             FireballConfig.LogLevel = _logLevel;
             SetStatus(AuthStatus.Initializing, "Initializing...");
-            _fireball.Init(_settings,
+            _fireball.Init(
+#if UNITY_EDITOR
+                _settings,
+#endif
                 (session) =>
                 {
                     SetStatus(AuthStatus.Initialized, "Initialization successful!");

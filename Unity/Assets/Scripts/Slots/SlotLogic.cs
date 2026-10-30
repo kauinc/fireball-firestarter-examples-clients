@@ -57,7 +57,10 @@ namespace SlotsSample
 
             FireballConfig.LogLevel = _logLevel;
             SetStatus(SlotStatus.Loading);
-            _fireball.Init(_settings,
+            _fireball.Init(
+#if UNITY_EDITOR
+                _settings,
+#endif
                 (session) =>
                 {
                     _fireball.Authorize<AuthRequest, AuthResponse<SlotsGameState>>(new AuthRequest(session),
