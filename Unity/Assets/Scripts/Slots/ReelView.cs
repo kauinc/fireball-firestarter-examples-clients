@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace SlotSample
+namespace SlotsSample
 {
     public class ReelView : MonoBehaviour
     {
@@ -38,7 +38,7 @@ namespace SlotSample
 
         private ReelPhase _phase = ReelPhase.Idle;
         private Coroutine _spinCoroutine;
-        private SlotSymbol _finalSymbol;
+        private Symbol _finalSymbol;
         private Image _finalImage;
         private bool _stopRequested;
         private float _speed;
@@ -58,14 +58,14 @@ namespace SlotSample
                 return;
 
             _stopRequested = false;
-            _finalSymbol = SlotSymbol.None;
+            _finalSymbol = Symbol.None;
             _finalImage = null;
             _speed = 0;
 
             _spinCoroutine = StartCoroutine(SpinRoutine());
         }
 
-        public void StopAt(SlotSymbol targetSymbol)
+        public void StopAt(Symbol targetSymbol)
         {
             if (_phase == ReelPhase.Idle ||
                 _phase == ReelPhase.Stopping)
@@ -132,7 +132,7 @@ namespace SlotSample
             }
         }
         
-        private IEnumerator AnimateStopping( float distance,  float duration)
+        private IEnumerator AnimateStopping(float distance, float duration)
         {
             var time = 0f;
             var previousProgress = 0f;
@@ -179,10 +179,14 @@ namespace SlotSample
 
         private void AssignSpriteOnWrap(Image image)
         {
+            if (_finalImage == image)
+                return;
+            
             if (_stopRequested && _finalImage == null)
             {
                 _finalImage = image;
                 image.sprite = GetSprite(_finalSymbol);
+                return;
             }
 
             image.sprite = GetRandomSprite();
@@ -193,7 +197,7 @@ namespace SlotSample
             return _availableSprites[Random.Range(0, _availableSprites.Length)];
         }
 
-        private Sprite GetSprite(SlotSymbol symbol)
+        private Sprite GetSprite(Symbol symbol)
         {
             return _availableSprites[Mathf.Clamp((int)symbol - 1, 0, _availableSprites.Length - 1)];
         }
@@ -220,7 +224,7 @@ namespace SlotSample
         {
             _phase = ReelPhase.Idle;
             _stopRequested = false;
-            _finalSymbol = SlotSymbol.None;
+            _finalSymbol = Symbol.None;
             _finalImage = null;
             _speed = 0f;
             _spinCoroutine = null;

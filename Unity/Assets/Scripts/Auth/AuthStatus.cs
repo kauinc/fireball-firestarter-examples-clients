@@ -1,4 +1,4 @@
-namespace SlotSample
+namespace SlotsSample
 {
     public enum AuthStatus
     {

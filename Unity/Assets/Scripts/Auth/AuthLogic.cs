@@ -5,7 +5,7 @@ using Fireball.Game.Client.Modules;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace SlotSample
+namespace SlotsSample
 {
     public class AuthLogic : IDisposable
     {
@@ -16,8 +16,8 @@ namespace SlotSample
 
         private AuthStatus _status = AuthStatus.None;
 
-        public static AuthResponse Response => _response;
-        private static AuthResponse _response = null;
+        public static AuthResponse<SlotsGameState> Response => _response;
+        private static AuthResponse<SlotsGameState> _response = null;
 
         public AuthLogic(
             IFireball fireball,
@@ -59,7 +59,7 @@ namespace SlotSample
                 return;
 
             SetStatus(AuthStatus.Authorizing, "Authorizing...");
-            _fireball.Authorize(new AuthRequest(_fireball.CurrentSession),
+            _fireball.Authorize<AuthRequest, AuthResponse<SlotsGameState>>(new AuthRequest(_fireball.CurrentSession),
                 (response) =>
                 {
                     Debug.Log($"Response: {response.ToJson()}");
@@ -78,7 +78,7 @@ namespace SlotSample
                 return;
 
             SetStatus(AuthStatus.Authorizing, "Authorizing...");
-            _fireball.DemoAuthorize("USD", 54321,
+            _fireball.DemoAuthorize<AuthResponse<SlotsGameState>>("USD", 54321,
                 (response) =>
                 {
                     Debug.Log($"Response: {response.ToJson()}");

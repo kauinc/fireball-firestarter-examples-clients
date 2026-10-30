@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
-namespace SlotSample
+namespace SlotsSample
 {
     public class SlotView : MonoBehaviour
     {
@@ -26,6 +26,10 @@ namespace SlotSample
         public int ReelsCount => _reels.Length;
 
         public event Action OnClickSpin;
+        public event Action OnSpinStopped;
+        
+        private Coroutine _spinStartCoroutine;
+        private Coroutine _spinStopCoroutine;
 
         private void Awake()
         {
@@ -50,6 +54,12 @@ namespace SlotSample
                                    status == SlotStatus.Lose ? "Try again!" :
                                    string.Empty);
         }
+
+        public void UpdateBalance(SlotsGameState gameState)
+        {
+            UpdateBet(gameState.BetAmount, gameState.Currency);
+            UpdateBalance(gameState.Balance, gameState.Currency);
+        }
         
         public void UpdateBet(long amount, string currency)
         {
@@ -66,9 +76,18 @@ namespace SlotSample
             _resultText.text = message;
         }
 
-        public IEnumerator SpinAnimation(SlotSymbol[] results)
+        public void StartSpin()
         {
-            var duration = Random.Range(1, _spinDuration + 1);
+            _spinStartCoroutine = StartCoroutine(SpinStartAnimation());
+        }
+
+        private IEnumerator SpinStartAnimation()
+        {
+            while (_spinStopCoroutine != null)
+            {
+                yield return null;
+            }
+            
             for (int i = 0; i < _reels.Length; i++)
             {
                 _reels[i].StartSpin();
@@ -77,7 +96,21 @@ namespace SlotSample
                     yield return new WaitForSeconds(_delay);
             }
 
-            yield return new WaitForSeconds(duration);
+            _spinStartCoroutine = null;
+        }
+
+        public void StopSpin(Symbol[] symbols)
+        {
+            _spinStopCoroutine = StartCoroutine(SpinStopAnimation(symbols));
+        }
+
+        private IEnumerator SpinStopAnimation(Symbol[] results)
+        {
+            while (_spinStartCoroutine != null)
+            {
+                yield return null;
+            }
+            
             for (int i = 0; i < _reels.Length; i++)
             {
                 _reels[i].StopAt(results[i]);
@@ -90,6 +123,10 @@ namespace SlotSample
             {
                 yield return null;
             }
+
+            _spinStopCoroutine = null;
+            
+            OnSpinStopped?.Invoke();
         }
 
         private bool IsSpinning()

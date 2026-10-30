@@ -302,15 +302,15 @@ MonoBehaviour:
   - {fileID: 1515941923}
   - {fileID: 1149713494}
   _availableSprites:
-  - {fileID: 166629989, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -528663102, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -1324133700, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: 221219379, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
   - {fileID: -1622937223, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: 522108462, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -426190698, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: 1250081470, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -830133364, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -1099317419, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: 2046608840, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -1292778675, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -39879384, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -1324133700, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -528663102, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -2001713213, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: 166629989, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
   _spriteSpacing: 250
   _accelerationDuration: 0.2
   _maxSpeed: 2500
@@ -541,7 +541,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: USD 5,000.00
+  m_Text: $0.00
 --- !u!222 &399613937
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1931,15 +1931,15 @@ MonoBehaviour:
   - {fileID: 143938265}
   - {fileID: 1272342186}
   _availableSprites:
-  - {fileID: 166629989, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -528663102, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -1324133700, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: 221219379, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
   - {fileID: -1622937223, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: 522108462, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -426190698, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: 1250081470, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -830133364, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -1099317419, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: 2046608840, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -1292778675, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -39879384, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -1324133700, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -528663102, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -2001713213, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: 166629989, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
   _spriteSpacing: 250
   _accelerationDuration: 0.2
   _maxSpeed: 2500
@@ -2087,7 +2087,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: USD 1.00
+  m_Text: $0.00
 --- !u!222 &1496445375
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2770,15 +2770,15 @@ MonoBehaviour:
   - {fileID: 1510966427}
   - {fileID: 1287944333}
   _availableSprites:
-  - {fileID: 166629989, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -528663102, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -1324133700, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: 221219379, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
   - {fileID: -1622937223, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: 522108462, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -426190698, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: 1250081470, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -830133364, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
-  - {fileID: -1099317419, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: 2046608840, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -1292778675, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -39879384, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -1324133700, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -528663102, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: -2001713213, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
+  - {fileID: 166629989, guid: e21dc34f8c129401fb2dc00154e1ec0c, type: 3}
   _spriteSpacing: 250
   _accelerationDuration: 0.2
   _maxSpeed: 2500

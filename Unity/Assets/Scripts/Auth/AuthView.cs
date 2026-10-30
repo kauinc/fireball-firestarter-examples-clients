@@ -3,7 +3,7 @@ using Fireball.Game.Client.Tools;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace SlotSample
+namespace SlotsSample
 {
     public class AuthView : MonoBehaviour
     {

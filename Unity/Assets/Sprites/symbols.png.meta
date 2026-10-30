@@ -151,15 +151,15 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: symbols_0
+      name: symbols_seven
       rect:
         serializedVersion: 2
-        x: 38
-        y: 686
-        width: 264
-        height: 255
+        x: 25
+        y: 835
+        width: 380
+        height: 380
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -173,15 +173,15 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: symbols_1
+      name: symbols_banana
       rect:
         serializedVersion: 2
-        x: 327
-        y: 678
-        width: 298
-        height: 295
+        x: 429
+        y: 833
+        width: 380
+        height: 380
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -195,15 +195,15 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: symbols_2
+      name: symbols_cherry
       rect:
         serializedVersion: 2
-        x: 687
-        y: 678
-        width: 291
-        height: 279
+        x: 841
+        y: 819
+        width: 380
+        height: 380
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -217,15 +217,15 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: symbols_3
+      name: symbols_lemon
       rect:
         serializedVersion: 2
-        x: 43
-        y: 375
-        width: 254
-        height: 225
+        x: 23
+        y: 450
+        width: 380
+        height: 380
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -239,111 +239,111 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: symbols_4
+      name: symbols_blueberry
       rect:
         serializedVersion: 2
-        x: 344
-        y: 378
-        width: 300
-        height: 267
+        x: 447
+        y: 448
+        width: 380
+        height: 380
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e4529a0ce2ea9444daf1f9bcfff2c57b
-      internalID: 522108462
+      spriteID: e660924d5d87d47cd909d328102c6520
+      internalID: 221219379
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: symbols_5
+      name: symbols_plum
       rect:
         serializedVersion: 2
-        x: 686
-        y: 378
-        width: 285
-        height: 243
+        x: 841
+        y: 437
+        width: 380
+        height: 380
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9a0bd87714e92499a84eacc90ed47872
-      internalID: -426190698
+      spriteID: 9f41e7baf12eb43ca8af13ce0d0276df
+      internalID: 2046608840
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: symbols_6
+      name: symbols_watermellon
       rect:
         serializedVersion: 2
-        x: 41
-        y: 59
-        width: 255
-        height: 252
+        x: 25
+        y: 56
+        width: 380
+        height: 380
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7c50cc9a1729a45259aac9af531cf498
-      internalID: 1250081470
+      spriteID: 48640f868bb7c49dca48a3c73be04326
+      internalID: -2001713213
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: symbols_7
+      name: symbols_orange
       rect:
         serializedVersion: 2
-        x: 370
-        y: 59
-        width: 246
-        height: 248
+        x: 429
+        y: 52
+        width: 380
+        height: 380
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 3633cc75b84aa451eba263c763b6ac77
-      internalID: -830133364
+      spriteID: 606e7e460bef049aea7577955e702053
+      internalID: -1292778675
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: symbols_8
+      name: symbols_strawberry
       rect:
         serializedVersion: 2
-        x: 717
-        y: 58
-        width: 232
-        height: 267
+        x: 835
+        y: 50
+        width: 380
+        height: 380
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 078dd6653c1884ac3a7a1fd313810264
-      internalID: -1099317419
+      spriteID: eb132383642bc49e486aa0c9cba1adf6
+      internalID: -39879384
       vertices: []
       indices: 
       edges: []
@@ -360,17 +360,19 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":400.0,"y":400.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      symbols_0: 166629989
-      symbols_1: -528663102
-      symbols_2: -1324133700
-      symbols_3: -1622937223
-      symbols_4: 522108462
-      symbols_5: -426190698
-      symbols_6: 1250081470
-      symbols_7: -830133364
-      symbols_8: -1099317419
+      symbols_banana: -528663102
+      symbols_blueberry: 221219379
+      symbols_cherry: -1324133700
+      symbols_lemon: -1622937223
+      symbols_orange: -1292778675
+      symbols_plum: 2046608840
+      symbols_seven: 166629989
+      symbols_strawberry: -39879384
+      symbols_watermellon: -2001713213
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

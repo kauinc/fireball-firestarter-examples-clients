@@ -2,7 +2,7 @@ using Fireball.Game.Client;
 using Fireball.Game.Client.Modules;
 using UnityEngine;
 
-namespace SlotSample
+namespace SlotsSample
 {
     public class AuthStartUp : MonoBehaviour
     {
