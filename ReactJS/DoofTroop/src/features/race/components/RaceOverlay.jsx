@@ -17,6 +17,7 @@ import {
   HudFade,
   HudMenuChrome,
   useDialogFocus,
+  useOverlayPresence,
 } from '../../hud/index.js'
 import { playSfx } from '../../../shared/audio/index.js'
 import '../../betting/styles/hud-shared.css'
@@ -217,7 +218,10 @@ export function RaceOverlay() {
     viewportMode,
   ])
 
-  if (!isRaceUiVisible) {
+  const { mounted: overlayMounted, exiting: overlayExiting } =
+    useOverlayPresence(isRaceUiVisible)
+
+  if (!overlayMounted) {
     return null
   }
 
@@ -225,7 +229,7 @@ export function RaceOverlay() {
     return (
       <div
         ref={overlayRef}
-        className="race-overlay"
+        className={`race-overlay${overlayExiting ? ' is-exiting' : ''}`}
         data-compact={compact ? 'true' : undefined}
         data-orientation="portrait"
         data-round-id={round?.id ?? undefined}
@@ -300,7 +304,9 @@ export function RaceOverlay() {
   return (
     <div
       ref={overlayRef}
-      className={`race-overlay${betsOpen ? ' is-bets-open' : ''}`}
+      className={`race-overlay${betsOpen ? ' is-bets-open' : ''}${
+        overlayExiting ? ' is-exiting' : ''
+      }`}
       data-compact={compact ? 'true' : undefined}
       data-orientation={orientation}
       data-round-id={round?.id ?? undefined}

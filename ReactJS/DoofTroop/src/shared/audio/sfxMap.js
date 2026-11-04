@@ -80,19 +80,16 @@ export const sfxMap = {
   fullscreenToggle: { sound: null, volume: 0.5 },
 
   // --- Settlement ---
-  /** Settlement overlay appears — player won. */
-  settleWin: { sound: 'Special_Powerup_05', volume: 0.85 },
+  /** Settlement overlay appears — player won. (silenced — coin count-up only) */
+  settleWin: { sound: null, volume: 0.85 },
   /** Settlement overlay appears — player lost / no win. */
-  settleLose: { sound: 'Discordant_GameOver_Musical_Short', volume: 0.7 },
-  /**
-   * One ding per winning bet during the light-up (highlight) phase.
-   * Overlay plays this `winCount` times, staggered.
-   */
-  settleWinBet: { sound: 'cashRegisterPurchase', volume: 0.7 },
-  /** Winning chips start flying to TOTAL WIN (cash-register covers the win cue). */
+  settleLose: { sound: null, volume: 0.7 },
+  /** Per-bet win ding during highlight (silenced). */
+  settleWinBet: { sound: null, volume: 0.7 },
+  /** Winning chips fly to TOTAL WIN (unused — winners stay on board). */
   settleChipFly: { sound: null, volume: 0.6 },
-  /** Losing chips fall away. */
-  settleChipFall: { sound: 'Cartoon_Falling_02', volume: 0.55 },
+  /** Losing chips fall away (silenced — visual only). */
+  settleChipFall: { sound: null, volume: 0.55 },
   /** TOTAL WIN count-up (~5.4s floraphonic coin payout). */
   settleCountUp: { sound: 'slotCoinPayout', volume: 0.55 },
 }

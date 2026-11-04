@@ -16,10 +16,7 @@ import {
   historyRowFromWinners,
 } from '../../betting/state/historyStore.js'
 import { useSettlementOverlayState } from '../hooks/useSettlementOverlay.js'
-import {
-  useChipSettleAnimation,
-  WIN_BET_SFX_STAGGER_MS,
-} from '../hooks/useChipSettleAnimation.js'
+import { useChipSettleAnimation } from '../hooks/useChipSettleAnimation.js'
 import { useHistoryInsertAnimation } from '../hooks/useHistoryInsertAnimation.js'
 import { sumBetTotal } from '../../betting/utils/betTotals.js'
 import {
@@ -37,9 +34,10 @@ import '../styles/settlement.css'
  * Game settlement HUD — shown once results are accepted and podium presentation
  * has started (`podium_transition_started_at` / `podium_entered_at`), until the
  * next round. Not triggered by FINISHED alone.
- * Chips resolve roulette-style; podium icons fly into HISTORY (landscape only).
- * Wallet credit happens in `reconcileRoundWallet` (round feed); this overlay only
- * defers the displayed balance until the count-up finishes.
+ * Losing chips fall away; winning chips stay on the board. Podium icons fly
+ * into HISTORY (landscape only). Wallet credit happens in
+ * `reconcileRoundWallet` (round feed); this overlay only defers the displayed
+ * balance until the count-up finishes.
  */
 export function SettlementOverlay() {
   const {
@@ -94,7 +92,7 @@ export function SettlementOverlay() {
     return map
   }, [settlement])
 
-  const { phase, flights, displayedWin, hideSourceChips } =
+  const { phase, flights, displayedWin, hideLostChips } =
     useChipSettleAnimation({
       enabled: Boolean(
         isSettlementUiVisible && settlement && hasBets,
@@ -103,17 +101,7 @@ export function SettlementOverlay() {
       outcomes: settlement?.outcomes ?? null,
       totalWin: settlement?.totalWin ?? 0,
       boardRef,
-      winBarRef,
     })
-
-  const settleStingKeyRef = useRef('')
-  useEffect(() => {
-    if (!isSettlementUiVisible || !settlement || !settlementRoundId) return
-    const key = `${settlementRoundId}:${settlement.didWin ? 'w' : 'l'}`
-    if (settleStingKeyRef.current === key) return
-    settleStingKeyRef.current = key
-    playSfx(settlement.didWin ? 'settleWin' : 'settleLose')
-  }, [isSettlementUiVisible, settlement, settlementRoundId])
 
   // Keep winning chips + combo / crazy-combo picks for the next betting board.
   useEffect(() => {
@@ -145,42 +133,17 @@ export function SettlementOverlay() {
     ? roundMoney(balance - creditedWin)
     : balance
 
+  // Payout screen: only the TOTAL WIN coin count-up SFX.
   const settlePhaseRef = useRef('')
-  const winBetSfxTimersRef = useRef([])
   useEffect(() => {
     if (!isSettlementUiVisible || !settlement) return
     if (settlePhaseRef.current === phase) return
     const prev = settlePhaseRef.current
     settlePhaseRef.current = phase
-
-    for (const id of winBetSfxTimersRef.current) window.clearTimeout(id)
-    winBetSfxTimersRef.current = []
-
-    if (phase === 'highlight' && prev !== 'highlight') {
-      const winCount =
-        settlement.winCount ?? settlement.outcomes?.winCount ?? 0
-      for (let i = 0; i < winCount; i += 1) {
-        const timerId = window.setTimeout(() => {
-          playSfx('settleWinBet')
-        }, i * WIN_BET_SFX_STAGGER_MS)
-        winBetSfxTimersRef.current.push(timerId)
-      }
-    }
-    if (phase === 'fly' && prev !== 'fly') {
-      const hasLoseFlight = flights.some((f) => f.outcome === 'lose')
-      if (hasLoseFlight) playSfx('settleChipFall')
-    }
     if (phase === 'count' && prev !== 'count') {
       playSfx('settleCountUp')
     }
-  }, [phase, flights, isSettlementUiVisible, settlement])
-
-  useEffect(() => {
-    return () => {
-      for (const id of winBetSfxTimersRef.current) window.clearTimeout(id)
-      winBetSfxTimersRef.current = []
-    }
-  }, [])
+  }, [phase, isSettlementUiVisible, settlement])
 
   const ensureHistoryOpen = useCallback(() => {
     setHistoryOpen(true)
@@ -272,7 +235,7 @@ export function SettlementOverlay() {
       didWin={settlement.didWin}
       displayedWin={winAmount}
       settleByBetId={settleByBetId}
-      hideSettledChips={hideSourceChips}
+      hideLostChips={hideLostChips}
       boardRef={isPortrait ? null : boardRef}
       winBarRef={isPortrait ? null : winBarRef}
       historyOpen={isPortrait ? false : historyOpen}

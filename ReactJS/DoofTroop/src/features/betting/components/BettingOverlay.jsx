@@ -36,6 +36,7 @@ import {
   HudMenuChrome,
   getDoofColorBarsFadeAnchorTop,
   useHudViewportContext,
+  useOverlayPresence,
   useSyncHudFadeHeight,
 } from '../../hud/index.js'
 import { playSfx } from '../../../shared/audio/index.js'
@@ -356,15 +357,18 @@ function BettingRoundSession({
     () => getDoofColorBarsFadeAnchorTop(overlayRef.current),
     [],
   )
+  const { mounted: overlayMounted, exiting: overlayExiting } =
+    useOverlayPresence(!hidden)
+
   useSyncHudFadeHeight({
     // Portrait uses CSS height (stream overlap); landscape syncs to color bars.
-    enabled: showAdvancedChrome && !hidden && !isPortrait,
+    enabled: showAdvancedChrome && overlayMounted && !overlayExiting && !isPortrait,
     overlayRef,
     getAnchorTop: getFadeAnchorTop,
-    deps: [viewportScale, compact, showAdvancedChrome, isPortrait],
+    deps: [viewportScale, compact, showAdvancedChrome, isPortrait, overlayMounted],
   })
 
-  if (hidden) return null
+  if (!overlayMounted) return null
 
   const comboPickRequired = requiresComboPickBeforeBet(crazyCombo, comboPick)
   const boardBettingDisabled = disabled
@@ -394,7 +398,7 @@ function BettingRoundSession({
   return (
     <div
       ref={overlayRef}
-      className="betting-overlay"
+      className={`betting-overlay${overlayExiting ? ' is-exiting' : ''}`}
       data-phase={phase}
       data-timer-variant={timerVariant}
       data-compact={compact ? 'true' : undefined}

@@ -6,6 +6,10 @@ export {
   RotatePhonePrompt,
 } from './components/RotatePhonePrompt.jsx'
 export { useDialogFocus } from './hooks/useDialogFocus.js'
+export {
+  useOverlayPresence,
+  OVERLAY_EXIT_MS,
+} from './hooks/useOverlayPresence.js'
 export { useHudViewport } from './hooks/useHudScale.js'
 export {
   useSyncHudFadeHeight,

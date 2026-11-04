@@ -146,7 +146,8 @@ export function DoofGrid({
   onPlaceBet,
   labelBets = [],
   settleByBetId = null,
-  hideSettledChips = false,
+  /** When true, hide losing chips after they fall (winners stay visible). */
+  hideLostChips = false,
   comboActive = false,
   onComboBarPick,
   comboPick = null,
@@ -174,7 +175,7 @@ export function DoofGrid({
   function settleClass(betId) {
     const outcome = settleByBetId?.[betId]
     if (!outcome) return ''
-    const hidden = hideSettledChips ? ' is-settle-gone' : ''
+    const hidden = hideLostChips && outcome === 'lose' ? ' is-settle-gone' : ''
     return ` is-settle-${outcome}${hidden}`
   }
 

@@ -33,6 +33,14 @@
   animation: settle-chip-dim 800ms ease-in-out forwards;
 }
 
+/* Winners stay on the board after highlight — soft glow through the rest of settle. */
+.settlement-overlay[data-settle-phase='fly'] .is-settle-win .chip-stack,
+.settlement-overlay[data-settle-phase='count'] .is-settle-win .chip-stack,
+.settlement-overlay[data-settle-phase='done'] .is-settle-win .chip-stack {
+  filter: drop-shadow(0 0 6px rgba(232, 255, 74, 0.65))
+    drop-shadow(0 0 10px rgba(255, 220, 80, 0.35));
+}
+
 .settlement-overlay .is-settle-gone {
   visibility: hidden;
   pointer-events: none;
