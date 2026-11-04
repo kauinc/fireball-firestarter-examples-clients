@@ -10,6 +10,16 @@ import { usePublishedRoundBets } from '../../betting/state/roundBetsStore.js'
 import '../../betting/styles/crazy-combos.css'
 
 /**
+ * @param {'win' | 'lose' | null | undefined} outcome
+ * @param {boolean} hideLostChips
+ */
+function settleChipClass(outcome, hideLostChips) {
+  if (!outcome) return ''
+  const hidden = hideLostChips && outcome === 'lose' ? ' is-settle-gone' : ''
+  return ` is-settle-${outcome}${hidden}`
+}
+
+/**
  * Read-only results board — same geometry as betting / race CURRENT BETS.
  * Landscape includes HISTORY for podium→history flights.
  * Portrait matches the betting table (no History).
@@ -19,7 +29,8 @@ export function SettlementBoard({
   didWin = false,
   displayedWin = 0,
   settleByBetId = null,
-  hideSettledChips = false,
+  /** When true, hide losing chips after they fall (winners stay visible). */
+  hideLostChips = false,
   boardRef = null,
   winBarRef = null,
   historyOpen = false,
@@ -59,7 +70,7 @@ export function SettlementBoard({
       bets={bets}
       labelBets={labelBets}
       settleByBetId={settleByBetId}
-      hideSettledChips={hideSettledChips}
+      hideLostChips={hideLostChips}
       portrait={portrait}
       comboPick={publishedComboPick}
     />
@@ -87,9 +98,7 @@ export function SettlementBoard({
             const iconSrc =
               item === 'Hats' ? uiAssets.hatIcon : uiAssets.glassesIcon
             const outcome = stack ? settleByBetId?.[stack.id] : null
-            const settleClass = outcome
-              ? ` is-settle-${outcome}${hideSettledChips ? ' is-settle-gone' : ''}`
-              : ''
+            const settleClass = settleChipClass(outcome, hideLostChips)
             return (
               <div
                 key={item}
@@ -134,20 +143,14 @@ export function SettlementBoard({
           crazyComboPicks={publishedCrazyComboPicks}
           comboBet={comboBet}
           crazyComboBet={crazyComboBet}
-          settleClass={
-            comboBet && settleByBetId?.[comboBet.id]
-              ? ` is-settle-${settleByBetId[comboBet.id]}${
-                  hideSettledChips ? ' is-settle-gone' : ''
-                }`
-              : ''
-          }
-          crazyComboSettleClass={
-            crazyComboBet && settleByBetId?.[crazyComboBet.id]
-              ? ` is-settle-${settleByBetId[crazyComboBet.id]}${
-                  hideSettledChips ? ' is-settle-gone' : ''
-                }`
-              : ''
-          }
+          settleClass={settleChipClass(
+            comboBet ? settleByBetId?.[comboBet.id] : null,
+            hideLostChips,
+          )}
+          crazyComboSettleClass={settleChipClass(
+            crazyComboBet ? settleByBetId?.[crazyComboBet.id] : null,
+            hideLostChips,
+          )}
         />
       </div>
     </div>

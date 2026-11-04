@@ -15,6 +15,75 @@
   /* Nudge board + HISTORY column right so they clear the letterbox black. */
   --board-shift-x: calc(97px * var(--hud-scale));
   --pattern-label-x: 8px;
+  animation: hud-overlay-enter 280ms ease-out both;
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay).is-exiting {
+  animation: hud-overlay-exit 280ms ease-in both;
+  pointer-events: none !important;
+}
+
+@keyframes hud-overlay-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hud-overlay-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Discrete press feedback on HUD controls */
+:is(.betting-overlay, .race-overlay, .settlement-overlay)
+  :is(
+    .betting-footer__round,
+    .betting-footer__chip,
+    .betting-footer__stake-btn,
+    .betting-footer__menu,
+    .doof-grid__clear-bets,
+    .combo-bar__action,
+    .crazy-combo-bar__action,
+    .hud-menu-panel__item,
+    .race-overlay__current-bets
+  ):not(:disabled) {
+  transition: transform 120ms ease;
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay)
+  :is(
+    .betting-footer__chip,
+    .betting-footer__stake-btn,
+    .betting-footer__menu,
+    .combo-bar__action,
+    .crazy-combo-bar__action,
+    .hud-menu-panel__item,
+    .race-overlay__current-bets
+  ):not(:disabled):active {
+  transform: scale(0.94);
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay)
+  .betting-footer__round:not(:disabled):active {
+  transform: translateY(calc(5px * var(--hud-scale))) scale(0.94);
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay)
+  .doof-grid__clear-bets:not(:disabled):active {
+  /* Keep the rail nudge so scale doesn't jump left. */
+  transform: translateX(calc(12px * var(--hud-scale))) scale(0.94);
+}
+
+:is(.betting-overlay, .race-overlay, .settlement-overlay)
+  .mid-controls__history:not(:disabled):active {
+  transform: translateY(var(--bets-toggle-drop)) scale(0.94);
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)[data-compact='true']:not([data-orientation='portrait']) {

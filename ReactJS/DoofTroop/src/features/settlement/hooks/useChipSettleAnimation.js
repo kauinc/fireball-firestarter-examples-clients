@@ -4,17 +4,14 @@ import { uiAssets } from '../../betting/assets/uiAssets.js'
 const HIGHLIGHT_MS = 900
 const FLY_MS = 1400
 const STAGGER_MS = 120
-/** Gap between per-bet cash-register dings during highlight. */
-export const WIN_BET_SFX_STAGGER_MS = 160
-/** Start counting shortly after the first win chip is mid-flight. */
+/** Start counting shortly after losing chips begin to fall. */
 const COUNT_START_OFFSET_MS = Math.round(FLY_MS * 0.4)
 /** TOTAL WIN count-up — keep in sync with `settleCountUp` SFX (~slot coin payout). */
 const COUNT_MS = 5200
 
 /**
- * Roulette-style chip settle: highlight → fly → smooth TOTAL WIN count-up.
- * Winning chips fly to TOTAL WIN (visual); they are re-seeded on the next
- * betting overlay via carry-forward. Losing chips fall off.
+ * Chip settle: highlight → losing chips fall away → TOTAL WIN count-up.
+ * Winning chips stay on the board (carry-forward still seeds the next round).
  *
  * @param {{
  *   enabled: boolean,
@@ -22,7 +19,6 @@ const COUNT_MS = 5200
  *   outcomes: { byId: Record<string, { won: boolean, payout: number }>, didWin?: boolean } | null,
  *   totalWin: number,
  *   boardRef: React.RefObject<HTMLElement | null>,
- *   winBarRef: React.RefObject<HTMLElement | null>,
  * }} args
  */
 export function useChipSettleAnimation({
@@ -31,7 +27,6 @@ export function useChipSettleAnimation({
   outcomes,
   totalWin,
   boardRef,
-  winBarRef,
 }) {
   const [phase, setPhase] = useState('idle')
   const [flights, setFlights] = useState([])
@@ -42,7 +37,6 @@ export function useChipSettleAnimation({
   const betsRef = useRef(bets)
   const outcomesRef = useRef(outcomes)
   const boardRefStable = useRef(boardRef)
-  const winBarRefStable = useRef(winBarRef)
 
   useEffect(() => {
     betsRef.current = bets
@@ -55,10 +49,6 @@ export function useChipSettleAnimation({
   useEffect(() => {
     boardRefStable.current = boardRef
   }, [boardRef])
-
-  useEffect(() => {
-    winBarRefStable.current = winBarRef
-  }, [winBarRef])
 
   function clearTimers() {
     for (const id of timersRef.current) window.clearTimeout(id)
@@ -106,22 +96,12 @@ export function useChipSettleAnimation({
       if (runKeyRef.current !== key) return
       setPhase('highlight')
 
-      const winCount = countWinningBets(outcomesRef.current)
-      // Hold highlight long enough for every cash-register ding to start.
-      const highlightMs = Math.max(
-        HIGHLIGHT_MS,
-        winCount > 0
-          ? (winCount - 1) * WIN_BET_SFX_STAGGER_MS + 400
-          : HIGHLIGHT_MS,
-      )
-
       const flyId = window.setTimeout(() => {
         if (runKeyRef.current !== key) return
-        const nextFlights = buildFlights({
+        const nextFlights = buildLoseFlights({
           bets: betsRef.current,
           outcomes: outcomesRef.current,
           boardEl: boardRefStable.current?.current ?? null,
-          winBarEl: winBarRefStable.current?.current ?? null,
         })
         setFlights(nextFlights)
         setPhase('fly')
@@ -165,7 +145,7 @@ export function useChipSettleAnimation({
           ) + 120,
         )
         timersRef.current.push(doneId)
-      }, highlightMs)
+      }, HIGHLIGHT_MS)
       timersRef.current.push(flyId)
     }, 80)
     timersRef.current.push(startId)
@@ -182,7 +162,8 @@ export function useChipSettleAnimation({
     phase,
     flights,
     displayedWin: showCounted ? displayedWin : 0,
-    hideSourceChips: phase === 'fly' || phase === 'count' || phase === 'done',
+    /** Hide losing source chips once they start falling (winners stay). */
+    hideLostChips: phase === 'fly' || phase === 'count' || phase === 'done',
   }
 }
 
@@ -225,40 +206,15 @@ function animateCountUp({
   rafRef.current = window.requestAnimationFrame(tick)
 }
 
-/**
- * @param {{ byId?: Record<string, { won?: boolean }> } | null} outcomes
- */
-function countWinningBets(outcomes) {
-  const byId = outcomes?.byId
-  if (!byId) return 0
-  let n = 0
-  for (const row of Object.values(byId)) {
-    if (row?.won) n += 1
-  }
-  return n
-}
-
-function buildFlights({ bets, outcomes, boardEl, winBarEl }) {
+function buildLoseFlights({ bets, outcomes, boardEl }) {
   if (!boardEl) return []
 
-  const winRect = winBarEl?.getBoundingClientRect()
-  const winTarget = winRect
-    ? {
-        x: winRect.left + winRect.width / 2,
-        y: winRect.top + winRect.height / 2,
-      }
-    : {
-        x: window.innerWidth / 2,
-        y: window.innerHeight * 0.42,
-      }
-
   const flights = []
-  let winIndex = 0
   let loseIndex = 0
 
   for (const bet of bets) {
     const result = outcomes?.byId?.[bet.id]
-    if (!result) continue
+    if (!result || result.won) continue
 
     const node = boardEl.querySelector(`[data-bet-id="${bet.id}"]`)
     if (!node) continue
@@ -279,33 +235,18 @@ function buildFlights({ bets, outcomes, boardEl, winBarEl }) {
       y: rect.top + rect.height / 2,
     }
 
-    if (result.won) {
-      flights.push({
-        id: `win-${bet.id}`,
-        betId: bet.id,
-        outcome: 'win',
-        src,
-        from,
-        to: winTarget,
-        payout: result.payout,
-        delayMs: winIndex * STAGGER_MS,
-        size: Math.max(rect.width, 28),
-      })
-      winIndex += 1
-    } else {
-      flights.push({
-        id: `lose-${bet.id}`,
-        betId: bet.id,
-        outcome: 'lose',
-        src,
-        from,
-        to: { x: from.x, y: from.y + Math.min(180, window.innerHeight * 0.2) },
-        payout: 0,
-        delayMs: loseIndex * STAGGER_MS,
-        size: Math.max(rect.width, 28),
-      })
-      loseIndex += 1
-    }
+    flights.push({
+      id: `lose-${bet.id}`,
+      betId: bet.id,
+      outcome: 'lose',
+      src,
+      from,
+      to: { x: from.x, y: from.y + Math.min(180, window.innerHeight * 0.2) },
+      payout: 0,
+      delayMs: loseIndex * STAGGER_MS,
+      size: Math.max(rect.width, 28),
+    })
+    loseIndex += 1
   }
 
   return flights

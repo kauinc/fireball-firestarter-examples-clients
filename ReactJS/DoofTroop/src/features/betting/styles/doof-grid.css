@@ -418,6 +418,33 @@
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }
 
+/* Very discreet idle bob — betting board only, staggered per cell. */
+.betting-overlay .doof-grid__sprite-base {
+  animation: doof-idle-bob 3.2s ease-in-out infinite;
+}
+
+.betting-overlay .doof-grid__cell:nth-child(3n + 1) .doof-grid__sprite-base {
+  animation-delay: 0s;
+}
+
+.betting-overlay .doof-grid__cell:nth-child(3n + 2) .doof-grid__sprite-base {
+  animation-delay: 0.55s;
+}
+
+.betting-overlay .doof-grid__cell:nth-child(3n) .doof-grid__sprite-base {
+  animation-delay: 1.1s;
+}
+
+@keyframes doof-idle-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.5px);
+  }
+}
+
 /* Keep the base sprite visible so size/position never change; HL art is glow only. */
 .doof-grid__sprite.is-highlighted .doof-grid__sprite-base {
   filter: none;
