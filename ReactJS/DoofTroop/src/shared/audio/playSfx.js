@@ -14,6 +14,12 @@ let dedupeFrame = -1
 /** @type {Set<string>} */
 let dedupeIds = new Set()
 
+/** @type {Map<string, { stop: () => void, gen: number }>} */
+const activeByEvent = new Map()
+
+/** @type {Map<string, number>} */
+const playGenByEvent = new Map()
+
 function getContext() {
   if (typeof window === 'undefined') return null
   if (!audioCtx) {
@@ -52,8 +58,26 @@ export function installSfxUnlock() {
 }
 
 /**
+ * Stop a tracked/exclusive SFX instance (e.g. looping countdown tick).
+ * @param {string} eventId
+ */
+export function stopSfx(eventId) {
+  const nextGen = (playGenByEvent.get(eventId) ?? 0) + 1
+  playGenByEvent.set(eventId, nextGen)
+
+  const active = activeByEvent.get(eventId)
+  if (!active) return
+  activeByEvent.delete(eventId)
+  try {
+    active.stop()
+  } catch {
+    // already stopped
+  }
+}
+
+/**
  * @param {string} eventId key from `sfxMap`
- * @param {{ volume?: number }} [opts]
+ * @param {{ volume?: number, loop?: boolean, exclusive?: boolean }} [opts]
  */
 export function playSfx(eventId, opts = {}) {
   if (!SFX_ENABLED || isAudioMuted()) return
@@ -61,13 +85,22 @@ export function playSfx(eventId, opts = {}) {
   const entry = sfxMap[eventId]
   if (!entry || entry.sound == null) return
 
-  const frame = Math.floor(performance.now())
-  if (frame !== dedupeFrame) {
-    dedupeFrame = frame
-    dedupeIds = new Set()
+  const loop = Boolean(opts.loop ?? entry.loop)
+  const exclusive = Boolean(opts.exclusive ?? entry.exclusive ?? loop)
+
+  // One-shots still dedupe same-frame StrictMode doubles.
+  // Exclusive/looping cues skip that so a restart can replace the active one.
+  if (!exclusive) {
+    const frame = Math.floor(performance.now())
+    if (frame !== dedupeFrame) {
+      dedupeFrame = frame
+      dedupeIds = new Set()
+    }
+    if (dedupeIds.has(eventId)) return
+    dedupeIds.add(eventId)
+  } else {
+    stopSfx(eventId)
   }
-  if (dedupeIds.has(eventId)) return
-  dedupeIds.add(eventId)
 
   const soundKey = pickSound(entry.sound)
   if (!soundKey) return
@@ -87,7 +120,10 @@ export function playSfx(eventId, opts = {}) {
   const ctx = getContext()
   if (!ctx) return
 
-  void playUrl(ctx, url, volume)
+  const gen = (playGenByEvent.get(eventId) ?? 0) + 1
+  playGenByEvent.set(eventId, gen)
+
+  void playUrl(ctx, url, volume, { loop, exclusive, eventId, gen })
 }
 
 /**
@@ -105,24 +141,88 @@ function pickSound(sound) {
  * @param {AudioContext} ctx
  * @param {string} url
  * @param {number} volume
+ * @param {{
+ *   loop?: boolean,
+ *   exclusive?: boolean,
+ *   eventId?: string | null,
+ *   gen?: number,
+ * }} [opts]
  */
-async function playUrl(ctx, url, volume) {
+async function playUrl(ctx, url, volume, opts = {}) {
+  const {
+    loop = false,
+    exclusive = false,
+    eventId = null,
+    gen = 0,
+  } = opts
+
+  /** @type {AudioBufferSourceNode | null} */
+  let source = null
+  /** @type {HTMLAudioElement | null} */
+  let audio = null
+  let stopped = false
+
+  const stop = () => {
+    stopped = true
+    try {
+      source?.stop(0)
+    } catch {
+      // already stopped
+    }
+    if (audio) {
+      audio.pause()
+      audio.currentTime = 0
+    }
+  }
+
+  if (exclusive && eventId) {
+    activeByEvent.set(eventId, { stop, gen })
+  }
+
+  const isCurrent = () =>
+    !exclusive ||
+    !eventId ||
+    (playGenByEvent.get(eventId) === gen && !stopped)
+
   try {
     if (ctx.state === 'suspended') await ctx.resume()
+    if (!isCurrent()) return
+
     const buffer = await loadBuffer(ctx, url)
+    if (!isCurrent()) return
     if (!buffer) throw new Error('decode failed')
-    const source = ctx.createBufferSource()
+
+    source = ctx.createBufferSource()
     source.buffer = buffer
+    source.loop = loop
     const gain = ctx.createGain()
     gain.gain.value = volume
     source.connect(gain)
     gain.connect(ctx.destination)
+
+    if (exclusive && eventId) {
+      source.onended = () => {
+        const active = activeByEvent.get(eventId)
+        if (active && active.gen === gen && !loop) {
+          activeByEvent.delete(eventId)
+        }
+      }
+    }
+
     source.start(0)
   } catch (err) {
+    if (!isCurrent()) return
     try {
-      const audio = new Audio(url)
+      audio = new Audio(url)
       audio.volume = volume
+      audio.loop = loop
       void audio.play()
+      if (exclusive && eventId && !loop) {
+        audio.onended = () => {
+          const active = activeByEvent.get(eventId)
+          if (active && active.gen === gen) activeByEvent.delete(eventId)
+        }
+      }
     } catch {
       console.warn('[sfx] play failed', err)
     }

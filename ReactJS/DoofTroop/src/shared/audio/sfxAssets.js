@@ -33,6 +33,7 @@ import Item_Sell_Purchase_02 from '../../assets/sfx/Item_Sell_Purchase_02.WAV'
 import Musical_Click_01 from '../../assets/sfx/Musical_Click_01.WAV'
 import Musical_Click_09 from '../../assets/sfx/Musical_Click_09.WAV'
 import Bar_Filling_01 from '../../assets/sfx/Bar_Filling_01.WAV'
+import ticking from '../../assets/sfx/ticking.mp3'
 import cashRegisterPurchase from '../../assets/sfx/freesound_community-cash-register-purchase-87313.mp3'
 import slotCoinPayout from '../../assets/sfx/floraphonic-slot-machine-coin-payout-1-188227.mp3'
 
@@ -70,6 +71,7 @@ export const sfxAssets = {
   Musical_Click_01,
   Musical_Click_09,
   Bar_Filling_01,
+  ticking,
   cashRegisterPurchase,
   slotCoinPayout,
 }
