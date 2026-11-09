@@ -22,7 +22,12 @@ export const SFX_ENABLED = true
 export const MASTER_VOLUME = 0.55
 
 /**
- * @typedef {{ sound: string | string[] | null, volume?: number }} SfxEntry
+ * @typedef {{
+ *   sound: string | string[] | null,
+ *   volume?: number,
+ *   loop?: boolean,
+ *   exclusive?: boolean,
+ * }} SfxEntry
  * @type {Record<string, SfxEntry>}
  */
 export const sfxMap = {
@@ -64,6 +69,16 @@ export const sfxMap = {
   bettingOpen: { sound: null, volume: 0.7 },
   /** Enter BETS CLOSING (≤10s). */
   bettingClosing: { sound: null, volume: 0.65 },
+  /**
+   * Final 5s countdown bed (≤ BETTING_FLASH_THRESHOLD_SECONDS).
+   * One looping instance — start once, stop when betting UI leaves.
+   */
+  bettingTick: {
+    sound: 'ticking',
+    volume: 1.85,
+    loop: true,
+    exclusive: true,
+  },
   /** BETS CLOSED. */
   bettingClosed: { sound: null, volume: 0.75 },
 

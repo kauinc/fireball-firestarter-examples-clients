@@ -21,7 +21,10 @@ import {
   nextCrazyComboSlot,
   requiresComboPickBeforeBet,
 } from '../constants/combo.js'
-import { BettingPhase } from '../constants/bettingPhase.js'
+import {
+  BettingPhase,
+  BETTING_FLASH_THRESHOLD_SECONDS,
+} from '../constants/bettingPhase.js'
 import { RoundState } from '../../../domain/round/index.js'
 import {
   CHIP_VALUES,
@@ -39,7 +42,7 @@ import {
   useOverlayPresence,
   useSyncHudFadeHeight,
 } from '../../hud/index.js'
-import { playSfx } from '../../../shared/audio/index.js'
+import { playSfx, stopSfx } from '../../../shared/audio/index.js'
 import '../styles/betting.css'
 
 const DEFAULT_SELECTED_POSITIONS = Object.freeze(['1st'])
@@ -133,6 +136,23 @@ function BettingRoundSession({
     else if (phase === BettingPhase.CLOSING) playSfx('bettingClosing')
     else if (phase === BettingPhase.CLOSED) playSfx('bettingClosed')
   }, [phase, hidden])
+
+  // Final-seconds heads-up: one looping tick bed; stop when betting UI leaves.
+  const urgentTickActive =
+    !hidden &&
+    !boardHidden &&
+    (phase === BettingPhase.CLOSING || phase === BettingPhase.OPEN) &&
+    secondsLeft > 0 &&
+    secondsLeft <= BETTING_FLASH_THRESHOLD_SECONDS
+
+  useEffect(() => {
+    if (!urgentTickActive) {
+      stopSfx('bettingTick')
+      return undefined
+    }
+    playSfx('bettingTick')
+    return () => stopSfx('bettingTick')
+  }, [urgentTickActive])
 
   function handleComboToggle() {
     setCrazyComboPickActive(false)
