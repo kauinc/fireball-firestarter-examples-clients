@@ -394,7 +394,6 @@
   max-width: 88%;
   max-height: 100%;
   flex-shrink: 0;
-  transition: transform 160ms ease;
 }
 
 .doof-grid__cell.is-hat .doof-grid__sprite {
@@ -417,71 +416,73 @@
   object-position: center bottom;
   display: block;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+  transition: transform 160ms ease;
 }
 
 /*
- * Idle sway on betting / race / settlement — animate the wrapper so drop-shadow
- * filter on the <img> does not fight the transform compositor.
+ * Idle sway on the <img>, NOT `.doof-grid__sprite`.
+ * Portrait centers the wrapper with `transform: translate(-50%, -50%)`;
+ * animating that wrapper (9f1a518) overwrote centering and shifted the board.
  */
-:is(.betting-overlay, .race-overlay, .settlement-overlay) .doof-grid__sprite {
+:is(.betting-overlay, .race-overlay, .settlement-overlay)
+  .doof-grid__sprite-base {
   transform-origin: center bottom;
-  will-change: transform;
   animation: doof-idle-sway-a 3s ease-in-out infinite;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)
   .doof-grid[data-portrait='true']
-  .doof-grid__sprite {
+  .doof-grid__sprite-base {
   transform-origin: center center;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)
   .doof-grid[data-disabled='false']
   .doof-grid__cell:hover
-  .doof-grid__sprite {
+  .doof-grid__sprite-base {
   animation-play-state: paused;
   transform: translateY(-2px) scale(1.05);
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)
   .doof-grid__cell:nth-child(even)
-  .doof-grid__sprite {
+  .doof-grid__sprite-base {
   animation-name: doof-idle-sway-b;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)
   .doof-grid__cell:nth-child(6n + 1)
-  .doof-grid__sprite {
+  .doof-grid__sprite-base {
   animation-delay: 0s;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)
   .doof-grid__cell:nth-child(6n + 2)
-  .doof-grid__sprite {
+  .doof-grid__sprite-base {
   animation-delay: 0.3s;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)
   .doof-grid__cell:nth-child(6n + 3)
-  .doof-grid__sprite {
+  .doof-grid__sprite-base {
   animation-delay: 0.6s;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)
   .doof-grid__cell:nth-child(6n + 4)
-  .doof-grid__sprite {
+  .doof-grid__sprite-base {
   animation-delay: 0.9s;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)
   .doof-grid__cell:nth-child(6n + 5)
-  .doof-grid__sprite {
+  .doof-grid__sprite-base {
   animation-delay: 1.2s;
 }
 
 :is(.betting-overlay, .race-overlay, .settlement-overlay)
   .doof-grid__cell:nth-child(6n)
-  .doof-grid__sprite {
+  .doof-grid__sprite-base {
   animation-delay: 1.5s;
 }
 

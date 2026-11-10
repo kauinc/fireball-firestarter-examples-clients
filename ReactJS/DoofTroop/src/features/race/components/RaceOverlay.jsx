@@ -2,7 +2,6 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { BettingBanner } from '../../betting/components/BettingBanner.jsx'
 import { uiAssets } from '../../betting/assets/uiAssets.js'
 import { formatMoney } from '../../betting/utils/formatMoney.js'
-import { getBetTotal } from '../../betting/utils/chipMath.js'
 import { useHudViewportContext } from '../../hud/index.js'
 import { useCurrentRound } from '../../betting/hooks/useCurrentRound.js'
 import { usePublishedRoundBets } from '../../betting/state/roundBetsStore.js'
@@ -84,15 +83,14 @@ export function RaceOverlay() {
   const visibleComboPick = roundMatches ? publishedComboPick : null
 
   const visibleCrazyComboPicks = roundMatches ? publishedCrazyComboPicks : null
-  const totalBet = useMemo(
-    () =>
-      visibleBets.reduce((sum, bet) => sum + getBetTotal(bet), 0),
-    [visibleBets],
-  )
+  // Live leaderboard during race; official podium while we hold through
+  // RESULTS_RECORDED (Realtime may omit unchanged race_placements).
+  const racePlacements =
+    round?.race_placements ?? round?.placements ?? null
   const potentialWin = usePotentialWin({
     active: isRaceUiVisible,
     bets: visibleBets,
-    racePlacements: round?.race_placements ?? null,
+    racePlacements,
     comboPick: visibleComboPick,
     crazyComboPicks: visibleCrazyComboPicks,
   })
@@ -250,7 +248,7 @@ export function RaceOverlay() {
             {board}
 
             {/*
-              Zero-height footer anchors Balance / Total Bet meters
+              Zero-height footer anchors Balance / Potential Win meters
               (same absolute placement as betting portrait) — no chips.
             */}
             <footer className="betting-footer race-overlay__footer race-overlay__footer--meters-only">
@@ -265,12 +263,12 @@ export function RaceOverlay() {
               </div>
 
               <div className="betting-footer__total-wrap">
-                <span className="betting-footer__caption">TOTAL BET:</span>
+                <span className="betting-footer__caption">POTENTIAL WIN:</span>
                 <div
                   className="betting-footer__meter"
                   style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
                 >
-                  {formatMoney(totalBet)}
+                  {formatMoney(potentialWin)}
                 </div>
               </div>
             </footer>

@@ -68,6 +68,21 @@ function emit(next) {
   for (const listener of listeners) listener()
 }
 
+/**
+ * Same-id Realtime UPDATEs can omit unchanged TOASTed jsonb columns
+ * (e.g. `race_placements`). Merge onto the prior row so a progress tick
+ * that only bumps elapsed/time cannot wipe the live leaderboard.
+ *
+ * Explicit `null` from the server still clears the field.
+ *
+ * @param {Record<string, unknown> | null | undefined} prev
+ * @param {Record<string, unknown>} next
+ */
+function mergeRoundRow(prev, next) {
+  if (!prev?.id || prev.id !== next.id) return next
+  return { ...prev, ...next }
+}
+
 function applyRound(data, { fromRealtime = false } = {}) {
   const prev = snapshot.round
   if (!shouldApplyRound(data, prev)) {
@@ -82,16 +97,17 @@ function applyRound(data, { fromRealtime = false } = {}) {
     }
     return
   }
-  if (fromRealtime) syncServerClockFromRealtime(data)
+  const merged = mergeRoundRow(prev, data)
+  if (fromRealtime) syncServerClockFromRealtime(merged)
   emit({
     ...snapshot,
-    round: data,
-    status: typeof data?.status === 'string' ? data.status : null,
+    round: merged,
+    status: typeof merged?.status === 'string' ? merged.status : null,
     ready: true,
     error: null,
   })
   // Wallet follows round lifecycle even if settlement UI never mounts.
-  reconcileRoundWallet(data, getRoundBetsSnapshot())
+  reconcileRoundWallet(merged, getRoundBetsSnapshot())
 }
 
 async function loadLatest() {
@@ -140,6 +156,9 @@ function ensureStarted() {
           eventType,
           status: next.status,
           presentation_phase: next.presentation_phase ?? null,
+          // `in` check: absent key = TOAST omission; null = cleared.
+          has_race_placements: Object.hasOwn(next, 'race_placements'),
+          race_placements: next.race_placements ?? null,
           placements: next.placements ?? null,
           finisher_times_ms: next.finisher_times_ms ?? null,
           race_elapsed_ms: next.race_elapsed_ms ?? null,
