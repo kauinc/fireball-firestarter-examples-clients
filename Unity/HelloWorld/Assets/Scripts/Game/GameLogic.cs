@@ -3,7 +3,6 @@ using Fireball.Game.Client;
 using Fireball.Game.Client.Models;
 using Fireball.Game.Client.Modules;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace HelloWorld
 {
@@ -15,6 +14,7 @@ namespace HelloWorld
         private readonly LogLevels _logLevel;
 
         private Status _status = Status.None;
+        private GameState _gameState;
 
         public GameLogic(
             IFireball fireball,
@@ -57,11 +57,10 @@ namespace HelloWorld
                 return;
 
             SetStatus(Status.Authorizing, "Authorizing...");
-            _fireball.Authorize<AuthRequest, AuthResponse>(new AuthRequest(_fireball.CurrentSession),
+            _fireball.Authorize<AuthRequest, AuthResponse<GameState>>(new AuthRequest(_fireball.CurrentSession),
                 (response) =>
                 {
-                    Debug.Log($"Response: {response.ToJson()}");
-                    Debug.Log($"Session: {_fireball.CurrentSession.ToJson()}");
+                    _gameState = response.GameState;
                     _view.UpdateBalance(response.Balance, response.Currency);
                     SetStatus(Status.Ready, "Authorization successful!");
                 },
@@ -78,8 +77,6 @@ namespace HelloWorld
             _fireball.DemoAuthorize<AuthResponse>("USD", 54321,
                 (response) =>
                 {
-                    Debug.Log($"Response: {response.ToJson()}");
-                    Debug.Log($"Session: {_fireball.CurrentSession.ToJson()}");
                     _view.UpdateBalance(response.Balance, response.Currency);
                     SetStatus(Status.Ready, "Authorization successful!");
                 },
