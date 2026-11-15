@@ -8,7 +8,7 @@ using Fireball.Game.Client.Modules;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace SlotsSample
+namespace FruitsSample
 {
     public class SlotLogic : IDisposable
     {
@@ -49,12 +49,6 @@ namespace SlotsSample
 
         private void Initialize()
         {
-            if (_fireball.IsAuth && AuthLogic.Response != null)
-            {
-                PrepareSlots(AuthLogic.Response);
-                return;
-            }
-
             FireballConfig.LogLevel = _logLevel;
             SetStatus(SlotStatus.Loading);
             _fireball.Init(

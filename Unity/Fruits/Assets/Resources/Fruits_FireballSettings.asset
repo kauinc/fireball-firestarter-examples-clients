@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 19c2091cb32c44ea6950f63bc4deac81, type: 3}
-  m_Name: SampleGame_Fireball_Settings
+  m_Name: Fruits_FireballSettings
   m_EditorClassIdentifier: 
   GameMode: 1
   Environment: 0
   OperatorId: 964d5c31-043c-413d-b28d-8d0c2c0b1504
-  GameId: 11361519-8d22-485b-9974-e7b202d4fe3a
-  OperatorPlayerId: f5694163-b751-4101-b535-e6d269245245
-  Token: f5694163-b751-4101-b535-e6d269245245
+  GameId: 3b234ec9-5c97-4b3e-bc93-b9d84255e446
+  OperatorPlayerId: 
+  Token: 
   Language: en
   Currency: USD
   Country: US

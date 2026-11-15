@@ -1,6 +1,6 @@
 using Fireball.Game.Client.Models;
 
-namespace SlotsSample
+namespace FruitsSample
 {
     public class SpinResponse : BaseResponse
     {

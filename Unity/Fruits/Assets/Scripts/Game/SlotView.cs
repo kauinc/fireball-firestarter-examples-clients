@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
-namespace SlotsSample
+namespace FruitsSample
 {
     public class SlotView : MonoBehaviour
     {

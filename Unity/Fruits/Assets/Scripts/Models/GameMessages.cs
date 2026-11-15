@@ -1,4 +1,4 @@
-namespace SlotsSample
+namespace FruitsSample
 {
     public static class GameMessages
     {

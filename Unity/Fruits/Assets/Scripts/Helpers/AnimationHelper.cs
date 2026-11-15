@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace SlotsSample
+namespace FruitsSample
 {
     public static class AnimationHelper
     {
