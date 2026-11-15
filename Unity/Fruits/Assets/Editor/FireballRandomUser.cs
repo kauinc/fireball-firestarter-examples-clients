@@ -3,30 +3,33 @@ using Fireball.Game.Client;
 using UnityEditor;
 using UnityEngine;
 
-[InitializeOnLoad]
-public static class FireballRandomUser
+namespace Editor
 {
-    private const string ResourcePath = "Fruits_FireballSettings";
-
-    static FireballRandomUser()
+    [InitializeOnLoad]
+    public static class FireballRandomUser
     {
-        EditorApplication.delayCall += ValidateSettings;
-    }
+        private const string ResourcePath = "Fruits_FireballSettings";
 
-    private static void ValidateSettings()
-    {
-        var settings = Resources.Load<FireballSettings>(ResourcePath);
-
-        if (settings != null)
+        static FireballRandomUser()
         {
-            if (string.IsNullOrEmpty(settings.OperatorPlayerId))
+            EditorApplication.delayCall += ValidateSettings;
+        }
+
+        private static void ValidateSettings()
+        {
+            var settings = Resources.Load<FireballSettings>(ResourcePath);
+
+            if (settings != null)
             {
-                settings.OperatorPlayerId = Guid.NewGuid().ToString();
-            }
-            
-            if (string.IsNullOrEmpty(settings.Token))
-            {
-                settings.Token = Guid.NewGuid().ToString();
+                if (string.IsNullOrEmpty(settings.OperatorPlayerId))
+                {
+                    settings.OperatorPlayerId = Guid.NewGuid().ToString();
+                }
+
+                if (string.IsNullOrEmpty(settings.Token))
+                {
+                    settings.Token = Guid.NewGuid().ToString();
+                }
             }
         }
     }
