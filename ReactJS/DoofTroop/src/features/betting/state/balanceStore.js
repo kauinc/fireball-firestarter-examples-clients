@@ -26,6 +26,18 @@ export function getBalance() {
   return balance
 }
 
+/**
+ * Replace wallet from RGS / auth (absolute money units, not cents).
+ * @param {number} next
+ */
+export function setBalance(next) {
+  const value = roundMoney(Number(next))
+  if (!Number.isFinite(value) || value < 0) return
+  if (value === balance) return
+  balance = value
+  emit()
+}
+
 export function subscribeBalance(listener) {
   listeners.add(listener)
   return () => listeners.delete(listener)

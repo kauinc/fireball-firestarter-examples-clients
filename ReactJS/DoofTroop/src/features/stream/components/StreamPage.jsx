@@ -1,6 +1,7 @@
-import { lazy, Suspense, useCallback, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { BettingOverlay } from '../../betting/index.js'
 import { uiAssets } from '../../betting/assets/uiAssets.js'
+import { setBalance } from '../../betting/state/balanceStore.js'
 import { RaceOverlay } from '../../race/index.js'
 import { SettlementOverlay } from '../../settlement/index.js'
 import { LoadingScreen, LoadingStatus } from '../../loading/index.js'
@@ -12,6 +13,10 @@ import {
 import { useCurrentRound } from '../../betting/hooks/useCurrentRound.js'
 import { RoundState } from '../../../domain/round/index.js'
 import { useViewerSession } from '../hooks/useViewerSession.js'
+import {
+  balanceFromRgs,
+  useFireballSession,
+} from '../../../shared/fireball/index.js'
 import '../styles/stream.css'
 
 const StreamRoom = lazy(() => import('./StreamRoom.jsx'))
@@ -57,6 +62,13 @@ function StreamShell({ children }) {
  * Loading/CONNECTING are local boot UI. Overlays follow Supabase `rounds.status` (Realtime).
  */
 export function StreamPage() {
+  const {
+    ready: fireballReady,
+    error: fireballError,
+    isLoading: fireballLoading,
+    auth: fireballAuth,
+    reload: reloadFireball,
+  } = useFireballSession()
   const { session, error: sessionError, isLoading, reload } = useViewerSession()
   const {
     error: roundsError,
@@ -66,7 +78,12 @@ export function StreamPage() {
   } = useCurrentRound()
   const [roomError, setRoomError] = useState(null)
   const [hasVideo, setHasVideo] = useState(false)
-  const error = roomError || sessionError
+  const error = fireballError || roomError || sessionError
+
+  useEffect(() => {
+    if (fireballAuth?.Balance == null) return
+    setBalance(balanceFromRgs(fireballAuth.Balance))
+  }, [fireballAuth])
 
   const handleVideoAvailableChange = useCallback((available) => {
     setHasVideo(available)
@@ -103,7 +120,8 @@ export function StreamPage() {
             onClick={() => {
               setRoomError(null)
               setHasVideo(false)
-              reload()
+              if (fireballError) reloadFireball()
+              else reload()
             }}
           />
         </StreamShell>
@@ -111,11 +129,18 @@ export function StreamPage() {
     )
   }
 
-  if (isLoading || !session) {
+  if (fireballLoading || !fireballReady || isLoading || !session) {
     return (
       <HudViewportProvider>
         <StreamShell>
-          <LoadingScreen status={LoadingStatus.LOADING} />
+          <LoadingScreen
+            status={LoadingStatus.LOADING}
+            label={
+              fireballLoading || !fireballReady
+                ? 'CONNECTING TO RGS...'
+                : undefined
+            }
+          />
         </StreamShell>
       </HudViewportProvider>
     )

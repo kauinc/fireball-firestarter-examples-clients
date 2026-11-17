@@ -13,6 +13,7 @@
     "@livekit/components-react": "^2.9.24",
     "@livekit/components-styles": "^1.2.0",
     "@supabase/supabase-js": "^2.112.3",
+    "fireball-fireworks-sdk-client": "github:kauinc/fireball-fireworks-sdk-client-javascript",
     "livekit-client": "^2.22.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
