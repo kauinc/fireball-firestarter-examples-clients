@@ -1,2 +1,2 @@
-/** Default play-money wallet on login / page reload (until balance API lands). */
+/** Placeholder until Fireball auth Balance arrives. */
 export const DEFAULT_BALANCE = 5000

@@ -130,6 +130,15 @@ function BettingRoundSession({
     )
   }, [])
 
+  const handlePicksFromServer = useCallback((meta) => {
+    setComboPick(meta?.comboPick ?? null)
+    setCrazyComboPicks(
+      meta?.crazyComboPicks
+        ? { ...meta.crazyComboPicks }
+        : emptyCrazyComboPicks(),
+    )
+  }, [])
+
   useEffect(() => {
     if (hidden) return
     if (phase === BettingPhase.OPEN) playSfx('bettingOpen')
@@ -154,6 +163,31 @@ function BettingRoundSession({
     return () => stopSfx('bettingTick')
   }, [urgentTickActive])
 
+  const {
+    bets,
+    totalBet,
+    canRepeat,
+    placeBet,
+    clearBets,
+    clearBetsByTargetType,
+    repeatLastBets,
+    doubleBets,
+    syncComboPick,
+    syncCrazyComboPicks,
+  } = useChipBets(
+    DEFAULT_SELECTED_POSITIONS,
+    sessionKey,
+    crazyCombo,
+    comboPick,
+    crazyComboPicks,
+    {
+      carry,
+      onCarryForwardRejected: handleCarryForwardRejected,
+      onUndoMeta: handleUndoMeta,
+      onPicksFromServer: handlePicksFromServer,
+    },
+  )
+
   function handleComboToggle() {
     setCrazyComboPickActive(false)
     setCrazyComboActiveSlot(null)
@@ -161,11 +195,13 @@ function BettingRoundSession({
     playSfx('comboToggle')
   }
 
-  function handleComboBarPick(kind, key) {
+  async function handleComboBarPick(kind, key) {
     if (!canMutateBoard()) return
-    setComboPick({ kind, key })
+    const next = { kind, key }
+    setComboPick(next)
     setComboActive(false)
     playSfx('comboPick')
+    await syncComboPick(next)
   }
 
   function handleCrazyComboBarClick(requestedSlot = null) {
@@ -192,7 +228,7 @@ function BettingRoundSession({
     playSfx('crazyToggle')
   }
 
-  function handleCrazyComboDoofPick(color, pattern) {
+  async function handleCrazyComboDoofPick(color, pattern) {
     if (!crazyComboPickActive || !crazyComboActiveSlot) return
     if (!canMutateBoard()) return
     if (isCrazyComboDoofTaken(crazyComboPicks, color, pattern)) {
@@ -210,56 +246,34 @@ function BettingRoundSession({
     const nextSlot = nextCrazyComboSlot(nextPicks)
     if (nextSlot) {
       setCrazyComboActiveSlot(nextSlot)
+      await syncCrazyComboPicks(nextPicks)
       return
     }
 
     setCrazyComboPickActive(false)
     setCrazyComboActiveSlot(null)
     playSfx('crazyComplete')
+    await syncCrazyComboPicks(nextPicks)
   }
 
-  const {
-    bets,
-    totalBet,
-    canRepeat,
-    placeBet,
-    clearBets,
-    clearBetsByTargetType,
-    repeatLastBets,
-    doubleBets,
-  } = useChipBets(
-    DEFAULT_SELECTED_POSITIONS,
-    sessionKey,
-    crazyCombo,
-    comboPick,
-    crazyComboPicks,
-    {
-      carry,
-      onCarryForwardRejected: handleCarryForwardRejected,
-      onUndoMeta: handleUndoMeta,
-    },
-  )
-
-  function handleComboClear() {
+  async function handleComboClear() {
     if (!canMutateBoard()) return
     setComboActive(false)
-    // Snapshot undo (incl. pick) before clearing pick state.
-    clearBetsByTargetType('combo')
+    await clearBetsByTargetType('combo')
     setComboPick(null)
     playSfx('betClear')
   }
 
-  function handleCrazyComboClear() {
+  async function handleCrazyComboClear() {
     if (!canMutateBoard()) return
     setCrazyComboPickActive(false)
     setCrazyComboActiveSlot(null)
-    // Snapshot undo (incl. picks) before clearing pick state.
-    clearBetsByTargetType('crazyCombo')
+    await clearBetsByTargetType('crazyCombo')
     setCrazyComboPicks(emptyCrazyComboPicks())
     playSfx('betClear')
   }
 
-  function tryPlaceBet(amount, target, metal = selectedMetal) {
+  async function tryPlaceBet(amount, target, metal = selectedMetal) {
     if (
       !canMutateBoard() ||
       !canPlaceBetTarget(target, { crazyCombo, comboPick, crazyComboPicks })
@@ -291,7 +305,7 @@ function BettingRoundSession({
       }
     }
 
-    if (!placeBet(placeAmount, target, metal)) {
+    if (!(await placeBet(placeAmount, target, metal))) {
       playSfx('betReject')
       return false
     }
@@ -307,15 +321,19 @@ function BettingRoundSession({
     boardRef,
   })
 
-  function handleClear() {
+  async function handleClear() {
     if (!canMutateBoard()) return
     // CLEAR BETS clears chip stacks only — combo / crazy combo picks stay.
-    clearBets()
+    await clearBets()
     playSfx('betClear')
   }
 
-  function handleRepeat() {
-    if (!canMutateBoard() || !repeatLastBets()) {
+  async function handleRepeat() {
+    if (!canMutateBoard()) {
+      playSfx('betReject')
+      return
+    }
+    if (!(await repeatLastBets())) {
       playSfx('betReject')
       return
     }
@@ -333,8 +351,8 @@ function BettingRoundSession({
     playSfx('betDouble')
   }
 
-  function handleDouble() {
-    if (!canMutateBoard() || !doubleBets()) {
+  async function handleDouble() {
+    if (!canMutateBoard() || !(await doubleBets())) {
       playSfx('betReject')
       return
     }
