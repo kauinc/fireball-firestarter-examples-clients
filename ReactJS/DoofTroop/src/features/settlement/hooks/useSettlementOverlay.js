@@ -4,10 +4,13 @@ import {
   shouldClearSettlementLatch,
   shouldShowWinners,
 } from '../../../domain/round/index.js'
+import { useCfGameState } from '../../../shared/fireball/cfGameStore.js'
 import {
   roundHasResults,
   settlementFromRound,
+  winnersFromRound,
 } from '../utils/settlementFromRound.js'
+import { normalizeSettlementResult } from '../../../shared/fireball/normalize.js'
 
 /** New round / pre-results stages — hide settlement immediately. */
 const CLEARS_SETTLEMENT = new Set([
@@ -46,6 +49,7 @@ export function useSettlementOverlayState({
     Boolean(roundId) && shouldShowWinners(round) && hasLiveResults
   const nextRoundStarted = status != null && CLEARS_SETTLEMENT.has(status)
   const revokePodiumLatch = shouldClearSettlementLatch(status, round)
+  const cf = useCfGameState()
 
   const [latchedRoundId, setLatchedRoundId] = useState(null)
   /** Frozen round row with placements — survives podium → FINISHED. */
@@ -133,13 +137,39 @@ export function useSettlementOverlayState({
           : null
 
   const settlement = useMemo(() => {
-    if (!sourceRound) return null
+    if (!sourceRound || !activeRoundId) return null
+
+    // Prefer authoritative CF settle-result when it matches this round.
+    if (
+      cf.lastSettlement &&
+      cf.lastSettlementRoundId != null &&
+      String(cf.lastSettlementRoundId) === String(activeRoundId)
+    ) {
+      const winners = winnersFromRound(sourceRound)
+      if (cf.lastSettlement.fromServer) {
+        return {
+          ...cf.lastSettlement,
+          winners: winners ?? cf.lastSettlement.winners,
+        }
+      }
+      return normalizeSettlementResult(cf.lastSettlement, winners)
+    }
+
+    // Estimate until settle-result arrives (podium UI only — not wallet).
     return settlementFromRound(sourceRound, {
       bets,
       comboPick,
       crazyComboPicks,
     })
-  }, [sourceRound, bets, comboPick, crazyComboPicks])
+  }, [
+    sourceRound,
+    activeRoundId,
+    bets,
+    comboPick,
+    crazyComboPicks,
+    cf.lastSettlement,
+    cf.lastSettlementRoundId,
+  ])
 
   return {
     isSettlementUiVisible: Boolean(activeRoundId && settlement),

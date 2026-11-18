@@ -35,9 +35,8 @@ import '../styles/settlement.css'
  * has started (`podium_transition_started_at` / `podium_entered_at`), until the
  * next round. Not triggered by FINISHED alone.
  * Losing chips fall away; winning chips stay on the board. Podium icons fly
- * into HISTORY (landscape only). Wallet credit happens in
- * `reconcileRoundWallet` (round feed); this overlay only defers the displayed
- * balance until the count-up finishes.
+ * into HISTORY (landscape only). Wallet credit comes from CF settle-result
+ * Balance; this overlay only defers the displayed balance until count-up finishes.
  */
 export function SettlementOverlay() {
   const {
@@ -124,8 +123,8 @@ export function SettlementOverlay() {
     publishedCrazyComboPicks,
   ])
 
-  // Wallet already includes the win (reconcileRoundWallet). Hold it back in the
-  // footer until the count-up / idle-no-bets moment so the bar doesn't jump early.
+  // Wallet already includes the win (CF settle-result Balance). Hold it back in
+  // the footer until the count-up / idle-no-bets moment so the bar doesn't jump early.
   const creditedWin = creditedWinFor(settlementRoundId)
   const winAnimPending =
     creditedWin > 0 && (hasBets ? phase !== 'done' && phase !== 'idle' : false)

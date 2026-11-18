@@ -1,27 +1,32 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { adjustBalance } from '../state/balanceStore.js'
+import { useCallback, useEffect, useRef } from 'react'
 import {
   clearCarryForwardSeed,
   markCarryForwardCharged,
   wasCarryForwardCharged,
 } from '../state/carryForwardBetsStore.js'
-import {
-  getLastRoundBets,
-  useCanRepeatLastBets,
-} from '../state/lastRoundBetsStore.js'
-import { publishRoundBets } from '../state/roundBetsStore.js'
+import { useCanRepeatLastBets } from '../state/lastRoundBetsStore.js'
+import { getBalance } from '../state/balanceStore.js'
 import { MAX_BET_PER_TARGET } from '../constants/doofs.js'
 import { emptyCrazyComboPicks } from '../constants/combo.js'
-import { positionsForMetal, positionsForChips } from '../constants/positions.js'
+import { positionsForMetal } from '../constants/positions.js'
 import { betTargetKey } from '../utils/betTargets.js'
-import { cloneBets } from '../utils/cloneBet.js'
+import { roundMoney, stackTotal } from '../utils/chipMath.js'
 import {
-  mergeMetalChips,
-  mergeComboChips,
-  isComboBarTarget,
-  roundMoney,
-  stackTotal,
-} from '../utils/chipMath.js'
+  getCfGameSnapshot,
+  markUndoAvailable,
+  useCfGameState,
+} from '../../../shared/fireball/cfGameStore.js'
+import {
+  cfCarryForward,
+  cfClearBets,
+  cfDoubleBets,
+  cfPlaceChip,
+  cfRemoveChip,
+  cfRepeatLast,
+  cfSetComboPick,
+  cfSetCrazyComboPicks,
+  cfUndoBets,
+} from '../../../shared/fireball/cfRequests.js'
 
 function exceedsMaxBet(bets) {
   return bets.some((bet) => stackTotal(bet.chips) > MAX_BET_PER_TARGET)
@@ -31,67 +36,16 @@ function betsStakeTotal(bets) {
   return roundMoney(bets.reduce((sum, bet) => sum + stackTotal(bet.chips), 0))
 }
 
-const MAX_UNDO = 40
-
-let betSeq = 0
-
-function nextBetId() {
-  betSeq += 1
-  return `bet-${betSeq}`
-}
-
 /**
- * Re-seed previous settlement winners onto a fresh betting session.
- * @param {{ bets?: ReadonlyArray<Record<string, unknown>> } | null | undefined} carry
- */
-function seedBetsFromCarryForward(carry) {
-  if (!carry?.bets?.length) return []
-  return carry.bets.map((bet) => ({
-    id: nextBetId(),
-    key: bet.key,
-    chips: (bet.chips ?? []).map((chip) => ({ ...chip })),
-    positions: [...(bet.positions ?? [])],
-    target: bet.target ? { ...bet.target } : bet.target,
-  }))
-}
-
-function cloneTarget(target) {
-  return { ...target }
-}
-
-function mergeChipsForTarget(target, chips) {
-  return isComboBarTarget(target) ? mergeComboChips(chips) : mergeMetalChips(chips)
-}
-
-function snapshotMeta(comboPick, crazyComboPicks) {
-  return {
-    comboPick: comboPick ? { ...comboPick } : null,
-    crazyComboPicks: crazyComboPicks
-      ? { ...crazyComboPicks }
-      : emptyCrazyComboPicks(),
-  }
-}
-
-/**
- * Local chip placements. Max 3 faces per stack (silver / gold / bronze);
- * placing the same metal again adds to that face instead of stacking another.
- * Combo / Crazy Combo bars merge every metal into one stake.
- * Remount the consumer with `key={roundId}` to clear bets for a new round.
- * Winning bets from the previous settlement are re-seeded onto the new board.
- *
- * Metal selects paytable scope: gold=WINNER/1st, silver=TOP 2, bronze=TOP 3.
- *
- * UNDO — pops the last board mutation (place / clear / repeat / x2), including
- * combo / crazy-combo picks that were cleared with that mutation.
- * REPEAT LAST — restores the previous non-empty round's full bet set.
+ * CF-backed chip placements. Board / totals come from bets-updated.
+ * Remount with `key={roundId}` for a new round session.
  *
  * @param {unknown} _selectedPositions
  * @param {string | null} [roundId]
  * @param {boolean} [crazyCombo]
  * @param {{ kind: string, key: string } | null} [comboPick]
  * @param {Record<string, { color: string, pattern: string } | null> | null} [crazyComboPicks]
- * @param {{ carry?: { bets?: ReadonlyArray<Record<string, unknown>> } | null, onCarryForwardRejected?: () => void, onUndoMeta?: (meta: { comboPick: unknown, crazyComboPicks: unknown }) => void }} [options]
- *   `carry` — carry-forward payload already resolved for this round (or null).
+ * @param {{ carry?: { bets?: ReadonlyArray<Record<string, unknown>>, comboPick?: unknown, crazyComboPicks?: unknown } | null, onCarryForwardRejected?: () => void, onUndoMeta?: (meta: { comboPick: unknown, crazyComboPicks: unknown }) => void, onPicksFromServer?: (meta: { comboPick: unknown, crazyComboPicks: unknown }) => void }} [options]
  */
 export function useChipBets(
   _selectedPositions,
@@ -101,242 +55,213 @@ export function useChipBets(
   crazyComboPicks = null,
   options = {},
 ) {
-  const { carry = null, onCarryForwardRejected, onUndoMeta } = options
-  const [bets, setBets] = useState(() => seedBetsFromCarryForward(carry))
-  const [canUndo, setCanUndo] = useState(false)
-  const [carryRejected, setCarryRejected] = useState(false)
+  const {
+    carry = null,
+    onCarryForwardRejected,
+    onUndoMeta,
+    onPicksFromServer,
+  } = options
+  const cf = useCfGameState()
   const canRepeat = useCanRepeatLastBets()
-  const undoStackRef = useRef([])
-  const betsRef = useRef(bets)
-  const comboPickRef = useRef(comboPick)
-  const crazyComboPicksRef = useRef(crazyComboPicks)
   const onCarryForwardRejectedRef = useRef(onCarryForwardRejected)
   const onUndoMetaRef = useRef(onUndoMeta)
+  const onPicksFromServerRef = useRef(onPicksFromServer)
+  const comboPickRef = useRef(comboPick)
+  const crazyComboPicksRef = useRef(crazyComboPicks)
 
   useEffect(() => {
     comboPickRef.current = comboPick
   }, [comboPick])
-
   useEffect(() => {
     crazyComboPicksRef.current = crazyComboPicks
   }, [crazyComboPicks])
-
   useEffect(() => {
     onCarryForwardRejectedRef.current = onCarryForwardRejected
   }, [onCarryForwardRejected])
-
   useEffect(() => {
     onUndoMetaRef.current = onUndoMeta
   }, [onUndoMeta])
-
-  const totalBet = useMemo(
-    () => roundMoney(bets.reduce((sum, bet) => sum + stackTotal(bet.chips), 0)),
-    [bets],
-  )
-
-  // Re-stake carried winning chips once per new betting round.
   useEffect(() => {
-    if (wasCarryForwardCharged(roundId)) return
-    const stake = betsStakeTotal(betsRef.current)
-    if (!(stake > 0)) {
-      markCarryForwardCharged(roundId)
-      return
-    }
-    if (!adjustBalance(-stake)) {
-      // Can't afford to leave them — clear the board and picks.
-      betsRef.current = []
-      setBets([])
-      clearCarryForwardSeed(roundId)
-      setCarryRejected(true)
-      onCarryForwardRejectedRef.current?.()
-      markCarryForwardCharged(roundId)
-      return
-    }
-    markCarryForwardCharged(roundId)
-  }, [roundId])
+    onPicksFromServerRef.current = onPicksFromServer
+  }, [onPicksFromServer])
 
+  // Sync combo / crazy picks from CF into overlay local state.
   useEffect(() => {
-    publishRoundBets(roundId, bets, { crazyCombo, comboPick, crazyComboPicks })
-  }, [roundId, bets, crazyCombo, comboPick, crazyComboPicks])
-
-  const applyBets = useCallback((next) => {
-    betsRef.current = next
-    setBets(next)
-  }, [])
-
-  /**
-   * Apply board mutation and sync wallet: stake up → spend, stake down → refund.
-   * @returns {boolean}
-   */
-  const commitBets = useCallback(
-    (next) => {
-      const prevTotal = betsStakeTotal(betsRef.current)
-      const nextTotal = betsStakeTotal(next)
-      const delta = roundMoney(nextTotal - prevTotal)
-      if (delta !== 0 && !adjustBalance(-delta)) return false
-      applyBets(next)
-      return true
-    },
-    [applyBets],
-  )
-
-  const pushUndo = useCallback((betsSnapshot) => {
-    const stack = undoStackRef.current
-    stack.push({
-      bets: cloneBets(betsSnapshot),
-      ...snapshotMeta(comboPickRef.current, crazyComboPicksRef.current),
+    if (roundId == null) return
+    if (String(cf.roundId ?? '') !== String(roundId)) return
+    onPicksFromServerRef.current?.({
+      comboPick: cf.comboPick,
+      crazyComboPicks: cf.crazyComboPicks ?? emptyCrazyComboPicks(),
     })
-    if (stack.length > MAX_UNDO) stack.shift()
-    setCanUndo(true)
-  }, [])
+  }, [roundId, cf.roundId, cf.comboPick, cf.crazyComboPicks])
 
-  const buildPlacedBets = useCallback((prev, amount, target, metal) => {
-    const key = betTargetKey(target)
-    const stakeMetal = isComboBarTarget(target) ? 'gold' : metal
-    const addition = [{ metal: stakeMetal, value: amount }]
-    const existing = prev.find((bet) => bet.key === key)
-    if (existing) {
-      return prev.map((bet) => {
-        if (bet.key !== key) return bet
-        const chips = mergeChipsForTarget(target, [...bet.chips, ...addition])
-        return {
-          ...bet,
-          chips,
-          positions: [...positionsForChips(chips)],
-        }
-      })
+  const sameRound =
+    roundId != null &&
+    cf.roundId != null &&
+    String(cf.roundId) === String(roundId)
+
+  const bets = sameRound ? cf.bets : []
+  const totalBet = sameRound ? cf.totalStake : 0
+  const canUndo = sameRound ? cf.canUndo : false
+  const carryRejected = Boolean(
+    cf.lastError && /carry/i.test(cf.lastError.reason ?? ''),
+  )
+
+  // Carry-forward via CF once per round.
+  useEffect(() => {
+    if (!roundId || wasCarryForwardCharged(roundId)) return
+    if (!carry?.bets?.length) {
+      markCarryForwardCharged(roundId)
+      return
     }
-    const chips = mergeChipsForTarget(target, addition)
-    return [
-      ...prev,
-      {
-        id: nextBetId(),
-        key,
-        chips,
-        target: cloneTarget(target),
-        positions: [...positionsForMetal(stakeMetal)],
-      },
-    ]
-  }, [])
+
+    let cancelled = false
+    ;(async () => {
+      const stake = betsStakeTotal(carry.bets)
+      if (stake > getBalance()) {
+        clearCarryForwardSeed(roundId)
+        onCarryForwardRejectedRef.current?.()
+        markCarryForwardCharged(roundId)
+        return
+      }
+      const { ok } = await cfCarryForward({
+        roundId,
+        bets: carry.bets,
+        comboPick: carry.comboPick ?? null,
+        crazyComboPicks: carry.crazyComboPicks ?? emptyCrazyComboPicks(),
+      })
+      if (cancelled) return
+      markCarryForwardCharged(roundId)
+      if (!ok) {
+        clearCarryForwardSeed(roundId)
+        onCarryForwardRejectedRef.current?.()
+      } else {
+        markUndoAvailable(true)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [roundId, carry])
 
   const placeBet = useCallback(
-    (amount, target, metal = 'gold') => {
-      if (!amount || !target || !metal) return false
-      const prev = betsRef.current
-      const next = buildPlacedBets(prev, amount, target, metal)
-      if (exceedsMaxBet(next)) return false
-      pushUndo(prev)
-      if (!commitBets(next)) {
-        undoStackRef.current.pop()
-        setCanUndo(undoStackRef.current.length > 0)
-        return false
-      }
-      return true
+    async (amount, target, metal = 'gold') => {
+      if (!roundId || !amount || !target || !metal) return false
+      const key = betTargetKey(target)
+      const existing = getCfGameSnapshot().bets.find((bet) => bet.key === key)
+      const current = existing ? stackTotal(existing.chips) : 0
+      if (roundMoney(current + amount) > MAX_BET_PER_TARGET) return false
+
+      const nextStake = roundMoney(
+        betsStakeTotal(getCfGameSnapshot().bets) + amount,
+      )
+      if (nextStake > getBalance()) return false
+
+      const stakeMetal = target?.type === 'combo' || target?.type === 'crazyCombo'
+        ? 'gold'
+        : metal
+      const { ok } = await cfPlaceChip({
+        roundId,
+        target,
+        metal: stakeMetal,
+        chipValue: amount,
+        positions: [...positionsForMetal(stakeMetal)],
+      })
+      if (ok) markUndoAvailable(true)
+      return ok
     },
-    [buildPlacedBets, commitBets, pushUndo],
+    [roundId],
   )
 
-  const clearBets = useCallback(() => {
-    const prev = betsRef.current
-    if (!prev.length) return false
-    pushUndo(prev)
-    if (!commitBets([])) {
-      undoStackRef.current.pop()
-      setCanUndo(undoStackRef.current.length > 0)
-      return false
-    }
-    return true
-  }, [commitBets, pushUndo])
+  const clearBets = useCallback(async () => {
+    if (!roundId) return false
+    if (!getCfGameSnapshot().bets.length) return false
+    const { ok } = await cfClearBets(roundId)
+    if (ok) markUndoAvailable(true)
+    return ok
+  }, [roundId])
 
   const clearBetsByTargetType = useCallback(
-    (type) => {
-      if (!type) return false
-      const prev = betsRef.current
-      const next = prev.filter((bet) => bet.target?.type !== type)
-      if (next.length === prev.length) return false
-      pushUndo(prev)
-      if (!commitBets(next)) {
-        undoStackRef.current.pop()
-        setCanUndo(undoStackRef.current.length > 0)
-        return false
+    async (type) => {
+      if (!roundId || !type) return false
+      const matching = getCfGameSnapshot().bets.filter(
+        (bet) => bet.target?.type === type,
+      )
+      if (!matching.length) return false
+      let any = false
+      for (const bet of matching) {
+        const { ok } = await cfRemoveChip({ roundId, betId: bet.id })
+        if (ok) any = true
       }
-      return true
+      if (type === 'combo') {
+        await cfSetComboPick(roundId, null)
+      }
+      if (type === 'crazyCombo') {
+        await cfSetCrazyComboPicks(roundId, emptyCrazyComboPicks())
+      }
+      if (any) markUndoAvailable(true)
+      return any
     },
-    [commitBets, pushUndo],
+    [roundId],
   )
 
-  const undoBets = useCallback(() => {
-    const previous = undoStackRef.current.pop()
-    if (!previous) {
-      setCanUndo(false)
-      return false
-    }
-    if (!commitBets(previous.bets)) {
-      undoStackRef.current.push(previous)
-      return false
-    }
+  const undoBets = useCallback(async () => {
+    if (!roundId) return false
+    const { ok } = await cfUndoBets(roundId)
+    if (!ok) return false
+    const next = getCfGameSnapshot()
     onUndoMetaRef.current?.({
-      comboPick: previous.comboPick,
-      crazyComboPicks: previous.crazyComboPicks
-        ? { ...previous.crazyComboPicks }
+      comboPick: next.comboPick,
+      crazyComboPicks: next.crazyComboPicks
+        ? { ...next.crazyComboPicks }
         : emptyCrazyComboPicks(),
     })
-    setCanUndo(undoStackRef.current.length > 0)
+    // Server undo stack depth is unknown; leave canUndo true until undo fails.
+    markUndoAvailable(true)
     return true
-  }, [commitBets])
+  }, [roundId])
 
-  const repeatLastBets = useCallback(() => {
-    const last = getLastRoundBets()
-    if (!last?.bets?.length) return false
+  const repeatLastBets = useCallback(async () => {
+    if (!roundId) return false
+    const { ok } = await cfRepeatLast(roundId)
+    if (ok) markUndoAvailable(true)
+    return ok
+  }, [roundId])
 
-    const prev = betsRef.current
-    const next = last.bets.map((bet) => ({
-      id: nextBetId(),
-      key: bet.key,
-      chips: (bet.chips ?? []).map((chip) => ({ ...chip })),
-      positions: [...(bet.positions ?? [])],
-      target: bet.target ? { ...bet.target } : bet.target,
-    }))
-
-    if (exceedsMaxBet(next)) return false
-    pushUndo(prev)
-    if (!commitBets(next)) {
-      undoStackRef.current.pop()
-      setCanUndo(undoStackRef.current.length > 0)
-      return false
+  const doubleBets = useCallback(async () => {
+    if (!roundId) return false
+    if (!getCfGameSnapshot().bets.length) return false
+    if (exceedsMaxBet(getCfGameSnapshot().bets.map((bet) => ({
+      ...bet,
+      chips: bet.chips.map((c) => ({ ...c, value: roundMoney(c.value * 2) })),
+    })))) {
+      // CF also caps; soft reject when every stack is already at max.
     }
-    return true
-  }, [commitBets, pushUndo])
+    const { ok } = await cfDoubleBets(roundId)
+    if (ok) markUndoAvailable(true)
+    return ok
+  }, [roundId])
 
-  const doubleBets = useCallback(() => {
-    const prev = betsRef.current
-    if (!prev.length) return false
+  const syncComboPick = useCallback(
+    async (nextPick) => {
+      if (!roundId) return false
+      const { ok } = await cfSetComboPick(roundId, nextPick)
+      if (ok) markUndoAvailable(true)
+      return ok
+    },
+    [roundId],
+  )
 
-    let changed = false
-    const next = prev.map((bet) => {
-      const doubledChips = mergeChipsForTarget(
-        bet.target,
-        bet.chips.map((chip) => ({
-          ...chip,
-          value: roundMoney(chip.value * 2),
-        })),
-      )
-      if (stackTotal(doubledChips) > MAX_BET_PER_TARGET) {
-        return bet
-      }
-      changed = true
-      return { ...bet, chips: doubledChips }
-    })
-
-    if (!changed) return false
-    pushUndo(prev)
-    if (!commitBets(next)) {
-      undoStackRef.current.pop()
-      setCanUndo(undoStackRef.current.length > 0)
-      return false
-    }
-    return true
-  }, [commitBets, pushUndo])
+  const syncCrazyComboPicks = useCallback(
+    async (nextPicks) => {
+      if (!roundId) return false
+      const { ok } = await cfSetCrazyComboPicks(roundId, nextPicks)
+      if (ok) markUndoAvailable(true)
+      return ok
+    },
+    [roundId],
+  )
 
   return {
     bets,
@@ -350,5 +275,8 @@ export function useChipBets(
     undoBets,
     repeatLastBets,
     doubleBets,
+    syncComboPick,
+    syncCrazyComboPicks,
+    lastError: cf.lastError,
   }
 }

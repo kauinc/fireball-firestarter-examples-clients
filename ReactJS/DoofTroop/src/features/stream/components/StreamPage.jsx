@@ -15,8 +15,11 @@ import { RoundState } from '../../../domain/round/index.js'
 import { useViewerSession } from '../hooks/useViewerSession.js'
 import {
   balanceFromRgs,
+  hydrateFromGameState,
+  useCfServerMessages,
   useFireballSession,
 } from '../../../shared/fireball/index.js'
+import { useCfRoundWallet } from '../../betting/hooks/useCfRoundWallet.js'
 import '../styles/stream.css'
 
 const StreamRoom = lazy(() => import('./StreamRoom.jsx'))
@@ -75,14 +78,25 @@ export function StreamPage() {
     realtimeStatus,
     status: roundStatus,
     ready: roundsReady,
+    round: currentRound,
   } = useCurrentRound()
   const [roomError, setRoomError] = useState(null)
   const [hasVideo, setHasVideo] = useState(false)
   const error = fireballError || roomError || sessionError
 
+  useCfServerMessages(fireballReady)
+  useCfRoundWallet({
+    round: currentRound,
+    status: roundStatus,
+    fireballReady,
+  })
+
   useEffect(() => {
-    if (fireballAuth?.Balance == null) return
-    setBalance(balanceFromRgs(fireballAuth.Balance))
+    if (!fireballAuth) return
+    hydrateFromGameState(fireballAuth.GameState, fireballAuth.Balance)
+    if (fireballAuth.Balance != null && fireballAuth.GameState == null) {
+      setBalance(balanceFromRgs(fireballAuth.Balance))
+    }
   }, [fireballAuth])
 
   const handleVideoAvailableChange = useCallback((available) => {
