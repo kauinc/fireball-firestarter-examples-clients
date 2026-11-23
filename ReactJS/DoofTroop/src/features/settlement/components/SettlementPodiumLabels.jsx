@@ -1,3 +1,5 @@
+import { translatePlace, useT } from '../../../shared/i18n/index.js'
+
 /**
  * Podium callouts over the Unreal 3D winners: icon + place + mock time.
  * Layout: 2nd (left) · 1st (center, raised) · 3rd (right).
@@ -6,6 +8,7 @@ export function SettlementPodiumLabels({
   winners = [],
   podiumRef = null,
 }) {
+  const t = useT()
   const byPlace = Object.fromEntries(winners.map((w) => [w.place, w]))
   const ordered = [byPlace['2nd'], byPlace['1st'], byPlace['3rd']].filter(
     Boolean,
@@ -16,7 +19,7 @@ export function SettlementPodiumLabels({
   return (
     <div
       className="settlement-podium"
-      aria-label="Race results"
+      aria-label={t('label_race_results')}
       ref={podiumRef}
     >
       {ordered.map((winner) => (
@@ -34,7 +37,9 @@ export function SettlementPodiumLabels({
               draggable={false}
             />
           ) : null}
-          <span className="settlement-podium__place">{winner.place}</span>
+          <span className="settlement-podium__place">
+            {translatePlace(t, winner.place)}
+          </span>
           <span className="settlement-podium__time">{winner.timeLabel}</span>
         </div>
       ))}

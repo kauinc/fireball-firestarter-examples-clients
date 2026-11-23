@@ -1,10 +1,6 @@
 export { HudFade, HudMenuChrome } from './components/HudChrome.jsx'
 export { FullscreenHomeScreenHint } from './components/FullscreenHomeScreenHint.jsx'
 export { StreamErrorBoundary } from './components/StreamErrorBoundary.jsx'
-export {
-  LandscapeHudOnly,
-  RotatePhonePrompt,
-} from './components/RotatePhonePrompt.jsx'
 export { useDialogFocus } from './hooks/useDialogFocus.js'
 export {
   useOverlayPresence,

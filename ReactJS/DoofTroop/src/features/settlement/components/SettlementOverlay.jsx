@@ -26,6 +26,7 @@ import {
   useSyncHudFadeHeight,
 } from '../../hud/index.js'
 import { playSfx } from '../../../shared/audio/index.js'
+import { useT } from '../../../shared/i18n/index.js'
 import '../../betting/styles/hud-shared.css'
 import '../../betting/styles/portrait.css'
 import '../styles/settlement.css'
@@ -39,6 +40,7 @@ import '../styles/settlement.css'
  * Balance; this overlay only defers the displayed balance until count-up finishes.
  */
 export function SettlementOverlay() {
+  const t = useT()
   const {
     scale: viewportScale,
     compact,
@@ -254,7 +256,7 @@ export function SettlementOverlay() {
       }`}
     >
       <div className="betting-footer__balance-wrap">
-        <span className="betting-footer__caption">BALANCE:</span>
+        <span className="betting-footer__caption">{t('label_balance')}</span>
         <div
           className="betting-footer__meter"
           style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
@@ -268,7 +270,7 @@ export function SettlementOverlay() {
       )}
 
       <div className="betting-footer__total-wrap">
-        <span className="betting-footer__caption">TOTAL BET:</span>
+        <span className="betting-footer__caption">{t('label_total_bet')}</span>
         <div
           className="betting-footer__meter"
           style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
@@ -307,7 +309,7 @@ export function SettlementOverlay() {
 
       {isPortrait && settlement.didWin ? (
         <div className="settlement-win settlement-win--portrait" role="status">
-          <span className="settlement-win__label">TOTAL WIN:</span>
+          <span className="settlement-win__label">{t('label_total_win')}</span>
           <div className="settlement-win__bar" ref={winBarRef}>
             <strong className="settlement-win__amount">
               {formatMoney(winAmount)}

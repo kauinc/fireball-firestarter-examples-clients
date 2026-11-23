@@ -1,12 +1,14 @@
 import { POSITION_OPTIONS } from '../constants/doofs.js'
 import { uiAssets } from '../assets/uiAssets.js'
 import { useRaceHistory } from '../state/historyStore.js'
+import { translatePlace, useT } from '../../../shared/i18n/index.js'
 
 /**
  * Round history sheet (10 × 1st/2nd/3rd) over the History bar asset.
  * Reads shared history store; supports insert / shift / exit animations.
  */
 export function HistoryPanel({ open, panelRef = null, landed = false }) {
+  const t = useT()
   const { rows, anim } = useRaceHistory()
 
   if (!open) return null
@@ -22,7 +24,7 @@ export function HistoryPanel({ open, panelRef = null, landed = false }) {
     <div className="history-sheet">
       <div className="history-sheet__cols" aria-hidden="true">
         {POSITION_OPTIONS.map((pos) => (
-          <span key={pos}>{pos}</span>
+          <span key={pos}>{translatePlace(t, pos)}</span>
         ))}
       </div>
 
@@ -30,7 +32,7 @@ export function HistoryPanel({ open, panelRef = null, landed = false }) {
         ref={panelRef}
         className={`history-panel${inserting ? ' is-inserting' : ''}${landed ? ' is-landed' : ''}`}
         role="table"
-        aria-label="Round history"
+        aria-label={t('label_round_history')}
         style={{ backgroundImage: `url(${uiAssets.historyBar})` }}
       >
         <div className="history-panel__viewport">

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { t } from '../i18n/i18nStore.js'
 import { connectFireball, getDoofFireball } from './client.js'
 
 /**
@@ -43,7 +44,7 @@ export function useFireballSession() {
         err?.Reason ||
         err?.reason ||
         err?.message ||
-        (typeof err === 'string' ? err : 'Fireball connection failed')
+        (typeof err === 'string' ? err : t('label_fireball_connection_failed'))
       setError(String(message))
       setReady(false)
     } finally {

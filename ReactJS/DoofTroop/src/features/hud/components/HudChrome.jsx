@@ -6,24 +6,34 @@ import {
   toggleAudioMuted,
   useAudioMuted,
 } from '../../../shared/audio/index.js'
+import { useT } from '../../../shared/i18n/index.js'
 import { useDialogFocus } from '../hooks/useDialogFocus.js'
 
-const MENU_ITEMS = Object.freeze([
-  { id: 'sound', label: 'Audio' },
+const MENU_ITEM_IDS = Object.freeze([
+  { id: 'sound', labelKey: 'label_audio' },
   {
     id: 'fullscreen',
-    label: 'Full screen',
+    labelKey: 'label_fullscreen',
     icon: uiAssets.fullscreen,
   },
-  { id: 'commentary', label: 'Commentary', icon: uiAssets.menuIcons.commentary },
-  { id: 'howToPlay', label: 'How to play', icon: uiAssets.menuIcons.howToPlay },
-  { id: 'home', label: 'Home', icon: uiAssets.menuIcons.home },
+  {
+    id: 'commentary',
+    labelKey: 'label_commentary',
+    icon: uiAssets.menuIcons.commentary,
+  },
+  {
+    id: 'howToPlay',
+    labelKey: 'label_how_to_play',
+    icon: uiAssets.menuIcons.howToPlay,
+  },
+  { id: 'home', labelKey: 'label_home', icon: uiAssets.menuIcons.home },
 ])
 
 /**
  * Hamburger menu — Audio, Full screen, and placeholder items.
  */
 export function HudMenuChrome({ placement = 'footer' }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const rootRef = useRef(null)
   const menuId = useId()
@@ -91,10 +101,10 @@ export function HudMenuChrome({ placement = 'footer' }) {
           className="hud-menu-panel"
           id={menuId}
           role="menu"
-          aria-label="Game menu"
+          aria-label={t('label_game_menu')}
           style={{ backgroundImage: `url(${uiAssets.menuPanel})` }}
         >
-          {MENU_ITEMS.map((item) => {
+          {MENU_ITEM_IDS.map((item) => {
             const icon =
               item.id === 'sound'
                 ? audioMuted
@@ -110,9 +120,9 @@ export function HudMenuChrome({ placement = 'footer' }) {
             const label =
               item.id === 'fullscreen'
                 ? isFullscreen
-                  ? 'Exit full screen'
-                  : 'Full screen'
-                : item.label
+                  ? t('label_exit_fullscreen')
+                  : t('label_fullscreen')
+                : t(item.labelKey)
             return (
               <button
                 key={item.id}
@@ -123,8 +133,8 @@ export function HudMenuChrome({ placement = 'footer' }) {
                 aria-label={
                   item.id === 'sound'
                     ? audioMuted
-                      ? 'Unmute audio'
-                      : 'Mute audio'
+                      ? t('label_unmute_audio')
+                      : t('label_mute_audio')
                     : label
                 }
                 onPointerDown={(event) => {
@@ -157,7 +167,7 @@ export function HudMenuChrome({ placement = 'footer' }) {
         type="button"
         className={buttonClass}
         style={{ backgroundImage: `url(${uiAssets.menuButton})` }}
-        aria-label="Open menu"
+        aria-label={t('label_open_menu')}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}

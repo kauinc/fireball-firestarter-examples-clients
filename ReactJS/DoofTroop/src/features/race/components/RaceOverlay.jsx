@@ -19,6 +19,7 @@ import {
   useOverlayPresence,
 } from '../../hud/index.js'
 import { playSfx } from '../../../shared/audio/index.js'
+import { useT } from '../../../shared/i18n/index.js'
 import '../../betting/styles/hud-shared.css'
 import '../../betting/styles/crazy-combos.css'
 import '../../betting/styles/portrait.css'
@@ -30,6 +31,7 @@ import '../styles/race.css'
  * - Portrait: same board as betting (read-only), no chip footer; timer on stream edge.
  */
 export function RaceOverlay() {
+  const t = useT()
   const {
     scale: viewportScale,
     compact,
@@ -253,7 +255,7 @@ export function RaceOverlay() {
             */}
             <footer className="betting-footer race-overlay__footer race-overlay__footer--meters-only">
               <div className="betting-footer__balance-wrap">
-                <span className="betting-footer__caption">BALANCE:</span>
+                <span className="betting-footer__caption">{t('label_balance')}</span>
                 <div
                   className="betting-footer__meter"
                   style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
@@ -263,7 +265,7 @@ export function RaceOverlay() {
               </div>
 
               <div className="betting-footer__total-wrap">
-                <span className="betting-footer__caption">POTENTIAL WIN:</span>
+                <span className="betting-footer__caption">{t('label_potential_win')}</span>
                 <div
                   className="betting-footer__meter"
                   style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
@@ -290,12 +292,12 @@ export function RaceOverlay() {
             : uiAssets.historyMyBetsInactive
         })`,
       }}
-      aria-label="Current bets"
+      aria-label={t('label_current_bets')}
       aria-expanded={betsOpen}
       aria-controls="race-current-bets-dialog"
       onClick={toggleCurrentBets}
     >
-      CURRENT BETS
+      {t('label_current_bets')}
     </button>
   )
 
@@ -319,7 +321,7 @@ export function RaceOverlay() {
         <button
           type="button"
           className="race-bets-sheet__darken"
-          aria-label="Close current bets"
+          aria-label={t('label_close_current_bets')}
           onClick={closeBets}
         />
       ) : null}
@@ -335,7 +337,7 @@ export function RaceOverlay() {
               className="race-bets-sheet__panel"
               role="dialog"
               aria-modal="true"
-              aria-label="Current bets"
+              aria-label={t('label_current_bets')}
               tabIndex={-1}
             >
               {board}
@@ -346,7 +348,7 @@ export function RaceOverlay() {
 
           <footer className="betting-footer race-overlay__footer">
             <div className="betting-footer__balance-wrap">
-              <span className="betting-footer__caption">BALANCE:</span>
+              <span className="betting-footer__caption">{t('label_balance')}</span>
               <div
                 className="betting-footer__meter"
                 style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
@@ -360,7 +362,7 @@ export function RaceOverlay() {
             </div>
 
             <div className="betting-footer__total-wrap">
-              <span className="betting-footer__caption">POTENTIAL WIN:</span>
+              <span className="betting-footer__caption">{t('label_potential_win')}</span>
               <div
                 className="betting-footer__meter"
                 style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}

@@ -7,6 +7,7 @@ import { DOOF_ACCESSORIES } from '../../betting/constants/doofs.js'
 import { accessoryTarget } from '../../betting/utils/betTargets.js'
 import { formatMoney } from '../../betting/utils/formatMoney.js'
 import { usePublishedRoundBets } from '../../betting/state/roundBetsStore.js'
+import { translateAccessory, useT } from '../../../shared/i18n/index.js'
 import '../../betting/styles/crazy-combos.css'
 
 /**
@@ -42,6 +43,7 @@ export function SettlementBoard({
   /** When false, TOTAL WIN is rendered by the overlay (portrait banner slot). */
   showWinBarInBoard = true,
 }) {
+  const t = useT()
   const { comboPick: publishedComboPick, crazyComboPicks: publishedCrazyComboPicks } =
     usePublishedRoundBets()
 
@@ -55,7 +57,7 @@ export function SettlementBoard({
 
   const winBar = showWinBar ? (
     <div className="settlement-win" role="status">
-      <span className="settlement-win__label">TOTAL WIN:</span>
+      <span className="settlement-win__label">{t('label_total_win')}</span>
       <div className="settlement-win__bar" ref={winBarRef}>
         <strong className="settlement-win__amount">
           {formatMoney(displayedWin)}
@@ -88,7 +90,7 @@ export function SettlementBoard({
           />
         ) : null}
 
-        <div className="mid-controls__accessories" aria-label="Accessory bets">
+        <div className="mid-controls__accessories" aria-label={t('label_accessory_bets')}>
           {DOOF_ACCESSORIES.map((item) => {
             const stack = accessoryBets.find(
               (bet) =>
@@ -109,7 +111,9 @@ export function SettlementBoard({
                 }}
                 data-bet-drop={JSON.stringify(accessoryTarget(item))}
               >
-                <span className="mid-controls__accessory-label">{item}</span>
+                <span className="mid-controls__accessory-label">
+                  {translateAccessory(t, item)}
+                </span>
                 <img
                   src={iconSrc}
                   alt=""

@@ -3,6 +3,7 @@ import {
   LOADING_STATUS_LABEL,
   LoadingStatus,
 } from '../constants/loadingStatus.js'
+import { useT } from '../../../shared/i18n/index.js'
 import loadingBackground from '../../../assets/ui/LoadingScreenBackground.png'
 import '../styles/loading-screen.css'
 
@@ -15,7 +16,10 @@ export function LoadingScreen({
   status = LoadingStatus.LOADING,
   label,
 }) {
-  const text = label ?? LOADING_STATUS_LABEL[status] ?? LOADING_STATUS_LABEL[LoadingStatus.LOADING]
+  const t = useT()
+  const statusKey =
+    LOADING_STATUS_LABEL[status] ?? LOADING_STATUS_LABEL[LoadingStatus.LOADING]
+  const text = label ?? t(statusKey)
 
   return (
     <div

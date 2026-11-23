@@ -4,8 +4,8 @@ export const LoadingStatus = Object.freeze({
   CONNECTING: 'connecting',
 })
 
-/** @type {Record<string, string>} */
+/** @type {Record<string, string>} i18n keys (resolve via `t`) */
 export const LOADING_STATUS_LABEL = Object.freeze({
-  [LoadingStatus.LOADING]: 'LOADING...',
-  [LoadingStatus.CONNECTING]: 'CONNECTING TO STREAM...',
+  [LoadingStatus.LOADING]: 'label_loading',
+  [LoadingStatus.CONNECTING]: 'label_connecting_stream',
 })

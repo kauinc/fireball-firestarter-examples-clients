@@ -37,6 +37,18 @@ export function readFireballEnv(env = import.meta.env) {
       env.VITE_FIREBALL_CURRENCY.trim()) ||
     'USD'
 
+  const language =
+    (typeof env.VITE_FIREBALL_LANGUAGE === 'string' &&
+      env.VITE_FIREBALL_LANGUAGE.trim()) ||
+    'en'
+
+  // Translation CMS app UUID (Bonbonella-style). Falls back to gameId only if
+  // Admin created the Translation App with the same id — usually it is different.
+  const translationAppId =
+    (typeof env.VITE_FIREBALL_TRANSLATION_APP_ID === 'string' &&
+      env.VITE_FIREBALL_TRANSLATION_APP_ID.trim()) ||
+    ''
+
   const useDemo =
     env.VITE_FIREBALL_DEMO === '1' || env.VITE_FIREBALL_DEMO === 'true'
 
@@ -46,6 +58,8 @@ export function readFireballEnv(env = import.meta.env) {
     gameMode,
     operatorId,
     currency,
+    language,
+    translationAppId,
     useDemo,
   }
 }

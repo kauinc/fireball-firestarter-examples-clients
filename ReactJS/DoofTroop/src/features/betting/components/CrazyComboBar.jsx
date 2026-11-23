@@ -4,6 +4,7 @@ import { getDoofBoardCell } from '../assets/doofImages.js'
 import { isCrazyComboComplete } from '../constants/combo.js'
 import { crazyComboTarget } from '../utils/betTargets.js'
 import { uiAssets } from '../assets/uiAssets.js'
+import { translatePlace, useT } from '../../../shared/i18n/index.js'
 import { ChipStack } from './ChipStack.jsx'
 
 const crazyComboDropTarget = crazyComboTarget()
@@ -30,10 +31,11 @@ export function CrazyComboBar({
   onPlaceBet,
   settleClass = '',
 }) {
+  const t = useT()
   const complete = isCrazyComboComplete(picks)
   const dropEnabled = !readOnly && complete && !pickActive && !disabled
   const slotSwitchEnabled = !readOnly && pickActive && !disabled
-  const actionLabel = complete ? 'CLEAR' : 'PICK'
+  const actionLabel = complete ? t('label_clear') : t('label_pick')
 
   const shellClass = [
     'crazy-combo-bar__shell',
@@ -96,7 +98,7 @@ export function CrazyComboBar({
         const slotBody = (
           <>
             <span className="crazy-combo-bar__slot-label">
-              {POSITION_LABELS[slot] ?? slot}:
+              {translatePlace(t, POSITION_LABELS[slot] ?? slot)}:
             </span>
             {cell ? (
               <img
@@ -139,7 +141,9 @@ export function CrazyComboBar({
       style={{ backgroundImage: `url(${uiAssets.crazyComboBarRoundButton})` }}
       disabled={disabled}
       aria-pressed={pickActive}
-      aria-label={complete ? 'Clear crazy combo selection' : 'Pick crazy combo'}
+      aria-label={
+        complete ? t('label_clear_crazy_combo') : t('label_pick_crazy_combo')
+      }
       onClick={handleActionClick}
     >
       {actionLabel}
@@ -148,7 +152,7 @@ export function CrazyComboBar({
 
   const paysBlock = (
     <div className="crazy-combo-bar__pays">
-      <span className="crazy-combo-bar__pays-label">PAYS</span>
+      <span className="crazy-combo-bar__pays-label">{t('label_pays')}</span>
       <span className="crazy-combo-bar__pays-value">{paysMultiplier}</span>
     </div>
   )
@@ -156,13 +160,13 @@ export function CrazyComboBar({
   return (
     <article
       className={`crazy-combo-bar${pickActive ? ' is-pick-active' : ''}${complete ? ' is-complete' : ''}${readOnly ? ' is-readonly' : ''}`}
-      aria-label="Crazy Combo"
+      aria-label={t('label_crazy_combo')}
     >
       <div className="crazy-combo-bar__rail">
         <h3 className="crazy-combo-bar__caption">
           <span className="crazy-combo-bar__caption-title">
-            <span className="crazy-combo-bar__caption-crazy">CRAZY</span>{' '}
-            <span className="crazy-combo-bar__caption-combo">COMBO</span>
+            <span className="crazy-combo-bar__caption-crazy">{t('label_crazy')}</span>{' '}
+            <span className="crazy-combo-bar__caption-combo">{t('label_combo')}</span>
           </span>
         </h3>
         <div className="crazy-combo-bar__side">
