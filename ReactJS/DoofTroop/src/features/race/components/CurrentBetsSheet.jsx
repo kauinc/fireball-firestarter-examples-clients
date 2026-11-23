@@ -4,6 +4,7 @@ import { CrazyCombos } from '../../betting/components/CrazyCombos.jsx'
 import { uiAssets } from '../../betting/assets/uiAssets.js'
 import { DOOF_ACCESSORIES } from '../../betting/constants/doofs.js'
 import { accessoryTarget } from '../../betting/utils/betTargets.js'
+import { translateAccessory, useT } from '../../../shared/i18n/index.js'
 
 /**
  * Read-only board under CURRENT BETS (landscape) or always-visible
@@ -16,6 +17,7 @@ export function CurrentBetsBoard({
   crazyComboPicks = null,
   portrait = false,
 }) {
+  const t = useT()
   const labelBets = bets.filter(
     (bet) => bet.target.type === 'color' || bet.target.type === 'pattern',
   )
@@ -37,7 +39,7 @@ export function CurrentBetsBoard({
   const rails = (
     <div className="mid-controls-stack is-crazy">
       <div className="mid-controls">
-        <div className="mid-controls__accessories" aria-label="Accessory bets">
+        <div className="mid-controls__accessories" aria-label={t('label_accessory_bets')}>
           {DOOF_ACCESSORIES.map((item) => {
             const stack = accessoryBets.find(
               (bet) =>
@@ -56,7 +58,9 @@ export function CurrentBetsBoard({
                 }}
                 data-bet-drop={JSON.stringify(accessoryTarget(item))}
               >
-                <span className="mid-controls__accessory-label">{item}</span>
+                <span className="mid-controls__accessory-label">
+                  {translateAccessory(t, item)}
+                </span>
                 <img
                   src={iconSrc}
                   alt=""

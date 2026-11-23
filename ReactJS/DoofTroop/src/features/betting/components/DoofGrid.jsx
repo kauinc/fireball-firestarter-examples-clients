@@ -1,5 +1,10 @@
 import { useRef } from 'react'
 import { DOOF_COLORS, DOOF_PATTERNS } from '../constants/doofs.js'
+import {
+  translateColor,
+  translatePattern,
+  useT,
+} from '../../../shared/i18n/index.js'
 import { getDoofBoardCell } from '../assets/doofImages.js'
 import {
   getHighlightedDoofUrl,
@@ -66,6 +71,7 @@ function ChipLabel({
 function renderCell({
   color,
   pattern,
+  cellLabel,
   disabled,
   crazyComboPickActive,
   crazyComboActiveSlot,
@@ -101,7 +107,7 @@ function renderCell({
     <div
       key={`${color}-${pattern}`}
       className={cellClass}
-      aria-label={`${color} ${pattern}`}
+      aria-label={cellLabel}
       aria-disabled={alreadyTaken || undefined}
       onPointerUp={(event) => {
         if (!pickable || disabled || event.button !== 0) return
@@ -163,6 +169,7 @@ export function DoofGrid({
   onClear = null,
   canClear = false,
 }) {
+  const t = useT()
   const playableRef = useRef(null)
   const fieldSrc = crazyComboPickActive ? uiAssets.ccBoard : uiAssets.betField
 
@@ -208,32 +215,39 @@ export function DoofGrid({
 
   const { highlight } = getComboBarState(comboActive)
 
+  const cellArgs = {
+    disabled,
+    crazyComboPickActive,
+    crazyComboActiveSlot,
+    crazyComboPicks,
+    highlightTarget,
+    onCrazyComboDoofPick,
+  }
+
   const cells = portrait
     ? DOOF_COLORS.flatMap((color) =>
         DOOF_PATTERNS.map((pattern) =>
           renderCell({
+            ...cellArgs,
             color,
             pattern,
-            disabled,
-            crazyComboPickActive,
-            crazyComboActiveSlot,
-            crazyComboPicks,
-            highlightTarget,
-            onCrazyComboDoofPick,
+            cellLabel: t('label_doof_cell', {
+              color: translateColor(t, color),
+              pattern: translatePattern(t, pattern),
+            }),
           }),
         ),
       )
     : DOOF_PATTERNS.flatMap((pattern) =>
         DOOF_COLORS.map((color) =>
           renderCell({
+            ...cellArgs,
             color,
             pattern,
-            disabled,
-            crazyComboPickActive,
-            crazyComboActiveSlot,
-            crazyComboPicks,
-            highlightTarget,
-            onCrazyComboDoofPick,
+            cellLabel: t('label_doof_cell', {
+              color: translateColor(t, color),
+              pattern: translatePattern(t, pattern),
+            }),
           }),
         ),
       )
@@ -244,7 +258,7 @@ export function DoofGrid({
     <div
       className={`doof-grid${comboActive ? ' is-combo-active' : ''}${crazyComboPickActive ? ' is-crazy-combo-active' : ''}`}
       role="group"
-      aria-label="Betting board (pointer placement only in this prototype)"
+      aria-label={t('label_betting_board')}
       aria-disabled={disabled || undefined}
       data-disabled={disabled ? 'true' : 'false'}
       data-portrait={portrait ? 'true' : undefined}
@@ -270,7 +284,7 @@ export function DoofGrid({
                 onComboPick={() => onComboBarPick?.('patterns', pattern)}
                 onPlace={() => onPlaceBet?.(patternTarget(pattern))}
               >
-                {pattern}
+                {translatePattern(t, pattern)}
               </ChipLabel>
               {stack ? (
                 <span
@@ -347,7 +361,7 @@ export function DoofGrid({
                   onComboPick={() => onComboBarPick?.('colors', color)}
                   onPlace={() => onPlaceBet?.(colorTarget(color))}
                 >
-                  {color}
+                  {translateColor(t, color)}
                 </ChipLabel>
                 {stack ? (
                   <span
@@ -370,13 +384,13 @@ export function DoofGrid({
         <div className="doof-grid__side-rail">
           <div className="doof-grid__odds">
             <div className="doof-grid__odds-item">
-              <span className="doof-grid__odds-label">MAX</span>
+              <span className="doof-grid__odds-label">{t('label_max')}</span>
               <span className="doof-grid__odds-value">
                 {formatMultiplier(oddsMax)}
               </span>
             </div>
             <div className="doof-grid__odds-item">
-              <span className="doof-grid__odds-label">MIN</span>
+              <span className="doof-grid__odds-label">{t('label_min')}</span>
               <span className="doof-grid__odds-value">
                 {formatMultiplier(oddsMin)}
               </span>
@@ -389,10 +403,11 @@ export function DoofGrid({
               style={{ backgroundImage: `url(${uiAssets.roundButton})` }}
               disabled={disabled || !canClear}
               onClick={onClear}
+              aria-label={t('label_clear_bets')}
             >
-              CLEAR
+              {t('label_clear')}
               <br />
-              BETS
+              {t('label_bets')}
             </button>
           ) : null}
         </div>
@@ -401,7 +416,7 @@ export function DoofGrid({
           <div className="doof-grid__side-meters">
             {balance != null ? (
               <div className="doof-grid__meter">
-                <span className="doof-grid__meter-caption">BALANCE:</span>
+                <span className="doof-grid__meter-caption">{t('label_balance')}</span>
                 <div
                   className="doof-grid__meter-bar"
                   style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
@@ -412,7 +427,7 @@ export function DoofGrid({
             ) : null}
             {totalBet != null ? (
               <div className="doof-grid__meter">
-                <span className="doof-grid__meter-caption">TOTAL BET:</span>
+                <span className="doof-grid__meter-caption">{t('label_total_bet')}</span>
                 <div
                   className="doof-grid__meter-bar"
                   style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}

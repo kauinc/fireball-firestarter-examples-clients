@@ -1,4 +1,25 @@
 import { Component } from 'react'
+import { useT } from '../../../shared/i18n/index.js'
+
+function StreamErrorFallback({ error }) {
+  const t = useT()
+  const message =
+    error?.message || String(error) || t('label_unknown_error')
+  return (
+    <div className="stream-shell stream-shell--error">
+      <div className="stream-shell__banner stream-shell__banner--warn" role="alert">
+        {t('label_something_went_wrong')}
+      </div>
+      <button
+        type="button"
+        className="stream-shell__retry"
+        aria-label={t('label_reload')}
+        title={message}
+        onClick={() => window.location.reload()}
+      />
+    </div>
+  )
+}
 
 /**
  * Catches render errors in the stream / overlay tree so a single
@@ -20,22 +41,7 @@ export class StreamErrorBoundary extends Component {
 
   render() {
     if (this.state.error) {
-      const message =
-        this.state.error?.message || String(this.state.error) || 'Unknown error'
-      return (
-        <div className="stream-shell stream-shell--error">
-          <div className="stream-shell__banner stream-shell__banner--warn" role="alert">
-            Something went wrong. Reload the page to continue.
-          </div>
-          <button
-            type="button"
-            className="stream-shell__retry"
-            aria-label="Reload page"
-            title={message}
-            onClick={() => window.location.reload()}
-          />
-        </div>
-      )
+      return <StreamErrorFallback error={this.state.error} />
     }
     return this.props.children
   }

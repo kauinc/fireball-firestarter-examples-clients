@@ -5,6 +5,7 @@ import {
   setFireballLogLevel,
   LogLevels,
 } from 'fireball-fireworks-sdk-client'
+import { loadTranslations } from '../i18n/loadTranslations.js'
 import { readFireballEnv } from './config.js'
 
 /** @type {FireballClient | null} */
@@ -64,10 +65,18 @@ export async function connectFireball() {
       operatorPlayerId,
       token,
       currency: env.currency,
-      language: 'en',
+      language: env.language || 'en',
       country: 'US',
     })
   }
+
+  // EN first paint; remote pack merges when CMS responds (non-blocking for auth).
+  // API expects Translation App UUID (not gameId) — see Bonbonella FireballTranslation._appId.
+  const translationsPromise = loadTranslations({
+    fireball,
+    gameId: env.translationAppId || fireball.session?.gameId || env.gameId,
+    language: fireball.session?.language || env.language || 'en',
+  })
 
   let auth = null
   let demo = false
@@ -81,6 +90,8 @@ export async function connectFireball() {
   } else {
     auth = await fireball.authorize(new AuthRequest(fireball.session))
   }
+
+  await translationsPromise.catch(() => {})
 
   try {
     fireball.gci.sendLoadingComplete()

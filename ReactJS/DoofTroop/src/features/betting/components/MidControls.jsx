@@ -2,6 +2,7 @@ import { DOOF_ACCESSORIES } from '../constants/doofs.js'
 import { uiAssets } from '../assets/uiAssets.js'
 import { accessoryTarget } from '../utils/betTargets.js'
 import { getComboBarState, comboAccessoryPickBarBackground } from '../utils/comboBars.js'
+import { translateAccessory, useT } from '../../../shared/i18n/index.js'
 import { ChipStack } from './ChipStack.jsx'
 import { HistoryControl } from './HistoryControl.jsx'
 import { CrazyCombos } from './CrazyCombos.jsx'
@@ -33,6 +34,7 @@ export function MidControls({
   onCrazyComboClear,
   comboPickRequired = false,
 }) {
+  const t = useT()
   return (
     <div
       className={`mid-controls-stack is-crazy${comboActive ? ' is-combo-active' : ''}${crazyComboPickActive ? ' is-crazy-combo-active' : ''}`}
@@ -86,7 +88,9 @@ export function MidControls({
                   handleAccessoryActivate()
                 }}
               >
-                <span className="mid-controls__accessory-label">{item}</span>
+                <span className="mid-controls__accessory-label">
+                  {translateAccessory(t, item)}
+                </span>
                 <img
                   src={iconSrc}
                   alt=""

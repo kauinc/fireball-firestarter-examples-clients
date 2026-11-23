@@ -30,10 +30,11 @@ export const BETTING_CLOSING_THRESHOLD_SECONDS = 10
 /** Flash red/yellow TimerBar when this many seconds (or fewer) remain. */
 export const BETTING_FLASH_THRESHOLD_SECONDS = 5
 
+/** @type {Record<string, string>} i18n keys (resolve via `t`) */
 export const BETTING_BANNER = Object.freeze({
-  [BettingPhase.OPEN]: 'PLACE YOUR BETS',
-  [BettingPhase.CLOSING]: 'BETS CLOSING',
-  [BettingPhase.CLOSED]: 'BETS CLOSED',
+  [BettingPhase.OPEN]: 'label_place_your_bets',
+  [BettingPhase.CLOSING]: 'label_bets_closing',
+  [BettingPhase.CLOSED]: 'label_bets_closed',
 })
 
 /**

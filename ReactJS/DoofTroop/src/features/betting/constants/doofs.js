@@ -41,11 +41,11 @@ export const CHIP_METALS = Object.freeze(['silver', 'gold', 'bronze'])
 /** Board stack order: bottom → top. */
 export const CHIP_STACK_ORDER = Object.freeze(['bronze', 'silver', 'gold'])
 
-/** Labels drawn above each tray chip. */
+/** i18n keys drawn above each tray chip (resolve via `t`). */
 export const CHIP_METAL_LABELS = Object.freeze({
-  silver: 'TOP 2',
-  gold: 'WINNER',
-  bronze: 'TOP 3',
+  silver: 'label_top_2',
+  gold: 'label_winner',
+  bronze: 'label_top_3',
 })
 
 export const POSITION_OPTIONS = Object.freeze(['1st', '2nd', '3rd'])

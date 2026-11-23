@@ -1,4 +1,5 @@
 import { useFullscreen } from '../../betting/hooks/useFullscreen.js'
+import { useT } from '../../../shared/i18n/index.js'
 import './fullscreen-hint.css'
 
 /**
@@ -6,6 +7,7 @@ import './fullscreen-hint.css'
  * Guide the player to Add to Home Screen (true fullscreen / standalone).
  */
 export function FullscreenHomeScreenHint() {
+  const t = useT()
   const { needsHomeScreen, dismissHomeScreenHint } = useFullscreen()
   if (!needsHomeScreen) return null
 
@@ -18,20 +20,17 @@ export function FullscreenHomeScreenHint() {
     >
       <div className="fullscreen-hint__card">
         <p id="fullscreen-hint-title" className="fullscreen-hint__title">
-          Full screen on iPhone
+          {t('label_fullscreen_iphone_title')}
         </p>
         <p className="fullscreen-hint__body">
-          On iPhone, full screen only works from the Home Screen icon. Open the
-          game URL that ends with <strong>index.html</strong>, then Share →{' '}
-          <strong>Add to Home Screen</strong>. Delete any old icon that showed
-          an error first.
+          {t('label_fullscreen_iphone_body')}
         </p>
         <button
           type="button"
           className="fullscreen-hint__btn"
           onClick={dismissHomeScreenHint}
         >
-          Got it
+          {t('label_got_it')}
         </button>
       </div>
     </div>

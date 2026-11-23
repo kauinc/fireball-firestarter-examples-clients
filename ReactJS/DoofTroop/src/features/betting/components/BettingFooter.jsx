@@ -2,6 +2,7 @@ import { CHIP_METALS, CHIP_METAL_LABELS } from '../constants/doofs.js'
 import { DEFAULT_BALANCE } from '../constants/defaults.js'
 import { uiAssets } from '../assets/uiAssets.js'
 import { formatMoney } from '../utils/formatMoney.js'
+import { useT } from '../../../shared/i18n/index.js'
 import { HudMenuChrome } from '../../hud/index.js'
 
 function formatChipFace(value) {
@@ -31,10 +32,11 @@ export function BettingFooter({
   totalBet = 0,
   hideMenu = false,
 }) {
+  const t = useT()
   return (
     <footer className="betting-footer">
       <div className="betting-footer__balance-wrap">
-        <span className="betting-footer__caption">BALANCE:</span>
+        <span className="betting-footer__caption">{t('label_balance')}</span>
         <div
           className="betting-footer__meter"
           style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}
@@ -51,12 +53,12 @@ export function BettingFooter({
           disabled={disabled || !onRepeat || !canRepeat}
           onClick={onRepeat}
         >
-          REPEAT
+          {t('label_repeat')}
           <br />
-          LAST
+          {t('label_last')}
         </button>
 
-        <div className="betting-footer__chips" role="group" aria-label="Chips">
+        <div className="betting-footer__chips" role="group" aria-label={t('label_chips')}>
           {CHIP_METALS.map((metal) => {
             const selected = selectedMetal === metal
             const isWinner = metal === 'gold'
@@ -69,13 +71,13 @@ export function BettingFooter({
                 className={`betting-footer__chip-slot${isWinner ? ' betting-footer__chip-slot--winner' : ''}`}
               >
                 <span className="betting-footer__chip-label">
-                  {CHIP_METAL_LABELS[metal]}
+                  {t(CHIP_METAL_LABELS[metal])}
                 </span>
                 <button
                   type="button"
                   className={`betting-footer__chip${selected ? ' is-selected' : ''}`}
                   disabled={disabled}
-                  aria-label={CHIP_METAL_LABELS[metal]}
+                  aria-label={t(CHIP_METAL_LABELS[metal])}
                   aria-pressed={selected}
                   onClick={(event) => {
                     // Mouse already selected on pointerdown; detail===0 is keyboard.
@@ -94,12 +96,12 @@ export function BettingFooter({
             )
           })}
 
-          <div className="betting-footer__stake-step" role="group" aria-label="Change stake">
+          <div className="betting-footer__stake-step" role="group" aria-label={t('label_change_stake')}>
             <button
               type="button"
               className="betting-footer__stake-btn"
               disabled={disabled || !onIncreaseChip}
-              aria-label="Increase stake"
+              aria-label={t('label_increase_stake')}
               onClick={onIncreaseChip}
             >
               <img src={uiAssets.increaseBet} alt="" draggable={false} />
@@ -108,7 +110,7 @@ export function BettingFooter({
               type="button"
               className="betting-footer__stake-btn"
               disabled={disabled || !onDecreaseChip}
-              aria-label="Decrease stake"
+              aria-label={t('label_decrease_stake')}
               onClick={onDecreaseChip}
             >
               <img src={uiAssets.decreaseBet} alt="" draggable={false} />
@@ -123,12 +125,12 @@ export function BettingFooter({
           disabled={disabled || !onDouble || !canDouble}
           onClick={onDouble}
         >
-          x2
+          {t('label_double')}
         </button>
       </div>
 
       <div className="betting-footer__total-wrap">
-        <span className="betting-footer__caption">TOTAL BET:</span>
+        <span className="betting-footer__caption">{t('label_total_bet')}</span>
         <div
           className="betting-footer__meter"
           style={{ backgroundImage: `url(${uiAssets.balanceBar})` }}

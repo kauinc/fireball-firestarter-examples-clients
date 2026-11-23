@@ -19,6 +19,7 @@ import {
   useCfServerMessages,
   useFireballSession,
 } from '../../../shared/fireball/index.js'
+import { useT } from '../../../shared/i18n/index.js'
 import { useCfRoundWallet } from '../../betting/hooks/useCfRoundWallet.js'
 import '../styles/stream.css'
 
@@ -65,6 +66,7 @@ function StreamShell({ children }) {
  * Loading/CONNECTING are local boot UI. Overlays follow Supabase `rounds.status` (Realtime).
  */
 export function StreamPage() {
+  const t = useT()
   const {
     ready: fireballReady,
     error: fireballError,
@@ -125,11 +127,14 @@ export function StreamPage() {
     return (
       <HudViewportProvider>
         <StreamShell>
-          <LoadingScreen status={LoadingStatus.LOADING} label="TAP TO RETRY..." />
+          <LoadingScreen
+            status={LoadingStatus.LOADING}
+            label={t('label_tap_to_retry')}
+          />
           <button
             type="button"
             className="stream-shell__retry"
-            aria-label="Retry connection"
+            aria-label={t('label_retry_connection')}
             title={error}
             onClick={() => {
               setRoomError(null)
@@ -151,7 +156,7 @@ export function StreamPage() {
             status={LoadingStatus.LOADING}
             label={
               fireballLoading || !fireballReady
-                ? 'CONNECTING TO RGS...'
+                ? t('label_connecting_rgs')
                 : undefined
             }
           />
@@ -167,13 +172,13 @@ export function StreamPage() {
 
         {roundsIssue ? (
           <div className="stream-shell__banner" role="status">
-            Round feed unavailable. Reconnecting…
+            {t('label_round_feed_unavailable')}
           </div>
         ) : null}
 
         {isCancelledStatus(roundStatus) ? (
           <div className="stream-shell__banner stream-shell__banner--warn" role="status">
-            Round cancelled
+            {t('label_round_cancelled')}
           </div>
         ) : null}
 

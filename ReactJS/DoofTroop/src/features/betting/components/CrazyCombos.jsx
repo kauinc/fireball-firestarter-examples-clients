@@ -2,6 +2,7 @@ import {
   formatMultiplier,
   payoutMultiplier,
 } from '../../../shared/balancing/index.js'
+import { useT } from '../../../shared/i18n/index.js'
 import { ComboBar } from './ComboBar.jsx'
 import { CrazyComboBar } from './CrazyComboBar.jsx'
 
@@ -30,13 +31,14 @@ export function CrazyCombos({
   onCrazyComboClear,
   crazyComboDisabled = false,
 }) {
+  const t = useT()
   if (!showComboBar && !showCrazyComboBar) return null
 
   const comboPays = payoutMultiplier({ type: 'combo' }, null, { comboPick })
   const crazyPays = payoutMultiplier({ type: 'crazyCombo' }, null)
 
   return (
-    <div className="crazy-combos" role="group" aria-label="Combo payouts">
+    <div className="crazy-combos" role="group" aria-label={t('label_combo_payouts')}>
       {showComboBar ? (
         <ComboBar
           active={comboActive}

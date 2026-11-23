@@ -43,6 +43,7 @@ import {
   useSyncHudFadeHeight,
 } from '../../hud/index.js'
 import { playSfx, stopSfx } from '../../../shared/audio/index.js'
+import { useT } from '../../../shared/i18n/index.js'
 import '../styles/betting.css'
 
 const DEFAULT_SELECTED_POSITIONS = Object.freeze(['1st'])
@@ -81,6 +82,7 @@ function BettingRoundSession({
   selectedChip,
   onSelectedChipChange,
 }) {
+  const t = useT()
   const isPortrait = orientation === 'portrait'
   const balance = useBalance()
   const boardRef = useRef(null)
@@ -457,7 +459,7 @@ function BettingRoundSession({
       }}
     >
       <BettingBanner
-        label={bannerLabel}
+        label={bannerLabel ? t(bannerLabel) : null}
         secondsLeft={secondsLeft}
         variant={timerVariant}
       />
