@@ -27,11 +27,13 @@ import {
 } from '../constants/bettingPhase.js'
 import { RoundState } from '../../../domain/round/index.js'
 import {
-  CHIP_VALUES,
-  DEFAULT_CHIP_VALUE,
-  MAX_BET_PER_TARGET,
+  getChipValues,
+  getDefaultChipValue,
+  getMaxBetPerTarget,
   largestChipAtMost,
-} from '../constants/doofs.js'
+  useChipLadder,
+  useDefaultChipValue,
+} from '../state/chipLadderStore.js'
 import { betTargetKey } from '../utils/betTargets.js'
 import { roundMoney, stackTotal } from '../utils/chipMath.js'
 import {
@@ -85,6 +87,7 @@ function BettingRoundSession({
   const t = useT()
   const isPortrait = orientation === 'portrait'
   const balance = useBalance()
+  const chipValues = useChipLadder()
   const boardRef = useRef(null)
   const overlayRef = useRef(null)
   const [accessory, setAccessory] = useState(null)
@@ -290,7 +293,7 @@ function BettingRoundSession({
     const key = betTargetKey(target)
     const existing = bets.find((bet) => bet.key === key)
     const current = existing ? stackTotal(existing.chips) : 0
-    const remaining = roundMoney(MAX_BET_PER_TARGET - current)
+    const remaining = roundMoney(getMaxBetPerTarget() - current)
     if (!(remaining > 0)) {
       playSfx('betReject')
       return false
@@ -379,9 +382,9 @@ function BettingRoundSession({
   }
 
   function stepSelectedChip(delta) {
-    const index = CHIP_VALUES.indexOf(selectedChip)
+    const index = chipValues.indexOf(selectedChip)
     const from = index >= 0 ? index : 0
-    const next = CHIP_VALUES[from + delta]
+    const next = chipValues[from + delta]
     if (next == null) {
       playSfx('betReject')
       return
@@ -586,7 +589,16 @@ export function BettingOverlay() {
     disabled,
   } = useBettingOverlayState({ status, round })
   const [historyOpen, setHistoryOpen] = useState(false)
-  const [selectedChip, setSelectedChip] = useState(DEFAULT_CHIP_VALUE)
+  const defaultChip = useDefaultChipValue()
+  const [selectedChip, setSelectedChip] = useState(defaultChip)
+
+  useEffect(() => {
+    // When mode ladder loads after boot, snap tray to a valid face.
+    const ladder = getChipValues()
+    if (!ladder.includes(selectedChip)) {
+      setSelectedChip(getDefaultChipValue())
+    }
+  }, [defaultChip, selectedChip])
 
   // Keep bets for the whole round (race HUD reads the same placements).
   const sessionKey = round?.id ? String(round.id) : 'no-round'

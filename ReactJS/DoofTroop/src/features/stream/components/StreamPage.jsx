@@ -18,9 +18,10 @@ import {
   hydrateFromGameState,
   useCfServerMessages,
   useFireballSession,
+  usesCfWallet,
 } from '../../../shared/fireball/index.js'
 import { useT } from '../../../shared/i18n/index.js'
-import { useCfRoundWallet } from '../../betting/hooks/useCfRoundWallet.js'
+import { useRoundWallet } from '../../betting/hooks/useRoundWallet.js'
 import '../styles/stream.css'
 
 const StreamRoom = lazy(() => import('./StreamRoom.jsx'))
@@ -86,8 +87,8 @@ export function StreamPage() {
   const [hasVideo, setHasVideo] = useState(false)
   const error = fireballError || roomError || sessionError
 
-  useCfServerMessages(fireballReady)
-  useCfRoundWallet({
+  useCfServerMessages(fireballReady && usesCfWallet())
+  useRoundWallet({
     round: currentRound,
     status: roundStatus,
     fireballReady,

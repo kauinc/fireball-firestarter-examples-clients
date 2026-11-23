@@ -8,7 +8,17 @@ export {
   connectFireball,
   sendGameRequest,
   balanceFromRgs,
+  balanceToRgs,
 } from './client.js'
+export {
+  getGameMode,
+  isFunMode,
+  isCoinsMode,
+  isMoneyMode,
+  usesCfWallet,
+  setActiveGameMode,
+  GameMode,
+} from './gameMode.js'
 export { useFireballSession } from './useFireballSession.js'
 export { useCfServerMessages } from './useCfServerMessages.js'
 export {

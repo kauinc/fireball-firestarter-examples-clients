@@ -25,8 +25,22 @@ Dev proxies `/api/livekit-token` to the dt-dashboard viewer token endpoint
 | `VITE_LIVEKIT_TOKEN_URL` | Viewer token endpoint (default `/api/livekit-token`) |
 | `VITE_SUPABASE_URL` | Optional Supabase URL override |
 | `VITE_SUPABASE_ANON_KEY` | Optional Supabase anon/publishable key override |
+| `VITE_FIREBALL_GAME_MODE` | `fun` (local wallet) / `coins` / `money` — launch URL `?mode=` wins when present |
+| `VITE_FIREBALL_CURRENCY` | Default `USD`; use `COINS` for coins mode |
+| `VITE_FIREBALL_DEMO` | Dev override for coins/money auth only (not a substitute for fun) |
+| `VITE_FIREBALL_TRANSLATION_APP_ID` | Translation CMS app UUID |
 
 Defaults for Supabase are in `src/shared/config/supabase.js`.
+
+### Game modes
+
+| Mode | Stream | Wallet |
+| --- | --- | --- |
+| **fun** | LiveKit + Supabase | Local only — no CF `PlaceBet` / `PayWin`; start **$5,000** play money |
+| **coins** | Live | CF online; integer chips from `coin_bets` |
+| **money** | Live | CF online; fiat/crypto via `CurrencyHelper` |
+
+Smoke: `?mode=fun`, `?mode=coins&currency=COINS`, `?mode=money&currency=USD`.
 
 ## Layout
 
@@ -53,16 +67,6 @@ src/
 | race / no-more-bets phases | Race |
 | `RESULTS_SENT` | Settlement (latched briefly so short results do not flash away) |
 | cancelled statuses | Banner: Round cancelled |
-
-## Intentionally mocked (prototype)
-
-These stay **client-only** by design — not production wallet / RGS integrations:
-
-- Chip bets & totals (`useChipBets` / local store)
-- Balance & potential win meters
-- Settlement outcomes (`mockSettlement.js`)
-- History rows & podium → history flight
-- Betting countdown timer (stable per `roundId`, status is hard stop)
 
 ## Scripts
 
