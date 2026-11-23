@@ -1,13 +1,9 @@
 import { CHIP_METALS, CHIP_METAL_LABELS } from '../constants/doofs.js'
 import { DEFAULT_BALANCE } from '../constants/defaults.js'
 import { uiAssets } from '../assets/uiAssets.js'
-import { formatMoney } from '../utils/formatMoney.js'
+import { formatChipFace, formatMoney } from '../utils/formatMoney.js'
 import { useT } from '../../../shared/i18n/index.js'
 import { HudMenuChrome } from '../../hud/index.js'
-
-function formatChipFace(value) {
-  return `€${value}`
-}
 
 /**
  * Bottom chrome:
