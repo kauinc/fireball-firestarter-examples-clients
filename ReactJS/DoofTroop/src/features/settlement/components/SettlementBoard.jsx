@@ -42,10 +42,19 @@ export function SettlementBoard({
   portrait = false,
   /** When false, TOTAL WIN is rendered by the overlay (portrait banner slot). */
   showWinBarInBoard = true,
+  /** Optional overrides (replay) — otherwise use published round bets. */
+  comboPick: comboPickOverride = undefined,
+  crazyComboPicks: crazyComboPicksOverride = undefined,
 }) {
   const t = useT()
   const { comboPick: publishedComboPick, crazyComboPicks: publishedCrazyComboPicks } =
     usePublishedRoundBets()
+  const publishedComboPickResolved =
+    comboPickOverride !== undefined ? comboPickOverride : publishedComboPick
+  const publishedCrazyComboPicksResolved =
+    crazyComboPicksOverride !== undefined
+      ? crazyComboPicksOverride
+      : publishedCrazyComboPicks
 
   const labelBets = bets.filter(
     (bet) => bet.target.type === 'color' || bet.target.type === 'pattern',
@@ -74,7 +83,7 @@ export function SettlementBoard({
       settleByBetId={settleByBetId}
       hideLostChips={hideLostChips}
       portrait={portrait}
-      comboPick={publishedComboPick}
+      comboPick={publishedComboPickResolved}
     />
   )
 
@@ -143,8 +152,8 @@ export function SettlementBoard({
           readOnly
           showComboBar
           showCrazyComboBar
-          comboPick={publishedComboPick}
-          crazyComboPicks={publishedCrazyComboPicks}
+          comboPick={publishedComboPickResolved}
+          crazyComboPicks={publishedCrazyComboPicksResolved}
           comboBet={comboBet}
           crazyComboBet={crazyComboBet}
           settleClass={settleChipClass(
