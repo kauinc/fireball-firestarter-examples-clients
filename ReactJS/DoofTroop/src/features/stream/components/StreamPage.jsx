@@ -3,7 +3,8 @@ import { BettingOverlay } from '../../betting/index.js'
 import { uiAssets } from '../../betting/assets/uiAssets.js'
 import { setBalance } from '../../betting/state/balanceStore.js'
 import { RaceOverlay } from '../../race/index.js'
-import { SettlementOverlay } from '../../settlement/index.js'
+import { ReplayOverlay, SettlementOverlay } from '../../settlement/index.js'
+import { tryOpenReplayDeepLink } from '../../betting/state/transactionsStore.js'
 import { LoadingScreen, LoadingStatus } from '../../loading/index.js'
 import {
   HudViewportProvider,
@@ -106,6 +107,11 @@ export function StreamPage() {
     }
   }, [fireballAuth])
 
+  useEffect(() => {
+    if (!fireballReady || !usesCfWallet()) return
+    tryOpenReplayDeepLink().catch(() => {})
+  }, [fireballReady])
+
   const handleVideoAvailableChange = useCallback((available) => {
     setHasVideo(available)
   }, [])
@@ -199,6 +205,7 @@ export function StreamPage() {
         <BettingOverlay key="betting-round" />
         <RaceOverlay key="race-round" />
         <SettlementOverlay key="settlement-round" />
+        <ReplayOverlay />
         <FullscreenHomeScreenHint />
         <HowToPlayOverlay />
         <PauseOverlay />

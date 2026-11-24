@@ -46,6 +46,153 @@
   height: var(--history-open-h);
 }
 
+.mid-controls__history-slot.is-open.has-tabs {
+  --history-tabs-h: calc(22px * var(--hud-scale));
+  --history-open-h: calc(
+    var(--history-btn-h) + var(--history-open-gap) + var(--history-tabs-h) +
+      var(--history-cols-h) + var(--history-sheet-h)
+  );
+}
+
+.mid-controls__history-slot.is-open.is-my-bets {
+  --history-sheet-w: calc(220px * var(--hud-scale));
+  --history-sheet-h: calc(220px * var(--hud-scale));
+  --history-open-h: calc(
+    var(--history-btn-h) + var(--history-open-gap) + var(--history-tabs-h) +
+      var(--history-sheet-h)
+  );
+}
+
+.history-tabs {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--history-sheet-h) + var(--history-cols-h, 0px));
+  z-index: 3;
+  width: max(var(--history-sheet-w), 100%);
+  height: var(--history-tabs-h, calc(22px * var(--hud-scale)));
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  pointer-events: auto;
+}
+
+.mid-controls__history-slot.is-my-bets .history-tabs {
+  bottom: var(--history-sheet-h);
+  width: var(--history-sheet-w);
+}
+
+.history-tabs__btn {
+  border: 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.7);
+  font: inherit;
+  font-size: calc(8px * var(--hud-font-scale));
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.history-tabs__btn.is-active {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.history-sheet--transactions {
+  pointer-events: auto;
+}
+
+.tx-panel {
+  width: var(--history-sheet-w);
+  height: var(--history-sheet-h);
+  box-sizing: border-box;
+  padding: calc(6px * var(--hud-scale));
+  display: flex;
+  flex-direction: column;
+  gap: calc(4px * var(--hud-scale));
+  background: rgba(6, 12, 22, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  pointer-events: auto;
+}
+
+.tx-panel__head {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 4px;
+  font-size: calc(8px * var(--hud-font-scale));
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.tx-panel__list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tx-panel__row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 4px;
+  align-items: center;
+  border: 0;
+  padding: calc(4px * var(--hud-scale)) 2px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: calc(9px * var(--hud-font-scale));
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tx-panel__row:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tx-panel__win.is-win {
+  color: #7dff9a;
+}
+
+.tx-panel__status {
+  margin: auto;
+  padding: 8px;
+  text-align: center;
+  font-size: calc(10px * var(--hud-font-scale));
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.tx-panel__status--error {
+  color: #ff8f8f;
+}
+
+.tx-panel__more {
+  border: 0;
+  padding: calc(5px * var(--hud-scale));
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  font: inherit;
+  font-size: calc(9px * var(--hud-font-scale));
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.tx-panel__more:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .mid-controls__history {
   position: absolute;
   left: 0;
