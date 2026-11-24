@@ -1,6 +1,9 @@
 /**
  * Normalize Fireball auth / session server + client vars shapes.
- * Supports PascalCase, camelCase, snake_case, and Extra wrappers.
+ * Supports PascalCase, camelCase, snake_case, Extra wrappers, and client_side.
+ *
+ * Fireball Admin "Client side" variables land on auth.client_side
+ * (same path Unity reads as sessionResponse.client_side / core_bet_values).
  */
 
 /**
@@ -29,6 +32,20 @@ export function extractServerVars(auth) {
 }
 
 /**
+ * Fireball session `client_side` payload (client-flagged game variables).
+ * @param {unknown} auth
+ * @returns {Record<string, unknown> | null}
+ */
+export function extractClientSide(auth) {
+  if (!auth || typeof auth !== 'object') return null
+  const a = /** @type {Record<string, unknown>} */ (auth)
+  const side = a.client_side ?? a.clientSide ?? null
+  return side && typeof side === 'object'
+    ? /** @type {Record<string, unknown>} */ (side)
+    : null
+}
+
+/**
  * @param {unknown} auth
  * @returns {Record<string, unknown> | null}
  */
@@ -51,6 +68,24 @@ export function extractClientVars(auth) {
   return vars && typeof vars === 'object'
     ? /** @type {Record<string, unknown>} */ (vars)
     : null
+}
+
+/**
+ * Merge server_vars + client_side for chip ladder / rates.
+ * client_side wins on key conflicts (matches Unity client reads).
+ * @param {unknown} auth
+ * @returns {Record<string, unknown> | null}
+ */
+export function extractBetVars(auth) {
+  const server = extractServerVars(auth)
+  const clientSide = extractClientSide(auth)
+  const clientVars = extractClientVars(auth)
+  if (!server && !clientSide && !clientVars) return null
+  return {
+    ...(server ?? {}),
+    ...(clientVars ?? {}),
+    ...(clientSide ?? {}),
+  }
 }
 
 /**

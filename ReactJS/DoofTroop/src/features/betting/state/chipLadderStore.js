@@ -9,7 +9,7 @@ import { getGameMode, isCoinsMode } from '../../../shared/fireball/gameMode.js'
 import {
   coreBetDefaultFromVars,
   currencyRateFromVars,
-  extractServerVars,
+  extractBetVars,
   snapToNearestFace,
 } from '../../../shared/fireball/sessionVars.js'
 
@@ -91,7 +91,8 @@ export function largestChipAtMost(maxAmount) {
  */
 export function applyChipLadderFromSession(session, auth = null) {
   const mode = getGameMode() || session?.gameMode || GameMode.fun
-  const vars = extractServerVars(auth)
+  // Fireball puts Client-side Admin vars on auth.client_side (Ares path).
+  const vars = extractBetVars(auth)
 
   if (mode === GameMode.coins || isCoinsMode()) {
     const fromAuth = extractCoinBets(vars)
@@ -106,12 +107,14 @@ export function applyChipLadderFromSession(session, auth = null) {
   const currency = session?.currency || 'USD'
   const rate = currencyRateFromVars(vars, currency)
   const moneyFromAuth = extractMoneyBets(vars, rate)
+  // No core_bet_values → scale built-in ladder by rate (UAH:50 → 0.2 becomes 10).
   const chips =
-    moneyFromAuth?.length > 0 ? moneyFromAuth : [...MONEY_CHIP_VALUES]
+    moneyFromAuth?.length > 0
+      ? moneyFromAuth
+      : MONEY_CHIP_VALUES.map((v) => Math.round(v * rate * 100) / 100)
   const max = Math.round(MONEY_MAX_BET * rate * 100) / 100
   const betDefaultMinor = coreBetDefaultFromVars(vars)
-  let selected =
-    moneyFromAuth?.length > 0 ? moneyFromAuth[0] : MONEY_DEFAULT_CHIP
+  let selected = chips[0] ?? MONEY_DEFAULT_CHIP
   if (betDefaultMinor > 0) {
     const face = Math.round((betDefaultMinor * rate) / 100 * 100) / 100
     selected = snapToNearestFace(chips, face)
