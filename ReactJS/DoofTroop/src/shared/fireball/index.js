@@ -21,9 +21,31 @@ export {
 } from './gameMode.js'
 export { useFireballSession } from './useFireballSession.js'
 export { useCfServerMessages } from './useCfServerMessages.js'
+export { useGciBridge } from './useGciBridge.js'
+export {
+  gciNotifyBalance,
+  gciNotifyBetPlaced,
+  gciNotifyBetResult,
+  gciNotifyBetUpdate,
+  gciNotifyAudioVolume,
+  gciOpenDepositMenu,
+  gciNotifyError,
+  attachGciBridge,
+} from './gciBridge.js'
 export {
   hydrateFromGameState,
   useCfGameState,
   getCfGameSnapshot,
 } from './cfGameStore.js'
 export { CfMessages, WalletPhase } from './messages.js'
+export { isGamePaused, setGamePaused, useGamePaused } from './pauseStore.js'
+export {
+  isHowToPlayOpen,
+  setHowToPlayOpen,
+  useHowToPlayOpen,
+} from './howToPlayStore.js'
+export {
+  getSelectedChip,
+  setSelectedChip,
+  useSelectedChip,
+} from './selectedChipStore.js'

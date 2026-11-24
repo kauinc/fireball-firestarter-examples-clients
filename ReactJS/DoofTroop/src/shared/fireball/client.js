@@ -12,7 +12,7 @@ import { loadTranslations } from '../i18n/loadTranslations.js'
 import { readFireballEnv, FUN_START_BALANCE_CENTS } from './config.js'
 import { isCoinsMode, setActiveGameMode, usesCfWallet } from './gameMode.js'
 import { applyChipLadderFromSession } from '../../features/betting/state/chipLadderStore.js'
-import { setBalance } from '../../features/betting/state/balanceStore.js'
+import { getBalance, setBalance } from '../../features/betting/state/balanceStore.js'
 
 /** @type {FireballClient | null} */
 let client = null
@@ -162,8 +162,18 @@ export async function connectFireball() {
   await translationsPromise.catch(() => {})
 
   try {
+    fireball.gci.sendLoadingStarted()
+    fireball.gci.sendLoadingProgress(0)
+    fireball.gci.sendLoadingProgress(100)
     fireball.gci.sendLoadingComplete()
     fireball.gci.sendReadyToPlay()
+    const balanceMinor =
+      auth?.Balance != null
+        ? Number(auth.Balance)
+        : balanceToRgs(getBalance())
+    if (Number.isFinite(balanceMinor)) {
+      fireball.gci.sendBalanceUpdated(balanceMinor)
+    }
   } catch {
     // GCI is best-effort outside operator shell
   }

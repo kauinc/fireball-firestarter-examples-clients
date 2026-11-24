@@ -90,6 +90,13 @@ export const EN = Object.freeze({
   label_exit_fullscreen: 'Exit full screen',
   label_commentary: 'Commentary',
   label_how_to_play: 'How to play',
+  label_howto_place_bets:
+    'Place chips on Doofs, places, colors, patterns, or accessories during betting.',
+  label_howto_metals:
+    'Gold, silver, and bronze chips cover different podium places and pay different odds.',
+  label_howto_combo:
+    'Combo and Crazy Combo need picks first, then a stake on the combo bar.',
+  label_game_paused: 'Game paused',
   label_home: 'Home',
   label_game_menu: 'Game menu',
   label_open_menu: 'Open menu',

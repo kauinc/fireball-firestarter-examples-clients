@@ -8,6 +8,8 @@ import { LoadingScreen, LoadingStatus } from '../../loading/index.js'
 import {
   HudViewportProvider,
   FullscreenHomeScreenHint,
+  HowToPlayOverlay,
+  PauseOverlay,
   useHudViewportContext,
 } from '../../hud/index.js'
 import { useCurrentRound } from '../../betting/hooks/useCurrentRound.js'
@@ -18,6 +20,7 @@ import {
   hydrateFromGameState,
   useCfServerMessages,
   useFireballSession,
+  useGciBridge,
   usesCfWallet,
 } from '../../../shared/fireball/index.js'
 import { useT } from '../../../shared/i18n/index.js'
@@ -88,6 +91,7 @@ export function StreamPage() {
   const error = fireballError || roomError || sessionError
 
   useCfServerMessages(fireballReady && usesCfWallet())
+  useGciBridge(fireballReady)
   useRoundWallet({
     round: currentRound,
     status: roundStatus,
@@ -196,6 +200,8 @@ export function StreamPage() {
         <RaceOverlay key="race-round" />
         <SettlementOverlay key="settlement-round" />
         <FullscreenHomeScreenHint />
+        <HowToPlayOverlay />
+        <PauseOverlay />
       </StreamShell>
     </HudViewportProvider>
   )

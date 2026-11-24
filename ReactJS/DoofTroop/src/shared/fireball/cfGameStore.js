@@ -6,6 +6,12 @@ import {
   setBalance,
 } from '../../features/betting/state/balanceStore.js'
 import { balanceFromRgs } from './client.js'
+import {
+  gciNotifyBalance,
+  gciNotifyBetPlaced,
+  gciNotifyBetResult,
+  gciNotifyBetUpdate,
+} from './gciBridge.js'
 import { WalletPhase } from './messages.js'
 import {
   field,
@@ -178,6 +184,7 @@ export function applyBetsUpdated(message) {
     lastError: null,
   })
   publishBoard()
+  gciNotifyBetUpdate(roundMoneySafe(totalStake))
 }
 
 /**
@@ -206,6 +213,8 @@ export function applyBetsLocked(message) {
     lastError: null,
   })
   publishBoard()
+  gciNotifyBetPlaced(roundMoneySafe(totalStake))
+  gciNotifyBalance()
 }
 
 /**
@@ -236,6 +245,8 @@ export function applySettleResult(message) {
     lastSettlementRoundId: roundId,
     lastError: null,
   })
+  gciNotifyBetResult(settlement?.totalWin ?? 0)
+  gciNotifyBalance()
 }
 
 /**
@@ -266,6 +277,7 @@ export function applyRefundResult(message) {
     lastError: null,
   })
   publishBoard()
+  gciNotifyBalance()
 }
 
 /**

@@ -6,6 +6,9 @@ import {
   toggleAudioMuted,
   useAudioMuted,
 } from '../../../shared/audio/index.js'
+import { gciNotifyAudioVolume } from '../../../shared/fireball/gciBridge.js'
+import { getDoofFireball } from '../../../shared/fireball/client.js'
+import { setHowToPlayOpen } from '../../../shared/fireball/howToPlayStore.js'
 import { useT } from '../../../shared/i18n/index.js'
 import { useDialogFocus } from '../hooks/useDialogFocus.js'
 
@@ -53,6 +56,7 @@ export function HudMenuChrome({ placement = 'footer' }) {
   function handleItemClick(itemId) {
     if (itemId === 'sound') {
       const nowMuted = toggleAudioMuted()
+      gciNotifyAudioVolume()
       if (!nowMuted) playSfx('menuOpen')
       return
     }
@@ -61,6 +65,20 @@ export function HudMenuChrome({ placement = 'footer' }) {
       toggleFullscreen()
       playSfx('fullscreenToggle')
       closeMenu()
+      return
+    }
+    if (itemId === 'howToPlay') {
+      setHowToPlayOpen(true)
+      closeMenu()
+      return
+    }
+    if (itemId === 'home') {
+      closeMenu()
+      try {
+        getDoofFireball().goHomePage()
+      } catch {
+        // ignore outside Fireball session
+      }
       return
     }
     // Keep the panel open after item presses; close via hamburger / outside / Escape.

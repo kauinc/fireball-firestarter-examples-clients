@@ -27,13 +27,14 @@ import {
 } from '../constants/bettingPhase.js'
 import { RoundState } from '../../../domain/round/index.js'
 import {
-  getChipValues,
-  getDefaultChipValue,
   getMaxBetPerTarget,
   largestChipAtMost,
   useChipLadder,
-  useDefaultChipValue,
 } from '../state/chipLadderStore.js'
+import {
+  setSelectedChip,
+  useSelectedChip,
+} from '../../../shared/fireball/selectedChipStore.js'
 import { betTargetKey } from '../utils/betTargets.js'
 import { roundMoney, stackTotal } from '../utils/chipMath.js'
 import {
@@ -589,16 +590,7 @@ export function BettingOverlay() {
     disabled,
   } = useBettingOverlayState({ status, round })
   const [historyOpen, setHistoryOpen] = useState(false)
-  const defaultChip = useDefaultChipValue()
-  const [selectedChip, setSelectedChip] = useState(defaultChip)
-
-  useEffect(() => {
-    // When mode ladder loads after boot, snap tray to a valid face.
-    const ladder = getChipValues()
-    if (!ladder.includes(selectedChip)) {
-      setSelectedChip(getDefaultChipValue())
-    }
-  }, [defaultChip, selectedChip])
+  const selectedChip = useSelectedChip()
 
   // Keep bets for the whole round (race HUD reads the same placements).
   const sessionKey = round?.id ? String(round.id) : 'no-round'
