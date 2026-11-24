@@ -1,10 +1,14 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { BettingOverlay } from '../../betting/index.js'
 import { uiAssets } from '../../betting/assets/uiAssets.js'
 import { setBalance } from '../../betting/state/balanceStore.js'
 import { RaceOverlay } from '../../race/index.js'
-import { ReplayOverlay, SettlementOverlay } from '../../settlement/index.js'
-import { tryOpenReplayDeepLink } from '../../betting/state/transactionsStore.js'
+import {
+  isReplayLaunch,
+  openReplayById,
+  ReplayOverlay,
+  SettlementOverlay,
+} from '../../settlement/index.js'
 import { LoadingScreen, LoadingStatus } from '../../loading/index.js'
 import {
   HudViewportProvider,
@@ -69,9 +73,11 @@ function StreamShell({ children }) {
 /**
  * Full-viewport LiveKit viewer for the Doof Troop WHIP ingress room.
  * Loading/CONNECTING are local boot UI. Overlays follow Supabase `rounds.status` (Realtime).
+ * Admin `?replay=` launches a stream-free settlement snapshot instead.
  */
 export function StreamPage() {
   const t = useT()
+  const replayMode = useMemo(() => isReplayLaunch(), [])
   const {
     ready: fireballReady,
     error: fireballError,
@@ -79,7 +85,9 @@ export function StreamPage() {
     auth: fireballAuth,
     reload: reloadFireball,
   } = useFireballSession()
-  const { session, error: sessionError, isLoading, reload } = useViewerSession()
+  const { session, error: sessionError, isLoading, reload } = useViewerSession({
+    enabled: !replayMode,
+  })
   const {
     error: roundsError,
     realtimeStatus,
@@ -89,28 +97,28 @@ export function StreamPage() {
   } = useCurrentRound()
   const [roomError, setRoomError] = useState(null)
   const [hasVideo, setHasVideo] = useState(false)
-  const error = fireballError || roomError || sessionError
+  const error = fireballError || (!replayMode && (roomError || sessionError))
 
-  useCfServerMessages(fireballReady && usesCfWallet())
+  useCfServerMessages(fireballReady && usesCfWallet() && !replayMode)
   useGciBridge(fireballReady)
   useRoundWallet({
-    round: currentRound,
-    status: roundStatus,
-    fireballReady,
+    round: replayMode ? null : currentRound,
+    status: replayMode ? null : roundStatus,
+    fireballReady: fireballReady && !replayMode,
   })
 
   useEffect(() => {
-    if (!fireballAuth) return
+    if (!fireballAuth || replayMode) return
     hydrateFromGameState(fireballAuth.GameState, fireballAuth.Balance)
     if (fireballAuth.Balance != null && fireballAuth.GameState == null) {
       setBalance(balanceFromRgs(fireballAuth.Balance))
     }
-  }, [fireballAuth])
+  }, [fireballAuth, replayMode])
 
   useEffect(() => {
-    if (!fireballReady || !usesCfWallet()) return
-    tryOpenReplayDeepLink().catch(() => {})
-  }, [fireballReady])
+    if (!replayMode || !fireballReady) return
+    openReplayById().catch(() => {})
+  }, [replayMode, fireballReady])
 
   const handleVideoAvailableChange = useCallback((available) => {
     setHasVideo(available)
@@ -126,13 +134,14 @@ export function StreamPage() {
   }, [])
 
   const roundsIssue =
-    roundsError ||
-    (roundsReady &&
-      (realtimeStatus === 'CHANNEL_ERROR' ||
-        realtimeStatus === 'TIMED_OUT' ||
-        realtimeStatus === 'CLOSED')
-      ? `Realtime ${realtimeStatus}`
-      : null)
+    !replayMode &&
+    (roundsError ||
+      (roundsReady &&
+        (realtimeStatus === 'CHANNEL_ERROR' ||
+          realtimeStatus === 'TIMED_OUT' ||
+          realtimeStatus === 'CLOSED')
+        ? `Realtime ${realtimeStatus}`
+        : null))
 
   if (error) {
     return (
@@ -159,7 +168,11 @@ export function StreamPage() {
     )
   }
 
-  if (fireballLoading || !fireballReady || isLoading || !session) {
+  if (
+    fireballLoading ||
+    !fireballReady ||
+    (!replayMode && (isLoading || !session))
+  ) {
     return (
       <HudViewportProvider>
         <StreamShell>
@@ -171,6 +184,16 @@ export function StreamPage() {
                 : undefined
             }
           />
+        </StreamShell>
+      </HudViewportProvider>
+    )
+  }
+
+  if (replayMode) {
+    return (
+      <HudViewportProvider>
+        <StreamShell>
+          <ReplayOverlay />
         </StreamShell>
       </HudViewportProvider>
     )
@@ -205,7 +228,6 @@ export function StreamPage() {
         <BettingOverlay key="betting-round" />
         <RaceOverlay key="race-round" />
         <SettlementOverlay key="settlement-round" />
-        <ReplayOverlay />
         <FullscreenHomeScreenHint />
         <HowToPlayOverlay />
         <PauseOverlay />

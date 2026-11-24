@@ -63,7 +63,7 @@ function betsStakeTotal(bets) {
  * @param {boolean} [crazyCombo]
  * @param {{ kind: string, key: string } | null} [comboPick]
  * @param {Record<string, { color: string, pattern: string } | null> | null} [crazyComboPicks]
- * @param {{ carry?: { bets?: ReadonlyArray<Record<string, unknown>>, comboPick?: unknown, crazyComboPicks?: unknown } | null, onCarryForwardRejected?: () => void, onUndoMeta?: (meta: { comboPick: unknown, crazyComboPicks: unknown }) => void, onPicksFromServer?: (meta: { comboPick: unknown, crazyComboPicks: unknown }) => void }} [options]
+ * @param {{ carry?: { bets?: ReadonlyArray<Record<string, unknown>>, comboPick?: unknown, crazyComboPicks?: unknown } | null, bettingOpen?: boolean, onCarryForwardRejected?: () => void, onUndoMeta?: (meta: { comboPick: unknown, crazyComboPicks: unknown }) => void, onPicksFromServer?: (meta: { comboPick: unknown, crazyComboPicks: unknown }) => void }} [options]
  */
 export function useChipBets(
   _selectedPositions,
@@ -75,6 +75,8 @@ export function useChipBets(
 ) {
   const {
     carry = null,
+    /** When false, defer carry-forward until betting admission is open. */
+    bettingOpen = true,
     onCarryForwardRejected,
     onUndoMeta,
     onPicksFromServer,
@@ -126,13 +128,14 @@ export function useChipBets(
     cf.lastError && /carry/i.test(cf.lastError.reason ?? ''),
   )
 
-  // Carry-forward once per round.
+  // Carry-forward once per round — only while betting is open (avoid closed-round reject).
   useEffect(() => {
     if (!roundId || wasCarryForwardCharged(roundId)) return
     if (!carry?.bets?.length) {
       markCarryForwardCharged(roundId)
       return
     }
+    if (!bettingOpen) return
 
     let cancelled = false
     ;(async () => {
@@ -173,7 +176,7 @@ export function useChipBets(
     return () => {
       cancelled = true
     }
-  }, [roundId, carry, remote])
+  }, [roundId, carry, remote, bettingOpen])
 
   const placeBet = useCallback(
     async (amount, target, metal = 'gold') => {

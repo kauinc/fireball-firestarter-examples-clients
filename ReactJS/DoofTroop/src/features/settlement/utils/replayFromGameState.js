@@ -10,13 +10,11 @@ import { WalletPhase } from '../../../shared/fireball/messages.js'
 import { balanceFromRgs } from '../../../shared/fireball/client.js'
 
 /**
- * Build a read-only replay view from a saved RGS GameState snapshot.
+ * Build a read-only replay view from an RGS GameState snapshot.
  * @param {Record<string, unknown> | null | undefined} gameState
  */
 export function replayViewFromGameState(gameState) {
-  if (!gameState || typeof gameState !== 'object') {
-    return null
-  }
+  if (!gameState || typeof gameState !== 'object') return null
 
   const walletPhase =
     field(gameState, 'WalletPhase', 'walletPhase') ?? WalletPhase.Settled
@@ -26,12 +24,7 @@ export function replayViewFromGameState(gameState) {
   const lastRound = (field(gameState, 'LastRoundBets', 'lastRoundBets') ?? [])
     .map(normalizeBet)
     .filter(Boolean)
-  const bets =
-    locked.length > 0
-      ? locked
-      : lastRound.length > 0
-        ? lastRound
-        : []
+  const bets = locked.length > 0 ? locked : lastRound
 
   const settlementRaw = field(gameState, 'LastSettlement', 'lastSettlement')
   const settlement = settlementRaw
@@ -60,20 +53,31 @@ export function replayViewFromGameState(gameState) {
   return {
     roundId: field(gameState, 'CurrentRoundId', 'currentRoundId') ?? null,
     walletPhase: String(walletPhase),
-    currency: field(gameState, 'Currency', 'currency') ?? null,
-    gameMode: field(gameState, 'GameMode', 'gameMode') ?? null,
     bets,
     comboPick: normalizeComboPick(field(gameState, 'ComboPick', 'comboPick')),
     crazyComboPicks: normalizeCrazyComboPicks(
       field(gameState, 'CrazyComboPicks', 'crazyComboPicks'),
     ),
-    settlement: settlement
-      ? { ...settlement, winners }
-      : null,
+    settlement: settlement ? { ...settlement, winners } : null,
     settleByBetId,
     totalStake: balanceFromRgs(lockedStakeCents),
     totalWin: settlement?.totalWin ?? 0,
     didWin: Boolean(settlement?.didWin),
-    lastReplayId: field(gameState, 'LastReplayId', 'lastReplayId') ?? null,
   }
+}
+
+/**
+ * Prefer the latest non-empty GameState on a transaction.
+ * @param {import('fireball-fireworks-sdk-client').Transaction | null | undefined} tx
+ */
+export function gameStateFromTransaction(tx) {
+  const states = tx?.GameStates ?? []
+  for (let i = states.length - 1; i >= 0; i -= 1) {
+    const parsed =
+      typeof states[i]?.parseGameState === 'function'
+        ? states[i].parseGameState()
+        : null
+    if (parsed) return parsed
+  }
+  return null
 }

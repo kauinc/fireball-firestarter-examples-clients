@@ -82,14 +82,12 @@ export const EN = Object.freeze({
   label_history: 'HISTORY',
   label_round_history: 'Round history',
   label_race_results: 'Race results',
-  label_my_bets: 'My bets',
   label_replay: 'Replay',
   label_replay_unavailable: 'Replay unavailable',
-  label_stake: 'Stake',
-  label_win: 'Win',
-  label_time: 'Time',
-  label_no_bets: 'No bets yet',
-  label_load_more: 'Load more',
+  label_replay_no_board:
+    'Replay loaded but board snapshot is missing. Redeploy CF with SaveGameStateForReplay and settle a new round.',
+  label_previous: 'Previous',
+  label_next: 'Next',
   label_close: 'Close',
 
   // HUD menu

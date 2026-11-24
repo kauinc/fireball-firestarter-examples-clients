@@ -3,8 +3,9 @@ import { fetchViewerSession } from '../api/fetchViewerSession.js'
 
 /**
  * Loads a LiveKit viewer session once on mount (and on `reload`).
+ * @param {{ enabled?: boolean }} [options] — skip token fetch in admin replay mode.
  */
-export function useViewerSession() {
+export function useViewerSession({ enabled = true } = {}) {
   const [reloadKey, setReloadKey] = useState(0)
   const [result, setResult] = useState({
     status: 'loading',
@@ -13,11 +14,14 @@ export function useViewerSession() {
   })
 
   const reload = useCallback(() => {
+    if (!enabled) return
     setResult({ status: 'loading', session: null, error: null })
     setReloadKey((key) => key + 1)
-  }, [])
+  }, [enabled])
 
   useEffect(() => {
+    if (!enabled) return undefined
+
     const controller = new AbortController()
     const key = reloadKey
 
@@ -44,7 +48,16 @@ export function useViewerSession() {
       void key
       controller.abort()
     }
-  }, [reloadKey])
+  }, [reloadKey, enabled])
+
+  if (!enabled) {
+    return {
+      session: null,
+      error: null,
+      isLoading: false,
+      reload,
+    }
+  }
 
   return {
     session: result.session,
