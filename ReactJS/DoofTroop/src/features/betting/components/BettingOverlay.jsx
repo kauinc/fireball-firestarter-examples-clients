@@ -188,6 +188,7 @@ function BettingRoundSession({
     crazyComboPicks,
     {
       carry,
+      bettingOpen: canMutateBoard(),
       onCarryForwardRejected: handleCarryForwardRejected,
       onUndoMeta: handleUndoMeta,
       onPicksFromServer: handlePicksFromServer,
