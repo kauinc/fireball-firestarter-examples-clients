@@ -3,18 +3,28 @@ import { GameMode } from 'fireball-fireworks-sdk-client'
 import {
   CHIP_VALUES as MONEY_CHIP_VALUES,
   DEFAULT_CHIP_VALUE as MONEY_DEFAULT_CHIP,
+  MAX_BET_PER_TARGET as MONEY_MAX_BET,
 } from '../constants/doofs.js'
 import { getGameMode, isCoinsMode } from '../../../shared/fireball/gameMode.js'
+import {
+  coreBetDefaultFromVars,
+  currencyRateFromVars,
+  extractServerVars,
+  snapToNearestFace,
+} from '../../../shared/fireball/sessionVars.js'
 
 /** Default coins ladder when server vars are empty. */
 export const DEFAULT_COIN_CHIPS = Object.freeze([1, 2, 5, 10, 20, 50, 100])
+
+/** Max stake per target in coin units (mirrors server Constants.MaxBetPerTargetCoins). */
+export const MAX_BET_PER_TARGET_COINS = 10000
 
 const listeners = new Set()
 
 let chipValues = [...MONEY_CHIP_VALUES]
 let defaultChipValue = MONEY_DEFAULT_CHIP
 /** Max stake per target in HUD units. */
-let maxBetPerTarget = 100
+let maxBetPerTarget = MONEY_MAX_BET
 
 function emit() {
   for (const listener of listeners) listener()
@@ -81,61 +91,54 @@ export function largestChipAtMost(maxAmount) {
  */
 export function applyChipLadderFromSession(session, auth = null) {
   const mode = getGameMode() || session?.gameMode || GameMode.fun
+  const vars = extractServerVars(auth)
 
   if (mode === GameMode.coins || isCoinsMode()) {
-    const fromAuth = extractCoinBets(auth)
-    const chips =
-      fromAuth?.length > 0 ? fromAuth : [...DEFAULT_COIN_CHIPS]
-    commit(chips, chips[0] ?? 1, 10000)
+    const fromAuth = extractCoinBets(vars)
+    const chips = fromAuth?.length > 0 ? fromAuth : [...DEFAULT_COIN_CHIPS]
+    const betDefault = coreBetDefaultFromVars(vars)
+    const selected =
+      betDefault > 0 ? snapToNearestFace(chips, betDefault) : (chips[0] ?? 1)
+    commit(chips, selected, MAX_BET_PER_TARGET_COINS)
     return
   }
 
-  const moneyFromAuth = extractMoneyBets(auth, session)
-  if (moneyFromAuth?.length > 0) {
-    commit(moneyFromAuth, moneyFromAuth[0], 100)
-    return
+  const currency = session?.currency || 'USD'
+  const rate = currencyRateFromVars(vars, currency)
+  const moneyFromAuth = extractMoneyBets(vars, rate)
+  const chips =
+    moneyFromAuth?.length > 0 ? moneyFromAuth : [...MONEY_CHIP_VALUES]
+  const max = Math.round(MONEY_MAX_BET * rate * 100) / 100
+  const betDefaultMinor = coreBetDefaultFromVars(vars)
+  let selected =
+    moneyFromAuth?.length > 0 ? moneyFromAuth[0] : MONEY_DEFAULT_CHIP
+  if (betDefaultMinor > 0) {
+    const face = Math.round((betDefaultMinor * rate) / 100 * 100) / 100
+    selected = snapToNearestFace(chips, face)
   }
-
-  // Fun + money fallback: existing money-look ladder.
-  commit([...MONEY_CHIP_VALUES], MONEY_DEFAULT_CHIP, 100)
+  commit(chips, selected, max)
 }
 
 /**
- * @param {unknown} auth
+ * @param {Record<string, unknown> | null} vars
  * @returns {number[] | null}
  */
-function extractCoinBets(auth) {
-  if (!auth || typeof auth !== 'object') return null
-  const vars =
-    auth.ServerVariables ??
-    auth.serverVariables ??
-    auth.server_vars ??
-    auth.Extra?.server_vars ??
-    auth.extra?.server_vars
-  const list = vars?.coin_bets ?? vars?.coinBets
+function extractCoinBets(vars) {
+  if (!vars) return null
+  const list = vars.coin_bets ?? vars.coinBets
   if (!Array.isArray(list) || list.length === 0) return null
   return list.map((v) => Number(v)).filter((n) => Number.isFinite(n) && n > 0)
 }
 
 /**
- * @param {unknown} auth
- * @param {import('fireball-fireworks-sdk-client').FireballSession | null | undefined} session
+ * @param {Record<string, unknown> | null} vars
+ * @param {number} rate
  * @returns {number[] | null}
  */
-function extractMoneyBets(auth, session) {
-  if (!auth || typeof auth !== 'object') return null
-  const vars =
-    auth.ServerVariables ??
-    auth.serverVariables ??
-    auth.server_vars ??
-    auth.Extra?.server_vars ??
-    auth.extra?.server_vars
-  const bets = vars?.core_bet_values ?? vars?.coreBetValues
+function extractMoneyBets(vars, rate) {
+  if (!vars) return null
+  const bets = vars.core_bet_values ?? vars.coreBetValues
   if (!Array.isArray(bets) || bets.length === 0) return null
-
-  const rates = vars?.core_currency_rates ?? vars?.coreCurrencyRates ?? {}
-  const currency = session?.currency || 'USD'
-  const rate = Number(rates?.[currency] ?? 1) || 1
   // core_bet_values are minor units → HUD major.
   return bets
     .map((v) => Math.round((Number(v) * rate) / 100 * 100) / 100)
