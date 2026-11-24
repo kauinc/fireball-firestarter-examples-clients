@@ -1,5 +1,7 @@
 export { HudFade, HudMenuChrome } from './components/HudChrome.jsx'
 export { FullscreenHomeScreenHint } from './components/FullscreenHomeScreenHint.jsx'
+export { HowToPlayOverlay } from './components/HowToPlayOverlay.jsx'
+export { PauseOverlay } from './components/PauseOverlay.jsx'
 export { StreamErrorBoundary } from './components/StreamErrorBoundary.jsx'
 export { useDialogFocus } from './hooks/useDialogFocus.js'
 export {

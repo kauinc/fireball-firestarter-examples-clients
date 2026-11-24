@@ -39,6 +39,11 @@ import {
   localSetCrazyComboPicks,
   localUndoBets,
 } from '../local/localWallet.js'
+import { gciOpenDepositMenu } from '../../../shared/fireball/gciBridge.js'
+
+function isInsufficient(reason) {
+  return typeof reason === 'string' && /insufficient/i.test(reason)
+}
 
 function exceedsMaxBet(bets) {
   const max = getMaxBetPerTarget()
@@ -133,6 +138,7 @@ export function useChipBets(
     ;(async () => {
       const stake = betsStakeTotal(carry.bets)
       if (stake > getBalance()) {
+        gciOpenDepositMenu()
         clearCarryForwardSeed(roundId)
         onCarryForwardRejectedRef.current?.()
         markCarryForwardCharged(roundId)
@@ -156,6 +162,7 @@ export function useChipBets(
       if (cancelled) return
       markCarryForwardCharged(roundId)
       if (!result.ok) {
+        if (isInsufficient(result.reason)) gciOpenDepositMenu()
         clearCarryForwardSeed(roundId)
         onCarryForwardRejectedRef.current?.()
       } else {
@@ -179,7 +186,10 @@ export function useChipBets(
       const nextStake = roundMoney(
         betsStakeTotal(getCfGameSnapshot().bets) + amount,
       )
-      if (nextStake > getBalance()) return false
+      if (nextStake > getBalance()) {
+        gciOpenDepositMenu()
+        return false
+      }
 
       const stakeMetal =
         target?.type === 'combo' || target?.type === 'crazyCombo'
@@ -203,6 +213,7 @@ export function useChipBets(
           })
 
       if (result.ok) markUndoAvailable(true)
+      else if (isInsufficient(result.reason)) gciOpenDepositMenu()
       return result.ok
     },
     [roundId, remote],
@@ -267,6 +278,7 @@ export function useChipBets(
       ? await cfRepeatLast(roundId)
       : localRepeatLast(roundId)
     if (result.ok) markUndoAvailable(true)
+    else if (isInsufficient(result.reason)) gciOpenDepositMenu()
     return result.ok
   }, [roundId, remote])
 
@@ -290,6 +302,7 @@ export function useChipBets(
       ? await cfDoubleBets(roundId)
       : localDoubleBets(roundId)
     if (result.ok) markUndoAvailable(true)
+    else if (isInsufficient(result.reason)) gciOpenDepositMenu()
     return result.ok
   }, [roundId, remote])
 
