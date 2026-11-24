@@ -45,6 +45,22 @@ describe('applyChipLadderFromSession', () => {
     assert.equal(getMaxBetPerTarget(), 10000)
   })
 
+  it('money reads rates from client_side and scales fallback ladder', () => {
+    setActiveGameMode(GameMode.money)
+    applyChipLadderFromSession(
+      { currency: 'UAH', gameMode: GameMode.money },
+      {
+        client_side: {
+          core_currency_rates: { UAH: 50 },
+        },
+      },
+    )
+    // Built-in 0.2 × 50 = 10; max 100 × 50 = 5000
+    assert.equal(getChipValues()[0], 10)
+    assert.equal(getMaxBetPerTarget(), 5000)
+    assert.equal(getDefaultChipValue(), 10)
+  })
+
   it('coins ignores rates and uses coin max', () => {
     setActiveGameMode(GameMode.coins)
     applyChipLadderFromSession(
