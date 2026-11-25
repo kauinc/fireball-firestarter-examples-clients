@@ -18,8 +18,21 @@ export function applyServerMessage(name, message) {
 
   const msgName = String(name ?? field(message, 'Name', 'name') ?? '')
 
-  if (isErrorPayload(message) || msgName === CfMessages.BetsRejected) {
-    applyCfError({ ...message, Name: msgName || CfMessages.BetsRejected })
+  const isPlatformError =
+    msgName === CfMessages.Error ||
+    msgName === CfMessages.WinningPayRejected ||
+    msgName === CfMessages.AuthenticateReject ||
+    msgName === CfMessages.Timeout
+
+  if (
+    isErrorPayload(message) ||
+    msgName === CfMessages.BetsRejected ||
+    isPlatformError
+  ) {
+    applyCfError({
+      ...message,
+      Name: msgName || CfMessages.Error,
+    })
     return
   }
 

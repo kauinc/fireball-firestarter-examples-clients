@@ -18,6 +18,12 @@ export const CfMessages = Object.freeze({
   BetsRejected: 'bets-rejected',
   SettleResult: 'settle-result',
   RefundResult: 'refund-result',
+
+  /** Platform / RGS error names (FireballConstants.MessagesNames). */
+  Error: 'error',
+  WinningPayRejected: 'winning-pay-rejected',
+  AuthenticateReject: 'authenticate-reject',
+  Timeout: 'timeout',
 })
 
 export const WalletPhase = Object.freeze({

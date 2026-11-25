@@ -11,8 +11,9 @@ import {
   gciNotifyBetPlaced,
   gciNotifyBetResult,
   gciNotifyBetUpdate,
+  gciNotifyError,
 } from './gciBridge.js'
-import { WalletPhase } from './messages.js'
+import { CfMessages, WalletPhase } from './messages.js'
 import {
   field,
   normalizeBet,
@@ -280,12 +281,38 @@ export function applyRefundResult(message) {
   gciNotifyBalance()
 }
 
+const BLOCKING_ERROR_NAMES = new Set([
+  CfMessages.Error,
+  CfMessages.WinningPayRejected,
+  CfMessages.AuthenticateReject,
+  CfMessages.Timeout,
+  CfMessages.SettleResult,
+])
+
 /**
- * @param {{ Name?: string, name?: string, Reason?: string, reason?: string, Balance?: unknown, balance?: unknown }} error
+ * Soft rejects (max bet, betting closed, invalid chip) stay non-blocking.
+ * Auth / lock PlaceBet reject / settle fail / pay-reject / platform ERROR block.
+ * @param {string} name
+ * @param {{ lockReject?: boolean, code?: unknown }} [opts]
+ */
+function isBlockingCfError(name, { lockReject = false, code } = {}) {
+  if (lockReject) return true
+  const normalized = String(name ?? '').toLowerCase()
+  if (BLOCKING_ERROR_NAMES.has(normalized)) return true
+  if (normalized === 'winning_pay_rejected') return true
+  const codeNum = Number(code)
+  // Fireball ErrorCode.Authentication — treat as blocking when present.
+  if (Number.isFinite(codeNum) && codeNum === 1) return true
+  return false
+}
+
+/**
+ * @param {{ Name?: string, name?: string, Reason?: string, reason?: string, Balance?: unknown, balance?: unknown, Code?: unknown, code?: unknown }} error
  */
 export function applyCfError(error) {
   const name = String(field(error, 'Name', 'name') ?? 'error')
   const reason = String(field(error, 'Reason', 'reason') ?? 'Request failed')
+  const code = field(error, 'Code', 'code')
   const balanceCents = field(error, 'Balance', 'balance')
   if (balanceCents != null) {
     setBalance(balanceFromRgs(balanceCents))
@@ -299,6 +326,13 @@ export function applyCfError(error) {
       reason,
     )
 
+  const blocking = isBlockingCfError(name, { lockReject, code })
+  const lastError = Object.freeze({ name, reason, blocking })
+
+  if (blocking) {
+    gciNotifyError(reason)
+  }
+
   if (lockReject) {
     commit({
       walletPhase: WalletPhase.Rejected,
@@ -306,15 +340,13 @@ export function applyCfError(error) {
       lockedBets: EMPTY_BETS,
       totalStake: 0,
       canUndo: false,
-      lastError: Object.freeze({ name, reason }),
+      lastError,
     })
     publishBoard()
     return
   }
 
-  commit({
-    lastError: Object.freeze({ name, reason }),
-  })
+  commit({ lastError })
 }
 
 export function markUndoAvailable(canUndo) {
