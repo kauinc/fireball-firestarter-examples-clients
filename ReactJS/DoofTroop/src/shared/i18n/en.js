@@ -116,6 +116,7 @@ export const EN = Object.freeze({
   // Errors (user-visible)
   label_request_failed: 'Request failed',
   label_action_error: 'Something went wrong',
+  label_pay_error: 'Pay error',
   label_fireball_connection_failed: 'Fireball connection failed',
   label_something_went_wrong: 'Something went wrong. Reload the page to continue.',
   label_reload: 'Reload page',

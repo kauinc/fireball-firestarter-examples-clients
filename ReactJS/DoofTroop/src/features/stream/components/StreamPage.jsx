@@ -12,6 +12,7 @@ import {
 import { LoadingScreen, LoadingStatus } from '../../loading/index.js'
 import {
   HudViewportProvider,
+  ErrorDialogOverlay,
   FullscreenHomeScreenHint,
   HowToPlayOverlay,
   PauseOverlay,
@@ -231,6 +232,7 @@ export function StreamPage() {
         <FullscreenHomeScreenHint />
         <HowToPlayOverlay />
         <PauseOverlay />
+        <ErrorDialogOverlay />
       </StreamShell>
     </HudViewportProvider>
   )

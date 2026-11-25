@@ -1,0 +1,74 @@
+.error-dialog {
+  position: absolute;
+  inset: 0;
+  z-index: calc(var(--z-modal, 40) + 5);
+  display: grid;
+  place-items: center;
+  padding: max(16px, env(safe-area-inset-top, 0px))
+    max(16px, env(safe-area-inset-right, 0px))
+    max(16px, env(safe-area-inset-bottom, 0px))
+    max(16px, env(safe-area-inset-left, 0px));
+  background: rgba(0, 0, 0, 0.72);
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.error-dialog__card {
+  width: min(420px, 100%);
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(12, 14, 22, 0.96);
+  color: #fff;
+  font-family: 'Helvetica Neue Cyr', 'Segoe UI', sans-serif;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.error-dialog__title {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.error-dialog__body {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #d7dbe6;
+  word-break: break-word;
+}
+
+.error-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.error-dialog__btn {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+.error-dialog__btn--primary {
+  color: #111;
+  background: #e8c85a;
+}
+
+.error-dialog__btn--secondary {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
