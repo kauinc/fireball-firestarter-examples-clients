@@ -16,8 +16,8 @@ MonoBehaviour:
   Environment: 0
   OperatorId: 964d5c31-043c-413d-b28d-8d0c2c0b1504
   GameId: 52162ad3-118b-4e5d-9161-0ba097508f86
-  OperatorPlayerId: e2f6046a-a7b1-4c43-8c5b-0e7ce9df5770
-  Token: 9f8e976f-a961-4ce9-a344-979cf9236cc0
+  OperatorPlayerId: 
+  Token: 
   Language: en
   Currency: USD
   Country: US
